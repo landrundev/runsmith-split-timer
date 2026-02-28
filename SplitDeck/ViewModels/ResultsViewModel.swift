@@ -1,0 +1,82 @@
+import Foundation
+
+enum DisplayMode: String, CaseIterable {
+    case cumulative = "Cumulative"
+    case lapTimes   = "Lap Times"
+}
+
+@MainActor
+final class ResultsViewModel: ObservableObject {
+    @Published var displayMode: DisplayMode = .cumulative
+
+    let race: Race
+    let athletes: [Athlete]
+    let splits: [Split]
+    let meet: Meet?
+
+    init(race: Race, athletes: [Athlete], splits: [Split], meet: Meet?) {
+        self.race = race
+        self.athletes = athletes
+        self.splits = splits
+        self.meet = meet
+    }
+
+    var orderedAthletes: [Athlete] {
+        race.athleteIds.compactMap { id in athletes.first { $0.id == id } }
+    }
+
+    var rankedAthletes: [(athlete: Athlete, place: Int?)] {
+        RaceDomain.ranked(athletes: orderedAthletes, splits: splits, race: race)
+    }
+
+    // MARK: – Relay
+
+    var relayLegData: [(leg: Int, athlete: Athlete, legMs: Int?, cumulativeMs: Int?)] {
+        guard race.eventType.isRelay else { return [] }
+        return RaceDomain.relayLegData(athletes: orderedAthletes, splits: splits, race: race)
+    }
+
+    var totalRelayMs: Int? {
+        relayLegData.last?.cumulativeMs
+    }
+
+    var columnLabels: [String] {
+        RaceDomain.cumulativeColumnLabels(for: race)
+    }
+
+    func cellValue(athlete: Athlete, lapIndex: Int) -> CellValue {
+        switch displayMode {
+        case .cumulative:
+            return RaceDomain.cumulativeDisplay(
+                athlete: athlete, lapIndex: lapIndex, splits: splits, race: race)
+        case .lapTimes:
+            return RaceDomain.lapTimeDisplay(
+                athlete: athlete, lapIndex: lapIndex, splits: splits, race: race)
+        }
+    }
+
+    func exportCSV() -> String {
+        CSVExporter.export(
+            race: race,
+            rankedAthletes: rankedAthletes,
+            splits: splits,
+            meet: meet
+        )
+    }
+
+    func csvFilename() -> String {
+        CSVExporter.filename(race: race, meet: meet)
+    }
+
+    func csvFileURL() -> URL? {
+        let csv = exportCSV()
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent(csvFilename())
+        do {
+            try csv.write(to: tmp, atomically: true, encoding: .utf8)
+            return tmp
+        } catch {
+            return nil
+        }
+    }
+}

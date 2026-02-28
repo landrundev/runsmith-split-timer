@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcodegen generate)",
+      "Bash(sips -g pixelWidth -g pixelHeight \"/Users/daniel/Downloads/Runsmith_Logo_Symbol_Pink_v1.png\")"
+    ]
+  }
+}

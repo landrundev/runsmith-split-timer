@@ -1,0 +1,262 @@
+import SwiftUI
+
+struct ResultsView: View {
+    @ObservedObject var vm: ResultsViewModel
+    var onDone: (() -> Void)? = nil
+    @State private var showShareSheet = false
+    @State private var shareURL: URL?
+    @Environment(\.dismiss) private var dismiss
+
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        return f
+    }()
+
+    var body: some View {
+        VStack(spacing: 0) {
+            raceInfoHeader
+            Divider()
+
+            if vm.race.eventType.isRelay {
+                relayResultsTable
+            } else {
+                Picker("Display", selection: $vm.displayMode) {
+                    ForEach(DisplayMode.allCases, id: \.self) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+
+                Divider()
+
+                resultsTable
+            }
+        }
+        .background(Theme.screenBackground.ignoresSafeArea())
+        .navigationTitle("Results")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    shareURL = vm.csvFileURL()
+                    showShareSheet = shareURL != nil
+                } label: {
+                    Label("Export CSV", systemImage: "square.and.arrow.up")
+                }
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            if onDone != nil {
+                doneButton
+            }
+        }
+        .sheet(isPresented: $showShareSheet) {
+            if let url = shareURL {
+                ShareSheet(activityItems: [url])
+            }
+        }
+    }
+
+    // MARK: – Race Info Header
+
+    private var raceInfoHeader: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(vm.race.name)
+                .font(.headline)
+
+            HStack(spacing: 6) {
+                Text(vm.race.eventType.displayName)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                if let meet = vm.meet {
+                    Text("·").foregroundStyle(.tertiary)
+                    Text(meet.name)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                if let date = vm.race.startedAt {
+                    Text("·").foregroundStyle(.tertiary)
+                    Text(Self.dateFormatter.string(from: date))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color(.secondarySystemGroupedBackground))
+    }
+
+    // MARK: – Done Button (bottom)
+
+    private var doneButton: some View {
+        Button {
+            onDone?()
+            dismiss()
+        } label: {
+            Text("Done")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(Theme.runsmithPink)
+        .padding(.horizontal)
+        .padding(.bottom, 8)
+        .background(.bar)
+    }
+
+    // MARK: – Individual Results Table
+
+    private var resultsTable: some View {
+        ScrollView(.vertical) {
+            LazyVStack(spacing: 0) {
+                ForEach(vm.rankedAthletes, id: \.athlete.id) { entry in
+                    athleteBlock(entry: entry)
+                    Divider()
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+
+    private func athleteBlock(entry: (athlete: Athlete, place: Int?)) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+
+            HStack(spacing: 6) {
+                Text(entry.place.map { "\($0)" } ?? "—")
+                    .font(.footnote.weight(.bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20, alignment: .leading)
+
+                Circle()
+                    .fill(Color(hex: entry.athlete.colorHex))
+                    .frame(width: 10, height: 10)
+
+                Text(entry.athlete.name)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+
+                Spacer()
+
+                let finalVal = vm.cellValue(athlete: entry.athlete, lapIndex: vm.race.laps)
+                Text(finalVal.displayString)
+                    .font(.subheadline.weight(.bold))
+                    .monospacedDigit()
+                    .foregroundStyle(entry.place != nil ? .primary : .tertiary)
+            }
+
+            if !vm.columnLabels.isEmpty {
+                HStack(spacing: 4) {
+                    ForEach(Array(vm.columnLabels.enumerated()), id: \.offset) { i, label in
+                        VStack(spacing: 2) {
+                            Text(label)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            let val = vm.cellValue(athlete: entry.athlete, lapIndex: i + 1)
+                            Text(val.displayString)
+                                .font(.caption.monospacedDigit())
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 12)
+    }
+
+    // MARK: – Relay Results Table
+
+    private var relayResultsTable: some View {
+        ScrollView(.vertical) {
+            VStack(spacing: 0) {
+                // Column headers
+                HStack {
+                    Text("Leg")
+                        .frame(width: 36, alignment: .leading)
+                    Text("Athlete")
+                    Spacer()
+                    Text("Leg Time")
+                        .frame(width: 74, alignment: .trailing)
+                    Text("Cumulative")
+                        .frame(width: 82, alignment: .trailing)
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+
+                Divider()
+
+                ForEach(vm.relayLegData, id: \.leg) { entry in
+                    HStack(spacing: 8) {
+                        Text("\(entry.leg)")
+                            .font(.footnote.weight(.bold))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 36, alignment: .leading)
+
+                        Circle()
+                            .fill(Color(hex: entry.athlete.colorHex))
+                            .frame(width: 10, height: 10)
+
+                        Text(entry.athlete.name)
+                            .font(.subheadline)
+                            .lineLimit(1)
+
+                        Spacer()
+
+                        Text(entry.legMs.map { $0.formattedSplitTime } ?? "—")
+                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                            .frame(width: 74, alignment: .trailing)
+
+                        Text(entry.cumulativeMs.map { $0.formattedSplitTime } ?? "—")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                            .frame(width: 82, alignment: .trailing)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+
+                    Divider()
+                }
+
+                // Total row
+                if let total = vm.totalRelayMs {
+                    HStack {
+                        Text("Total")
+                            .font(.subheadline.weight(.bold))
+                        Spacer()
+                        Text(total.formattedSplitTime)
+                            .font(.subheadline.weight(.bold).monospacedDigit())
+                            .frame(width: 74, alignment: .trailing)
+                        Text("")
+                            .frame(width: 82)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Color(.secondarySystemGroupedBackground))
+                }
+            }
+        }
+    }
+}
+
+// MARK: – UIActivityViewController wrapper
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uvc: UIActivityViewController, context: Context) {}
+}
