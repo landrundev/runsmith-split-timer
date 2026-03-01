@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(xcodegen generate)",
-      "Bash(sips -g pixelWidth -g pixelHeight \"/Users/daniel/Downloads/Runsmith_Logo_Symbol_Pink_v1.png\")"
+      "Bash(sips -g pixelWidth -g pixelHeight \"/Users/daniel/Downloads/Runsmith_Logo_Symbol_Pink_v1.png\")",
+      "Bash(sips -s hasAlpha false AppIcon.png)",
+      "Bash(python3 -c \":*)"
     ]
   }
 }

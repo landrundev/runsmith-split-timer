@@ -4,7 +4,7 @@ struct ResultsView: View {
     @ObservedObject var vm: ResultsViewModel
     var onDone: (() -> Void)? = nil
     @State private var showShareSheet = false
-    @State private var shareURL: URL?
+    @State private var shareItems: [Any] = []
     @Environment(\.dismiss) private var dismiss
 
     private static let dateFormatter: DateFormatter = {
@@ -43,10 +43,13 @@ struct ResultsView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    shareURL = vm.csvFileURL()
-                    showShareSheet = shareURL != nil
+                    var items: [Any] = []
+                    if let image = vm.shareableImage() { items.append(image) }
+                    if let url = vm.csvFileURL() { items.append(url) }
+                    shareItems = items
+                    showShareSheet = !items.isEmpty
                 } label: {
-                    Label("Export CSV", systemImage: "square.and.arrow.up")
+                    Label("Share", systemImage: "square.and.arrow.up")
                 }
             }
         }
@@ -56,9 +59,7 @@ struct ResultsView: View {
             }
         }
         .sheet(isPresented: $showShareSheet) {
-            if let url = shareURL {
-                ShareSheet(activityItems: [url])
-            }
+            ShareSheet(activityItems: shareItems)
         }
     }
 
@@ -147,7 +148,7 @@ struct ResultsView: View {
 
                 Spacer()
 
-                let finalVal = vm.cellValue(athlete: entry.athlete, lapIndex: vm.race.laps)
+                let finalVal = vm.totalTimeValue(athlete: entry.athlete)
                 Text(finalVal.displayString)
                     .font(.subheadline.weight(.bold))
                     .monospacedDigit()

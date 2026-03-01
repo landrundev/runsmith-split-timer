@@ -15,6 +15,12 @@ struct HomeView: View {
     @State private var meetToDelete: Meet? = nil
     @State private var quickRaceToDelete: Race? = nil
 
+    // Meet editing
+    @State private var meetToEdit: Meet? = nil
+    @State private var editMeetName = ""
+    @State private var editMeetDate = Date()
+    @State private var editMeetLocation = ""
+
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateStyle = .medium
@@ -47,6 +53,9 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showAddMeet) {
                 addMeetSheet
+            }
+            .sheet(item: $meetToEdit) { meet in
+                editMeetSheet(meet: meet)
             }
             .sheet(isPresented: $showQuickRaceSetup, onDismiss: { vm.load() }) {
                 RaceSetupView(
@@ -129,6 +138,15 @@ struct HomeView: View {
                                 } label: {
                                     Label("Delete", systemImage: "trash")
                                 }
+                                Button {
+                                    editMeetName = meet.name
+                                    editMeetDate = meet.date
+                                    editMeetLocation = meet.location ?? ""
+                                    meetToEdit = meet
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+                                .tint(.blue)
                             }
                         }
                     }
@@ -220,6 +238,40 @@ struct HomeView: View {
         .tint(Theme.runsmithPink)
         .padding(.horizontal)
         .padding(.bottom, 8)
+    }
+
+    // MARK: – Edit Meet Sheet
+
+    private func editMeetSheet(meet: Meet) -> some View {
+        NavigationStack {
+            Form {
+                Section("Meet Details") {
+                    TextField("Meet Name", text: $editMeetName)
+                    DatePicker("Date", selection: $editMeetDate, displayedComponents: .date)
+                    TextField("Location (optional)", text: $editMeetLocation)
+                }
+            }
+            .navigationTitle("Edit Meet")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { meetToEdit = nil }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        let updated = Meet(
+                            id: meet.id,
+                            name: editMeetName,
+                            date: editMeetDate,
+                            location: editMeetLocation.isEmpty ? nil : editMeetLocation
+                        )
+                        vm.save(meet: updated)
+                        meetToEdit = nil
+                    }
+                    .disabled(editMeetName.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+        }
     }
 
     // MARK: – Add Meet Sheet

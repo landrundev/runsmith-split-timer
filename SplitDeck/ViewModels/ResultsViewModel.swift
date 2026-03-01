@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 enum DisplayMode: String, CaseIterable {
     case cumulative = "Cumulative"
@@ -55,6 +56,11 @@ final class ResultsViewModel: ObservableObject {
         }
     }
 
+    /// Always returns the cumulative total time regardless of display mode — used for the header row.
+    func totalTimeValue(athlete: Athlete) -> CellValue {
+        RaceDomain.cumulativeDisplay(athlete: athlete, lapIndex: race.laps, splits: splits, race: race)
+    }
+
     func exportCSV() -> String {
         CSVExporter.export(
             race: race,
@@ -66,6 +72,14 @@ final class ResultsViewModel: ObservableObject {
 
     func csvFilename() -> String {
         CSVExporter.filename(race: race, meet: meet)
+    }
+
+    @MainActor
+    func shareableImage() -> UIImage? {
+        let card = ResultsCardView(vm: self)
+        let renderer = ImageRenderer(content: card)
+        renderer.scale = 3.0
+        return renderer.uiImage
     }
 
     func csvFileURL() -> URL? {
