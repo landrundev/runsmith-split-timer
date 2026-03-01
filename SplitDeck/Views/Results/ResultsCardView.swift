@@ -1,7 +1,38 @@
 import SwiftUI
 
+// MARK: – Plain data for offscreen rendering (no ObservableObject)
+
+struct CardData {
+    let raceName: String
+    let eventDisplayName: String
+    let startedAt: Date?
+    let meetName: String?
+    let displayModeName: String   // "Cumulative" or "Lap Times"
+    let isRelay: Bool
+    let athletes: [CardAthlete]
+    let columnLabels: [String]   // e.g. ["400m", "800m", "1200m", "1600m"]
+    let relayLegs: [CardRelayLeg]
+    let totalRelayTime: String?
+
+    struct CardAthlete {
+        let name: String
+        let colorHex: String
+        let place: Int?
+        let totalTime: String
+        let splitTimes: [String]  // cumulative split display strings
+    }
+
+    struct CardRelayLeg {
+        let leg: Int
+        let athleteName: String
+        let colorHex: String
+        let legTime: String
+        let cumulativeTime: String
+    }
+}
+
 struct ResultsCardView: View {
-    let vm: ResultsViewModel
+    let data: CardData
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -13,7 +44,7 @@ struct ResultsCardView: View {
     var body: some View {
         VStack(spacing: 0) {
             cardHeader
-            if vm.race.eventType.isRelay {
+            if data.isRelay {
                 relayResults
             } else {
                 individualResults
@@ -21,7 +52,8 @@ struct ResultsCardView: View {
             cardFooter
         }
         .frame(width: 390)
-        .background(Color(.systemBackground))
+        .fixedSize(horizontal: false, vertical: true)
+        .background(Color.white)
     }
 
     // MARK: – Header
@@ -31,22 +63,32 @@ struct ResultsCardView: View {
             Text("RUNSMITH SPLIT TIMER")
                 .font(.caption2.weight(.heavy))
                 .tracking(2)
-                .foregroundStyle(.white.opacity(0.75))
+                .foregroundColor(.white.opacity(0.75))
 
-            Text(vm.race.name)
+            Text(data.raceName)
                 .font(.title3.weight(.bold))
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
                 .multilineTextAlignment(.center)
 
             HStack(spacing: 6) {
-                Text(vm.race.eventType.displayName)
-                if let date = vm.race.startedAt {
+                Text(data.eventDisplayName)
+                if let meetName = data.meetName {
+                    Text("·").opacity(0.6)
+                    Text(meetName)
+                }
+                if let date = data.startedAt {
                     Text("·").opacity(0.6)
                     Text(Self.dateFormatter.string(from: date))
                 }
             }
             .font(.subheadline)
-            .foregroundStyle(.white.opacity(0.8))
+            .foregroundColor(.white.opacity(0.8))
+
+            if !data.isRelay {
+                Text(data.displayModeName)
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(.white.opacity(0.6))
+            }
         }
         .padding(.horizontal, 24)
         .padding(.top, 22)
@@ -65,9 +107,9 @@ struct ResultsCardView: View {
 
     private var individualResults: some View {
         VStack(spacing: 0) {
-            ForEach(Array(vm.rankedAthletes.enumerated()), id: \.element.athlete.id) { i, entry in
-                individualRow(entry: entry)
-                if i < vm.rankedAthletes.count - 1 {
+            ForEach(Array(data.athletes.enumerated()), id: \.offset) { i, athlete in
+                individualRow(athlete: athlete)
+                if i < data.athletes.count - 1 {
                     Divider()
                         .padding(.leading, 52)
                 }
@@ -76,40 +118,39 @@ struct ResultsCardView: View {
         .padding(.vertical, 6)
     }
 
-    private func individualRow(entry: (athlete: Athlete, place: Int?)) -> some View {
-        let finalVal = vm.totalTimeValue(athlete: entry.athlete)
-        return HStack(spacing: 12) {
+    private func individualRow(athlete: CardData.CardAthlete) -> some View {
+        HStack(spacing: 12) {
             // Place medal / number
             ZStack {
-                if let place = entry.place, place <= 3 {
+                if let place = athlete.place, place <= 3 {
                     Circle()
                         .fill(medalColor(place))
                         .frame(width: 26, height: 26)
                     Text("\(place)")
                         .font(.caption.weight(.black))
-                        .foregroundStyle(.white)
+                        .foregroundColor(.white)
                 } else {
-                    Text(entry.place.map { "\($0)" } ?? "—")
+                    Text(athlete.place.map { "\($0)" } ?? "—")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
                         .frame(width: 26)
                 }
             }
             .frame(width: 26)
 
             Circle()
-                .fill(Color(hex: entry.athlete.colorHex))
+                .fill(Color(hex: athlete.colorHex))
                 .frame(width: 10, height: 10)
 
-            Text(entry.athlete.name)
+            Text(athlete.name)
                 .font(.subheadline.weight(.semibold))
                 .lineLimit(1)
 
             Spacer()
 
-            Text(finalVal.displayString)
+            Text(athlete.totalTime)
                 .font(.subheadline.weight(.bold).monospacedDigit())
-                .foregroundStyle(entry.place != nil ? .primary : .tertiary)
+                .foregroundColor(athlete.place != nil ? .primary : Color(.tertiaryLabel))
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 11)
@@ -128,62 +169,62 @@ struct ResultsCardView: View {
                 Text("Cumul.").frame(width: 72, alignment: .trailing)
             }
             .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
+            .foregroundColor(.secondary)
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
 
             Divider()
 
-            ForEach(Array(vm.relayLegData.enumerated()), id: \.element.leg) { i, entry in
-                relayRow(entry: entry)
-                if i < vm.relayLegData.count - 1 {
+            ForEach(Array(data.relayLegs.enumerated()), id: \.offset) { i, leg in
+                relayRow(leg: leg)
+                if i < data.relayLegs.count - 1 {
                     Divider().padding(.leading, 56)
                 }
             }
 
-            if let total = vm.totalRelayMs {
+            if let total = data.totalRelayTime {
                 Divider()
                 HStack {
                     Text("Total")
                         .font(.subheadline.weight(.bold))
                     Spacer()
-                    Text(total.formattedSplitTime)
+                    Text(total)
                         .font(.subheadline.weight(.bold).monospacedDigit())
                         .frame(width: 74, alignment: .trailing)
                     Color.clear.frame(width: 72)
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
-                .background(Color(.secondarySystemBackground))
+                .background(Color(UIColor.secondarySystemBackground))
             }
         }
         .padding(.vertical, 6)
     }
 
-    private func relayRow(entry: (leg: Int, athlete: Athlete, legMs: Int?, cumulativeMs: Int?)) -> some View {
+    private func relayRow(leg: CardData.CardRelayLeg) -> some View {
         HStack(spacing: 10) {
-            Text("\(entry.leg)")
+            Text("\(leg.leg)")
                 .font(.footnote.weight(.bold))
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
                 .frame(width: 36, alignment: .leading)
 
             Circle()
-                .fill(Color(hex: entry.athlete.colorHex))
+                .fill(Color(hex: leg.colorHex))
                 .frame(width: 10, height: 10)
 
-            Text(entry.athlete.name)
+            Text(leg.athleteName)
                 .font(.subheadline.weight(.semibold))
                 .lineLimit(1)
 
             Spacer()
 
-            Text(entry.legMs.map { $0.formattedSplitTime } ?? "—")
+            Text(leg.legTime)
                 .font(.subheadline.weight(.semibold).monospacedDigit())
                 .frame(width: 74, alignment: .trailing)
 
-            Text(entry.cumulativeMs.map { $0.formattedSplitTime } ?? "—")
+            Text(leg.cumulativeTime)
                 .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
                 .frame(width: 72, alignment: .trailing)
         }
         .padding(.horizontal, 20)
@@ -200,9 +241,9 @@ struct ResultsCardView: View {
                 .frame(maxWidth: .infinity)
         }
         .overlay(
-            Text("runsmith.app")
+            Text("runsmith.com")
                 .font(.caption2.weight(.medium))
-                .foregroundStyle(.white)
+                .foregroundColor(.white)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
                 .background(Theme.runsmithPink)

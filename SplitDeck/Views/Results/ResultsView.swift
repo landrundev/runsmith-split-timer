@@ -3,8 +3,7 @@ import SwiftUI
 struct ResultsView: View {
     @ObservedObject var vm: ResultsViewModel
     var onDone: (() -> Void)? = nil
-    @State private var showShareSheet = false
-    @State private var shareItems: [Any] = []
+    @State private var previewImage: UIImage? = nil
     @Environment(\.dismiss) private var dismiss
 
     private static let dateFormatter: DateFormatter = {
@@ -43,11 +42,8 @@ struct ResultsView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    var items: [Any] = []
-                    if let image = vm.shareableImage() { items.append(image) }
-                    if let url = vm.csvFileURL() { items.append(url) }
-                    shareItems = items
-                    showShareSheet = !items.isEmpty
+                    let data = vm.buildCardData()
+                    previewImage = CardRenderer.render(data: data)
                 } label: {
                     Label("Share", systemImage: "square.and.arrow.up")
                 }
@@ -58,8 +54,11 @@ struct ResultsView: View {
                 doneButton
             }
         }
-        .sheet(isPresented: $showShareSheet) {
-            ShareSheet(activityItems: shareItems)
+        .sheet(item: Binding(
+            get: { previewImage.map { SharePreviewItem(image: $0) } },
+            set: { if $0 == nil { previewImage = nil } }
+        )) { item in
+            SharePreviewSheet(image: item.image, csvURL: vm.csvFileURL())
         }
     }
 
@@ -250,14 +249,51 @@ struct ResultsView: View {
     }
 }
 
-// MARK: – UIActivityViewController wrapper
+// MARK: – Share Preview
 
-struct ShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
+private struct SharePreviewItem: Identifiable {
+    let id = UUID()
+    let image: UIImage
+}
 
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+private struct SharePreviewSheet: View {
+    let image: UIImage
+    let csvURL: URL?
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .padding()
+                    .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Share Results")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        var items: [Any] = [image]
+                        if let url = csvURL { items.append(url) }
+                        let avc = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                           let rootVC = scene.windows.first?.rootViewController {
+                            var topVC = rootVC
+                            while let presented = topVC.presentedViewController { topVC = presented }
+                            avc.popoverPresentationController?.barButtonItem = nil
+                            topVC.present(avc, animated: true)
+                        }
+                    } label: {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                    }
+                }
+            }
+        }
     }
-
-    func updateUIViewController(_ uvc: UIActivityViewController, context: Context) {}
 }

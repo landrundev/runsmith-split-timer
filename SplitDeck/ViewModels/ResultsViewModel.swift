@@ -74,12 +74,52 @@ final class ResultsViewModel: ObservableObject {
         CSVExporter.filename(race: race, meet: meet)
     }
 
+    func buildCardData() -> CardData {
+        let labels = columnLabels
+        let athleteRows = rankedAthletes.map { entry in
+            let splitStrings = labels.indices.map { i in
+                cellValue(athlete: entry.athlete, lapIndex: i + 1).displayString
+            }
+            return CardData.CardAthlete(
+                name: entry.athlete.name,
+                colorHex: entry.athlete.colorHex,
+                place: entry.place,
+                totalTime: totalTimeValue(athlete: entry.athlete).displayString,
+                splitTimes: splitStrings
+            )
+        }
+        let relayRows = relayLegData.map { entry in
+            CardData.CardRelayLeg(
+                leg: entry.leg,
+                athleteName: entry.athlete.name,
+                colorHex: entry.athlete.colorHex,
+                legTime: entry.legMs.map { $0.formattedSplitTime } ?? "—",
+                cumulativeTime: entry.cumulativeMs.map { $0.formattedSplitTime } ?? "—"
+            )
+        }
+        return CardData(
+            raceName: race.name,
+            eventDisplayName: race.eventType.displayName,
+            startedAt: race.startedAt,
+            meetName: meet?.name,
+            displayModeName: displayMode.rawValue,
+            isRelay: race.eventType.isRelay,
+            athletes: athleteRows,
+            columnLabels: labels,
+            relayLegs: relayRows,
+            totalRelayTime: totalRelayMs.map { $0.formattedSplitTime }
+        )
+    }
+
     @MainActor
-    func shareableImage() -> UIImage? {
-        let card = ResultsCardView(vm: self)
-        let renderer = ImageRenderer(content: card)
-        renderer.scale = 3.0
-        return renderer.uiImage
+    func shareableImageURL() -> URL? {
+        let data = buildCardData()
+        let image = CardRenderer.render(data: data)
+        guard let pngData = image.pngData() else { return nil }
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("RunsmithResults.png")
+        try? pngData.write(to: url)
+        return url
     }
 
     func csvFileURL() -> URL? {
