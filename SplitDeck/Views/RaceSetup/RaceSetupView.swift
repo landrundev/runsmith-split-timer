@@ -25,12 +25,10 @@ struct RaceSetupView: View {
             }
             .navigationTitle("Race Setup")
             .navigationBarTitleDisplayMode(.inline)
+            .environment(\.editMode, .constant(.active))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -202,6 +200,7 @@ struct RaceSetupView: View {
                 }
             }
             .onMove { vm.moveAthletes(from: $0, to: $1) }
+            .deleteDisabled(true)
 
             Button {
                 showAddAthlete = true
@@ -252,6 +251,7 @@ struct RaceSetupView: View {
                     }
                 }
                 .onMove { vm.moveRelayLeg(from: $0, to: $1) }
+                .deleteDisabled(true)
 
                 // Empty leg placeholders
                 ForEach(vm.relayAthletesOrdered.count..<4, id: \.self) { i in

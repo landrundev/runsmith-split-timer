@@ -28,7 +28,7 @@ targets:
         CFBundleName: Runsmith Split Timer
         CFBundleDisplayName: Runsmith Split Timer
         CFBundleIdentifier: com.runsmith.splitdeck
-        CFBundleVersion: "5"
+        CFBundleVersion: "6"
         CFBundleShortVersionString: "1.1"
         UILaunchScreen:
           UIColorName: ""
@@ -39,6 +39,7 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+        NSPhotoLibraryAddUsageDescription: "Save race result cards to your photo library."
         UIRequiresFullScreen: NO
     settings:
       base:
