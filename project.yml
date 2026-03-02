@@ -28,7 +28,7 @@ targets:
         CFBundleName: Runsmith Split Timer
         CFBundleDisplayName: Runsmith Split Timer
         CFBundleIdentifier: com.runsmith.splitdeck
-        CFBundleVersion: "4"
+        CFBundleVersion: "5"
         CFBundleShortVersionString: "1.1"
         UILaunchScreen:
           UIColorName: ""

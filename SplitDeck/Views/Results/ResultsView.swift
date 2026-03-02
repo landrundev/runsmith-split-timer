@@ -260,6 +260,7 @@ private struct SharePreviewSheet: View {
     let image: UIImage
     let csvURL: URL?
     @Environment(\.dismiss) private var dismiss
+    @State private var savedToPhotos = false
 
     var body: some View {
         NavigationStack {
@@ -277,7 +278,17 @@ private struct SharePreviewSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItemGroup(placement: .confirmationAction) {
+                    Button {
+                        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+                        withAnimation { savedToPhotos = true }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            withAnimation { savedToPhotos = false }
+                        }
+                    } label: {
+                        Label(savedToPhotos ? "Saved!" : "Save",
+                              systemImage: savedToPhotos ? "checkmark" : "square.and.arrow.down")
+                    }
                     Button {
                         var items: [Any] = [image]
                         if let url = csvURL { items.append(url) }

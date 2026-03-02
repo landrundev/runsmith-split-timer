@@ -147,21 +147,25 @@ struct LiveTimingView: View {
     }
 
     private var relayAthleteList: some View {
-        ScrollView {
-            LazyVStack(spacing: 8) {
-                ForEach(Array(vm.athletes.enumerated()), id: \.element.id) { i, athlete in
-                    relayLegRow(legIndex: i, athlete: athlete)
-                }
+        List {
+            ForEach(Array(vm.athletes.enumerated()), id: \.element.id) { i, athlete in
+                relayLegRow(legIndex: i, athlete: athlete)
+                    .listRowInsets(.init(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                    .moveDisabled(i < vm.currentRelayLeg)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .onMove { vm.moveRelayLeg(from: $0, to: $1) }
         }
+        .listStyle(.plain)
+        .environment(\.editMode, .constant(.active))
     }
 
     private func relayLegRow(legIndex: Int, athlete: Athlete) -> some View {
         let legNumber = legIndex + 1
         let isCurrent = legIndex == vm.currentRelayLeg && !vm.isRelayComplete
         let isDone    = legIndex < vm.currentRelayLeg
+        let isWaiting = !isCurrent && !isDone
         let legSplit  = vm.splits.first { $0.athleteId == athlete.id }
 
         return HStack(spacing: 12) {
@@ -186,7 +190,7 @@ struct LiveTimingView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(isCurrent ? .primary : (isDone ? .secondary : .tertiary))
                 if isCurrent {
-                    Text("Running now")
+                    Text("Tap to record split")
                         .font(.caption)
                         .foregroundStyle(Theme.runsmithPink)
                 } else if isDone, let split = legSplit {
@@ -208,6 +212,10 @@ struct LiveTimingView: View {
             } else if isCurrent {
                 Image(systemName: "figure.run")
                     .foregroundStyle(Theme.runsmithPink)
+            } else if isWaiting {
+                Image(systemName: "line.3.horizontal")
+                    .foregroundStyle(.tertiary)
+                    .font(.subheadline)
             }
         }
         .padding(12)
@@ -219,6 +227,12 @@ struct LiveTimingView: View {
             RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(isCurrent ? Theme.runsmithPink.opacity(0.4) : Color.clear, lineWidth: 1.5)
         )
+        .contentShape(RoundedRectangle(cornerRadius: 12))
+        .onTapGesture {
+            if isCurrent {
+                vm.recordRelayLeg()
+            }
+        }
     }
 
     // MARK: – Bottom Bar

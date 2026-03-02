@@ -29,6 +29,9 @@ struct RaceSetupView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    EditButton()
+                }
             }
             .safeAreaInset(edge: .bottom) {
                 startButton
@@ -198,6 +201,7 @@ struct RaceSetupView: View {
                     .tint(.blue)
                 }
             }
+            .onMove { vm.moveAthletes(from: $0, to: $1) }
 
             Button {
                 showAddAthlete = true
@@ -220,96 +224,119 @@ struct RaceSetupView: View {
     // MARK: Relay Athlete Section
 
     private var relayAthleteSection: some View {
-        Section {
-            // Assigned leg slots
-            ForEach(Array(vm.relayAthletesOrdered.enumerated()), id: \.element.id) { i, athlete in
-                HStack(spacing: 10) {
-                    Text("Leg \(i + 1)")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 44, alignment: .leading)
-                    Circle()
-                        .fill(Color(hex: athlete.colorHex))
-                        .frame(width: 10, height: 10)
-                    Text(athlete.name)
-                    Spacer()
-                    Button {
-                        vm.toggleAthlete(athlete.id)
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
+        Group {
+            // Leg order section (assigned athletes, drag to reorder)
+            Section {
+                ForEach(Array(vm.relayAthletesOrdered.enumerated()), id: \.element.id) { i, athlete in
+                    HStack(spacing: 12) {
+                        Text("\(i + 1)")
+                            .font(.footnote.weight(.bold).monospacedDigit())
+                            .foregroundStyle(.white)
+                            .frame(width: 24, height: 24)
+                            .background(Theme.runsmithPink)
+                            .clipShape(Circle())
+                        Circle()
+                            .fill(Color(hex: athlete.colorHex))
+                            .frame(width: 12, height: 12)
+                        Text(athlete.name)
+                            .font(.body)
+                        Spacer()
+                        Button {
+                            vm.toggleAthlete(athlete.id)
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.quaternary)
+                                .font(.title3)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
+                }
+                .onMove { vm.moveRelayLeg(from: $0, to: $1) }
+
+                // Empty leg placeholders
+                ForEach(vm.relayAthletesOrdered.count..<4, id: \.self) { i in
+                    HStack(spacing: 12) {
+                        Text("\(i + 1)")
+                            .font(.footnote.weight(.bold).monospacedDigit())
+                            .foregroundStyle(.white)
+                            .frame(width: 24, height: 24)
+                            .background(Color(.quaternaryLabel))
+                            .clipShape(Circle())
+                        Text("Tap an athlete below")
+                            .font(.subheadline)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            } header: {
+                HStack {
+                    Text("Leg Order")
+                    Spacer()
+                    let count = vm.relayAthletesOrdered.count
+                    Text("\(count)/4 assigned")
+                        .font(.caption)
+                        .foregroundStyle(count == 4 ? Theme.runsmithPink : .secondary)
+                }
+            } footer: {
+                if !vm.relayAthletesOrdered.isEmpty {
+                    Text("Drag to reorder legs")
+                        .font(.caption)
                 }
             }
 
-            // Empty leg placeholders
-            ForEach(vm.relayAthletesOrdered.count..<4, id: \.self) { i in
-                HStack(spacing: 10) {
-                    Text("Leg \(i + 1)")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.tertiary)
-                        .frame(width: 44, alignment: .leading)
-                    Text("Tap an athlete below")
+            // Available athletes section
+            Section("Available Athletes") {
+                let unselected = vm.filteredAthletes.filter { !vm.selectedAthleteIds.contains($0.id) }
+                if unselected.isEmpty && vm.availableAthletes.isEmpty {
+                    Text("No athletes yet — add one below")
                         .font(.subheadline)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-
-            Divider().listRowSeparator(.hidden)
-
-            // Available (unselected) athletes
-            let unselected = vm.filteredAthletes.filter { !vm.selectedAthleteIds.contains($0.id) }
-            ForEach(unselected) { athlete in
-                HStack(spacing: 10) {
-                    Text("")
-                        .frame(width: 44)
-                    Circle()
-                        .fill(Color(hex: athlete.colorHex))
-                        .frame(width: 10, height: 10)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(athlete.name).font(.body)
-                        if let team = athlete.teamName {
-                            Text(team).font(.caption).foregroundStyle(.secondary)
+                        .foregroundStyle(.secondary)
+                } else if unselected.isEmpty {
+                    Text("All athletes assigned")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(unselected) { athlete in
+                        HStack(spacing: 12) {
+                            Circle()
+                                .fill(Color(hex: athlete.colorHex))
+                                .frame(width: 12, height: 12)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(athlete.name).font(.body)
+                                if let team = athlete.teamName {
+                                    Text(team).font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                            Spacer()
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundStyle(Theme.runsmithPink)
+                                .font(.title3)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture { vm.toggleAthlete(athlete.id) }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                vm.delete(athlete: athlete)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            Button {
+                                editName = athlete.name
+                                editTeam = athlete.teamName ?? ""
+                                editColorHex = athlete.colorHex
+                                athleteToEdit = athlete
+                            } label: {
+                                Label("Edit", systemImage: "pencil")
+                            }
+                            .tint(.blue)
                         }
                     }
-                    Spacer()
-                    Image(systemName: "plus.circle.fill")
-                        .foregroundStyle(Theme.runsmithPink)
                 }
-                .contentShape(Rectangle())
-                .onTapGesture { vm.toggleAthlete(athlete.id) }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        vm.delete(athlete: athlete)
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
-                    Button {
-                        editName = athlete.name
-                        editTeam = athlete.teamName ?? ""
-                        editColorHex = athlete.colorHex
-                        athleteToEdit = athlete
-                    } label: {
-                        Label("Edit", systemImage: "pencil")
-                    }
-                    .tint(.blue)
-                }
-            }
 
-            Button {
-                showAddAthlete = true
-            } label: {
-                Label("New Athlete", systemImage: "person.badge.plus")
-            }
-        } header: {
-            HStack {
-                Text("Relay Athletes")
-                Spacer()
-                let count = vm.relayAthletesOrdered.count
-                Text("\(count)/4 assigned")
-                    .font(.caption)
-                    .foregroundStyle(count == 4 ? Theme.runsmithPink : .secondary)
+                Button {
+                    showAddAthlete = true
+                } label: {
+                    Label("New Athlete", systemImage: "person.badge.plus")
+                }
             }
         }
     }

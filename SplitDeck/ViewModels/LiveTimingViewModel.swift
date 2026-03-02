@@ -23,7 +23,7 @@ final class LiveTimingViewModel: ObservableObject {
 
     init(race: Race, athletes: [Athlete], store: SplitDeckStore, cache: RaceStateCache) {
         self.race = race
-        self.athletes = athletes.filter { race.athleteIds.contains($0.id) }
+        self.athletes = race.athleteIds.compactMap { id in athletes.first { $0.id == id } }
         self.store = store
         self.cache = cache
 
@@ -188,6 +188,19 @@ final class LiveTimingViewModel: ObservableObject {
     func recordRelayLeg() {
         guard let athlete = currentRelayAthlete else { return }
         assign(to: athlete)
+    }
+
+    /// Reorder upcoming relay legs. Only legs that haven't run yet can be moved.
+    func moveRelayLeg(from source: IndexSet, to destination: Int) {
+        let firstMutableIndex = currentRelayLeg
+        // Only allow moves within the mutable (not-yet-run) portion
+        guard source.allSatisfy({ $0 >= firstMutableIndex }),
+              destination >= firstMutableIndex else { return }
+        var updatedIds = race.athleteIds
+        updatedIds.move(fromOffsets: source, toOffset: destination)
+        race.athleteIds = updatedIds
+        athletes = updatedIds.compactMap { id in athletes.first { $0.id == id } }
+        try? store.save(race)
     }
 
     // MARK: – Background flush blob

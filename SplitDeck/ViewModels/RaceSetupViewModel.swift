@@ -109,6 +109,16 @@ final class RaceSetupViewModel: ObservableObject {
         }
     }
 
+    // MARK: – Reordering
+
+    func moveAthletes(from source: IndexSet, to destination: Int) {
+        availableAthletes.move(fromOffsets: source, toOffset: destination)
+    }
+
+    func moveRelayLeg(from source: IndexSet, to destination: Int) {
+        relayAthleteOrder.move(fromOffsets: source, toOffset: destination)
+    }
+
     // MARK: – Athlete CRUD
 
     @discardableResult
