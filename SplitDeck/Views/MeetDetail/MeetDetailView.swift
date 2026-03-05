@@ -33,6 +33,8 @@ struct MeetDetailView: View {
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
                             Button {
                                 vm.archive(race: race)
                             } label: {

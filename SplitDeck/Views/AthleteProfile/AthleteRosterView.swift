@@ -168,6 +168,8 @@ struct AthleteRosterView: View {
                             Label("Edit", systemImage: "pencil")
                         }
                         .tint(.blue)
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
                         Button {
                             try? store.archive(athleteId: athlete.id)
                             refreshAthletes()

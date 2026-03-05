@@ -165,6 +165,8 @@ struct HomeView: View {
                                     Label("Edit", systemImage: "pencil")
                                 }
                                 .tint(.blue)
+                            }
+                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                 Button {
                                     vm.archive(meet: meet)
                                 } label: {
@@ -186,6 +188,8 @@ struct HomeView: View {
                                     } label: {
                                         Label("Delete", systemImage: "trash")
                                     }
+                                }
+                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                     Button {
                                         vm.archive(race: race)
                                     } label: {
