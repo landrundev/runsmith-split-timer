@@ -194,7 +194,7 @@ struct RelayBuilderView: View {
                         Circle()
                             .fill(Color(hex: athlete.colorHex))
                             .frame(width: 8, height: 8)
-                        Text(athlete.name)
+                        Text(athlete.name.components(separatedBy: " ").first ?? athlete.name)
                             .font(.caption)
                             .lineLimit(1)
                     }
@@ -329,7 +329,7 @@ struct RelayBuilderView: View {
     private func sourceBadge(_ source: AthleteRelayCandidate.TimeSource) -> some View {
         let (label, tint): (String, Color) = {
             switch source {
-            case .individualPB: return ("PB", .green)
+            case .individualPB: return ("PR", .green)
             case .splitFromRace: return ("Split", .secondary)
             case .average(let count): return ("Avg (\(count))", .blue)
             case .roster: return ("", .clear)
