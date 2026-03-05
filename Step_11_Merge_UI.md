@@ -1,6 +1,6 @@
-# Step 11 â Create MergeView and Wire into ResultsView
+# Step 11 — Create MergeView and Wire into ResultsView
 
-**Depends on**: Steps 01â10 must be complete (`QRScannerView.swift`, `PayloadEncoder.swift`, `MergeViewModel.swift`, `SplitDeckStore.replaceSplits`, `ExportSplitsView.swift`).
+**Depends on**: Steps 01–10 must be complete (`QRScannerView.swift`, `PayloadEncoder.swift`, `MergeViewModel.swift`, `SplitDeckStore.replaceSplits`, `ExportSplitsView.swift`).
 
 ---
 
@@ -18,14 +18,14 @@ struct MergeView: View {
     @ObservedObject var vm: MergeViewModel
     @Environment(\.dismiss) private var dismiss
 
-    // MARK: â Local State
+    // MARK: — Local State
 
     @State private var showFileImporter = false
     @State private var fileImportError: String? = nil
     @State private var showFileError = false
     @State private var showSaveSuccess = false
 
-    // MARK: â Body
+    // MARK: — Body
 
     var body: some View {
         NavigationStack {
@@ -70,13 +70,13 @@ struct MergeView: View {
             } message: {
                 Text("Splits have been updated with the merged values.")
             }
-            .onChange(of: vm.mergeStrategy) { _, _ in
+            .onChange(of: vm.mergeStrategy) { _ in
                 vm.computePreview()
             }
         }
     }
 
-    // MARK: â Imported Coaches Section
+    // MARK: — Imported Coaches Section
 
     private var importedCoachesSection: some View {
         Section {
@@ -97,7 +97,7 @@ struct MergeView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(payload.coachName)
                             .font(.body)
-                        Text("\(payload.athleteSplits.count) athlete\(payload.athleteSplits.count == 1 ? "" : "s") Â· \(formattedDate(payload.exportedAt))")
+                        Text("\(payload.athleteSplits.count) athlete\(payload.athleteSplits.count == 1 ? "" : "s") · \(formattedDate(payload.exportedAt))")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -122,7 +122,7 @@ struct MergeView: View {
         }
     }
 
-    // MARK: â Strategy Section
+    // MARK: — Strategy Section
 
     private var strategySection: some View {
         Section {
@@ -142,7 +142,7 @@ struct MergeView: View {
         }
     }
 
-    // MARK: â Preview Sections (one per athlete)
+    // MARK: — Preview Sections (one per athlete)
 
     @ViewBuilder
     private var previewSections: some View {
@@ -253,7 +253,7 @@ struct MergeView: View {
                             .font(.caption2)
                             .foregroundStyle(.orange)
                     }
-                    Text(ms.map { formatElapsedMs($0) } ?? "â")
+                    Text(ms.map { formatElapsedMs($0) } ?? "—")
                         .font(bold ? .subheadline.bold() : .subheadline)
                         .foregroundStyle(isOutlier ? .orange : (bold ? .primary : .secondary))
                         .monospacedDigit()
@@ -265,7 +265,7 @@ struct MergeView: View {
         .listRowBackground(bold ? Color(.systemGray6) : Color(.systemBackground))
     }
 
-    // MARK: â Save Button
+    // MARK: — Save Button
 
     private var saveButton: some View {
         VStack(spacing: 4) {
@@ -278,8 +278,7 @@ struct MergeView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Theme.runsmithPink)
+            .buttonStyle(GlassPrimaryButtonStyle())
             .disabled(vm.importedPayloads.isEmpty)
             .padding(.horizontal, 16)
 
@@ -291,7 +290,7 @@ struct MergeView: View {
         .background(.ultraThinMaterial)
     }
 
-    // MARK: â Handlers
+    // MARK: — Handlers
 
     private func handleScannedString(_ string: String) {
         guard let content = PayloadEncoder.decodeQR(string) else { return }
@@ -299,7 +298,7 @@ struct MergeView: View {
         case .splitPayload(let payload):
             vm.importPayload(payload)
         case .raceConfig:
-            // Wrong QR type â silently ignore (this scanner is only for split payloads)
+            // Wrong QR type — silently ignore (this scanner is only for split payloads)
             break
         }
     }
@@ -329,13 +328,13 @@ struct MergeView: View {
         }
     }
 
-    // MARK: â Formatting Helpers
+    // MARK: — Formatting Helpers
 
     /// Converts an elapsed time in milliseconds to a display string: "m:ss.xx"
     ///
     /// Examples:
-    ///   58410 ms â "0:58.41"
-    ///   118650 ms â "1:58.65"
+    ///   58410 ms → "0:58.41"
+    ///   118650 ms → "1:58.65"
     static func formatElapsedMs(_ ms: Int) -> String {
         let totalTenths = ms / 10          // drop sub-10ms precision
         let hundredths = totalTenths % 100
@@ -362,7 +361,7 @@ struct MergeView: View {
 
 ## MODIFY `SplitDeck/Views/Results/ResultsView.swift`
 
-### Change 1 â Add `@EnvironmentObject` for the store
+### Change 1 — Add `@EnvironmentObject` for the store
 
 Find the property declarations at the top of `ResultsView`. Add the `store` environment object below the existing `@ObservedObject vm`:
 
@@ -370,6 +369,7 @@ Find the property declarations at the top of `ResultsView`. Add the `store` envi
 
 ```swift
     @ObservedObject var vm: ResultsViewModel
+    var onDone: (() -> Void)? = nil
 ```
 
 #### After
@@ -377,9 +377,12 @@ Find the property declarations at the top of `ResultsView`. Add the `store` envi
 ```swift
     @ObservedObject var vm: ResultsViewModel
     @EnvironmentObject var store: SplitDeckStore
+    var onDone: (() -> Void)? = nil
 ```
 
-### Change 2 â Replace the "Coming soon" Merge sheet with MergeView
+> **Note:** `SplitDeckStore` is already injected into the environment at the app root in `SplitDeckApp.swift` (`.environmentObject(store)`), so it automatically propagates to ResultsView at every call site — HomeView, LiveTimingView, and MeetDetailView. No changes are needed at those call sites.
+
+### Change 2 — Replace the "Coming soon" Merge sheet with MergeView
 
 Find the `.sheet(isPresented: $showMerge)` modifier added in Step 08. Replace its content:
 
@@ -399,7 +402,7 @@ Find the `.sheet(isPresented: $showMerge)` modifier added in Step 08. Replace it
         .sheet(isPresented: $showMerge) {
             MergeView(vm: MergeViewModel(
                 race: vm.race,
-                athletes: vm.athletes,
+                athletes: vm.orderedAthletes,
                 hostSplits: vm.splits,
                 store: store
             ))
@@ -411,7 +414,7 @@ Find the `.sheet(isPresented: $showMerge)` modifier added in Step 08. Replace it
 ## Verification Checklist
 
 - [ ] Build succeeds with no errors or warnings
-- [ ] `ResultsView` compiles with `@EnvironmentObject var store: SplitDeckStore`
+- [ ] `ResultsView` compiles with `@EnvironmentObject var store: SplitDeckStore` — no crash at any call site (HomeView, LiveTimingView, MeetDetailView all inherit from app root)
 - [ ] Tapping "Merge Coach Data" in the Results `...` menu opens `MergeView` as a sheet (no longer shows "Coming soon")
 - [ ] `MergeView` shows a "Scan QR Code" button and an "Import File" button
 - [ ] Tapping "Scan QR Code" presents `QRScannerView`
@@ -425,6 +428,7 @@ Find the `.sheet(isPresented: $showMerge)` modifier added in Step 08. Replace it
 - [ ] Outlier splits are shown with an orange warning triangle icon
 - [ ] The Strategy segmented picker switches between "Median" and "Average"; changing it immediately updates the Merged row values
 - [ ] The "Save Merged Results" button is disabled until at least one payload is imported
+- [ ] The "Save Merged Results" button uses the app's glass button style (not `.borderedProminent`)
 - [ ] Tapping "Save Merged Results" calls `MergeViewModel.commitMerge()`, shows a success alert, then dismisses the sheet
 - [ ] After dismissing, `ResultsView` reflects the newly merged split times
 - [ ] Tapping "Import File" opens the system file importer; selecting a valid `.json` split export file imports it correctly

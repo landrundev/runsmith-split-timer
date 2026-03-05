@@ -1,6 +1,6 @@
-# Step 07 â Add "Import Race" to HomeView (Assistant Coach Scans Config)
+# Step 07 — Add "Import Race" to HomeView (Assistant Coach Scans Config)
 
-**Depends on**: Steps 01â06 must be complete (`CoachIdentity.swift`, `SharedRaceConfig.swift`, `CoachSplitPayload.swift`, `PayloadEncoder.swift`, `QRScannerView.swift`, `ShareRaceConfigView.swift`).
+**Depends on**: Steps 01–06 must be complete (`CoachIdentity.swift`, `SharedRaceConfig.swift`, `CoachSplitPayload.swift`, `PayloadEncoder.swift`, `QRScannerView.swift`, `ShareRaceConfigView.swift`).
 
 ---
 
@@ -14,10 +14,11 @@ import SwiftUI
 /// then offers a "Start Timing" button to navigate to LiveTimingView.
 struct ImportRaceView: View {
     let store: SplitDeckStore
+    let cache: RaceStateCache
 
     @Environment(\.dismiss) private var dismiss
 
-    // MARK: â State
+    // MARK: — State
 
     /// The raw string scanned from the QR code.
     @State private var scannedString: String? = nil
@@ -32,7 +33,7 @@ struct ImportRaceView: View {
     /// Controls navigation to LiveTimingView after import.
     @State private var navigateToTiming: Bool = false
 
-    // MARK: â Body
+    // MARK: — Body
 
     var body: some View {
         NavigationStack {
@@ -45,7 +46,7 @@ struct ImportRaceView: View {
                     scannerView
                 } else {
                     // Transient state between scan and decode
-                    ProgressView("Importing raceâ¦")
+                    ProgressView("Importing race…")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
@@ -58,18 +59,22 @@ struct ImportRaceView: View {
             }
             .navigationDestination(isPresented: $navigateToTiming) {
                 if let race = importedRace {
-                    LiveTimingView(race: race, store: store)
+                    let athletes = (try? store.fetchAthletes()) ?? []
+                    let liveVM = LiveTimingViewModel(
+                        race: race, athletes: athletes, store: store, cache: cache
+                    )
+                    LiveTimingView(vm: liveVM, cache: cache)
                 }
             }
         }
-        .onChange(of: scannedString) { _, newValue in
+        .onChange(of: scannedString) { newValue in
             guard let scanned = newValue else { return }
             isScanning = false
             processScannedString(scanned)
         }
     }
 
-    // MARK: â Subviews
+    // MARK: — Subviews
 
     private var scannerView: some View {
         QRScannerView { scanned in
@@ -113,12 +118,8 @@ struct ImportRaceView: View {
                     navigateToTiming = true
                 } label: {
                     Text("Start Timing")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 52)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Theme.runsmithPink)
+                .buttonStyle(GlassPrimaryButtonStyle())
 
                 Button("Done") {
                     dismiss()
@@ -156,18 +157,15 @@ struct ImportRaceView: View {
                 isScanning = true
             } label: {
                 Label("Scan Again", systemImage: "qrcode.viewfinder")
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Theme.runsmithPink)
+            .buttonStyle(GlassPrimaryButtonStyle())
             .padding(.horizontal, 32)
 
             Spacer()
         }
     }
 
-    // MARK: â Logic
+    // MARK: — Logic
 
     private func processScannedString(_ string: String) {
         guard let content = PayloadEncoder.decodeQR(string) else {
@@ -196,18 +194,20 @@ struct ImportRaceView: View {
 
 ## MODIFY `SplitDeck/Persistence/SplitDeckStore.swift`
 
-Add the following method to `SplitDeckStore`. Place it in a new `// MARK: â Import Support` extension or alongside the existing race-creation methods:
+Add the following method to `SplitDeckStore`. Place it in a new `// MARK: — Import Support` section **before** the existing `// MARK: — Splits` section:
 
-### Before (find the closing brace of the class or the last MARK section)
+### Before
 
 ```swift
-    // MARK: â Splits
+    // MARK: — Splits
+
+    func fetchSplits(for raceId: UUID) throws -> [Split] {
 ```
 
 ### After
 
 ```swift
-    // MARK: â Import Support
+    // MARK: — Import Support
 
     /// Create a Race and any missing Athletes from a SharedRaceConfig.
     ///
@@ -225,7 +225,7 @@ Add the following method to `SplitDeckStore`. Place it in a new `// MARK: â
                     teamName: nil,
                     colorHex: sharedAthlete.colorHex,
                     notes: nil,
-                    gender: sharedAthlete.gender
+                    gender: sharedAthlete.gender ?? .male
                 )
                 try save(athlete)
             }
@@ -247,94 +247,90 @@ Add the following method to `SplitDeckStore`. Place it in a new `// MARK: â
         return race
     }
 
-    // MARK: â Splits
+    // MARK: — Splits
+
+    func fetchSplits(for raceId: UUID) throws -> [Split] {
 ```
 
-**Note**: `fetchAthleteEntity(id:)` is the existing private helper used elsewhere in the store that fetches the Core Data entity for a given UUID. If the store uses a different internal helper name, substitute it here. The pattern mirrors the existing `importRace` shape in the plan.
+**Note**: `fetchAthleteEntity(id:)` is the existing private helper already inside the store. Since `importRace` is added as a method on the class itself (not an extension), it has access to the private helper. The `sharedAthlete.gender ?? .male` handles the case where `SharedAthlete.gender` is `Gender?` but `Athlete.gender` is non-optional.
 
 ---
 
 ## MODIFY `SplitDeck/Views/Home/HomeView.swift`
 
-### Change 1 â Add state variable
+### Change 1 — Add state variable
 
 Find the `@State` declarations in `HomeView`. Add `showImportRace` alongside the existing state:
 
 #### Before
 
 ```swift
-    @State private var showNewMeet = false
+    @State private var showQuickRaceSetup = false
 ```
 
 #### After
 
 ```swift
-    @State private var showNewMeet = false
+    @State private var showQuickRaceSetup = false
     @State private var showImportRace = false
 ```
 
-### Change 2 â Add Import button to the bottom action bar
+### Change 2 — Add Import button to the bottom action bar
 
-Find the `quickRaceButton` HStack (the bottom bar that contains the Quick Race and Relay Builder buttons). Add the Import button **before** the existing Relay Builder button:
+Find the `quickRaceButton` computed property. Inside the `HStack(spacing: 12)`, add the Import button **before** the existing Relay Builder `NavigationLink`:
 
 #### Before
 
 ```swift
-                    // Relay Builder button (existing)
-                    NavigationLink {
-                        RelayBuilderView(store: store)
-                    } label: {
-                        Label("Relay Builder", systemImage: "figure.run.square.stack")
-                            .font(.headline)
-                            .frame(height: 52)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(Theme.runsmithPink)
+            HStack(spacing: 12) {
+                NavigationLink {
+                    RelayBuilderView(
+                        vm: RelayBuilderViewModel(store: store)
+                    )
+                } label: {
+                    Label("Relay Builder", systemImage: "figure.run")
 ```
 
 #### After
 
 ```swift
-                    // Import Race button
-                    Button {
-                        showImportRace = true
-                    } label: {
-                        Label("Import", systemImage: "qrcode.viewfinder")
-                            .font(.headline)
-                            .frame(height: 52)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(Theme.runsmithPink)
+            HStack(spacing: 12) {
+                // Import Race button
+                Button {
+                    showImportRace = true
+                } label: {
+                    Label("Import", systemImage: "qrcode.viewfinder")
+                        .font(.headline)
+                        .frame(height: 52)
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.runsmithPink)
 
-                    // Relay Builder button (existing)
-                    NavigationLink {
-                        RelayBuilderView(store: store)
-                    } label: {
-                        Label("Relay Builder", systemImage: "figure.run.square.stack")
-                            .font(.headline)
-                            .frame(height: 52)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(Theme.runsmithPink)
+                NavigationLink {
+                    RelayBuilderView(
+                        vm: RelayBuilderViewModel(store: store)
+                    )
+                } label: {
+                    Label("Relay Builder", systemImage: "figure.run")
 ```
 
-### Change 3 â Add sheet modifier
+### Change 3 — Add sheet modifier
 
-Find the block of `.sheet` modifiers on `HomeView`'s root view. Add the import sheet alongside the existing ones:
+Find the existing `.sheet(isPresented: $showQuickRaceSetup` modifier on the `NavigationStack`. Add the import sheet alongside it:
 
 #### Before
 
 ```swift
-        .sheet(isPresented: $showNewMeet) {
+            .sheet(isPresented: $showQuickRaceSetup, onDismiss: { vm.load() }) {
 ```
 
 #### After
 
 ```swift
-        .sheet(isPresented: $showImportRace) {
-            ImportRaceView(store: store)
-        }
-        .sheet(isPresented: $showNewMeet) {
+            .sheet(isPresented: $showImportRace, onDismiss: { vm.load() }) {
+                ImportRaceView(store: store, cache: cache)
+            }
+            .sheet(isPresented: $showQuickRaceSetup, onDismiss: { vm.load() }) {
 ```
 
 ---
@@ -342,7 +338,7 @@ Find the block of `.sheet` modifiers on `HomeView`'s root view. Add the import s
 ## Verification Checklist
 
 - [ ] Build succeeds with no errors or warnings
-- [ ] Home screen bottom action bar shows an "Import" button (qrcode.viewfinder icon) between the Quick Race and Relay Builder buttons
+- [ ] Home screen bottom action bar shows an "Import" button (qrcode.viewfinder icon) alongside the Relay Builder and Quick Race buttons
 - [ ] Tapping "Import" presents `ImportRaceView` as a sheet
 - [ ] `ImportRaceView` opens the camera scanner immediately
 - [ ] Scanning a QR code that was generated by `ShareRaceConfigView` (from Step 06) successfully decodes the `SharedRaceConfig`

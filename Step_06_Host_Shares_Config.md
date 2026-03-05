@@ -1,6 +1,6 @@
-# Step 06 â Add "Share with Coaches" to Race Setup (Host Shares Config)
+# Step 06 — Add "Share with Coaches" to Race Setup (Host Shares Config)
 
-**Depends on**: Steps 01â05 must be complete (`CoachIdentity.swift`, `SharedRaceConfig.swift`, `CoachSplitPayload.swift`, `PayloadEncoder.swift`, `QRScannerView.swift`).
+**Depends on**: Steps 01–05 must be complete (`CoachIdentity.swift`, `SharedRaceConfig.swift`, `CoachSplitPayload.swift`, `PayloadEncoder.swift`, `QRScannerView.swift`).
 
 ---
 
@@ -33,7 +33,7 @@ struct ShareRaceConfigView: View {
     var body: some View {
         NavigationStack {
             List {
-                // MARK: â Coach + Race Info
+                // MARK: — Coach + Race Info
                 Section {
                     HStack {
                         Label("Sharing as", systemImage: "person.circle")
@@ -61,7 +61,7 @@ struct ShareRaceConfigView: View {
                     Text("Race Info")
                 }
 
-                // MARK: â QR Code
+                // MARK: — QR Code
                 Section {
                     HStack {
                         Spacer()
@@ -89,7 +89,7 @@ struct ShareRaceConfigView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                // MARK: â Action Buttons
+                // MARK: — Action Buttons
                 Section {
                     // Share JSON file via system share sheet
                     if let jsonData = PayloadEncoder.encodeJSON(config),
@@ -131,7 +131,7 @@ struct ShareRaceConfigView: View {
         }
     }
 
-    // MARK: â QR Code Generation
+    // MARK: — QR Code Generation
 
     private func generateQRCode(from string: String) -> UIImage? {
         guard !string.isEmpty else { return nil }
@@ -142,7 +142,7 @@ struct ShareRaceConfigView: View {
 
         guard let output = filter.outputImage else { return nil }
 
-        // Scale up for crisp rendering at 220Ã220 pt display size
+        // Scale up for crisp rendering at 220×220 pt display size
         let scale = 220.0 / output.extent.width
         let scaled = output.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
 
@@ -151,7 +151,7 @@ struct ShareRaceConfigView: View {
         return UIImage(cgImage: cgImage)
     }
 
-    // MARK: â Temp File for ShareLink
+    // MARK: — Temp File for ShareLink
 
     private func writeToTemporaryFile(data: Data, filename: String) -> URL? {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
@@ -165,32 +165,54 @@ struct ShareRaceConfigView: View {
 
 ## MODIFY `SplitDeck/ViewModels/RaceSetupViewModel.swift`
 
-Add the following function to `RaceSetupViewModel`. Place it after any existing race-creation functions (before the final closing brace of the class):
+Add the following function to `RaceSetupViewModel`. Place it **before the final closing brace** of the class, after the existing `startRace()` function:
 
 ### Before
 
 ```swift
-    // MARK: â Race Creation
+    // MARK: — Start Race
+
+    func startRace() -> Race? {
 ```
 
 ### After
 
 ```swift
-    // MARK: â Race Creation
+    // MARK: — Multi-Coach Sharing
 
     /// Assembles the current race setup state into a SharedRaceConfig
     /// that assistant coaches can import on their devices.
     func buildSharedConfig() -> SharedRaceConfig {
-        SharedRaceConfig(
+        let orderedIds: [UUID]
+        if eventType.isRelay {
+            orderedIds = relayAthleteOrder
+        } else {
+            orderedIds = availableAthletes
+                .filter { selectedAthleteIds.contains($0.id) }
+                .map(\.id)
+        }
+
+        let selectedAthletes = orderedIds.compactMap { id in
+            availableAthletes.first { $0.id == id }
+        }
+
+        let trackLength: Int
+        if eventType.isRelay {
+            trackLength = eventType.legDistanceMeters ?? 400
+        } else {
+            trackLength = 400
+        }
+
+        return SharedRaceConfig(
             version: 1,
             configId: UUID(),
             hostCoachName: CoachIdentity.name ?? "Host",
-            raceName: raceName,
-            eventType: selectedEventType,
-            distanceMeters: distanceMeters,
-            trackLengthMeters: trackLengthMeters,
-            splitsPerLap: splitsPerLap,
-            isUnlimitedSplits: isUnlimitedSplits,
+            raceName: raceName.isEmpty ? eventType.displayName : raceName,
+            eventType: eventType,
+            distanceMeters: unlimitedSplits ? 0 : distanceMeters,
+            trackLengthMeters: trackLength,
+            splitsPerLap: (eventType.isRelay || unlimitedSplits) ? 1 : splitsPerLap,
+            isUnlimitedSplits: unlimitedSplits,
             athletes: selectedAthletes.map { athlete in
                 SharedAthlete(
                     id: athlete.id,
@@ -201,79 +223,78 @@ Add the following function to `RaceSetupViewModel`. Place it after any existing 
             }
         )
     }
+
+    // MARK: — Start Race
+
+    func startRace() -> Race? {
 ```
 
 ---
 
 ## MODIFY `SplitDeck/Views/RaceSetup/RaceSetupView.swift`
 
-### Change 1 â Add state variable
+### Change 1 — Add state variable
 
-Find the block of `@State` declarations at the top of `RaceSetupView`. Add `showShareConfig` alongside them:
+Find the block of `@State` declarations at the top of `RaceSetupView`. Add `showShareConfig` alongside the existing relay builder navigation state:
 
 #### Before
 
 ```swift
-    @State private var showStartConfirmation = false
+    // Relay builder navigation
+    @State private var navigateToRelayBuilder = false
 ```
 
 #### After
 
 ```swift
-    @State private var showStartConfirmation = false
+    // Relay builder navigation
+    @State private var navigateToRelayBuilder = false
+
+    // Multi-Coach sharing
     @State private var showShareConfig = false
 ```
 
-### Change 2 â Add Multi-Coach section
+### Change 2 — Add Multi-Coach section to the Form
 
-Find the `Section` containing the Start Race button (look for `"Start Race"` button or `.borderedProminent`). Add the new `Section("Multi-Coach")` immediately **before** the Start button's section:
+Find the `eventSection` and `athleteSection` inside the `Form` in the body. Add a new `Section("Multi-Coach")` **after** the `athleteSection`:
 
 #### Before
 
 ```swift
-            Section {
-                Button {
-                    showStartConfirmation = true
-                } label: {
-                    Text("Start Race")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(Theme.runsmithPink)
+            Form {
+                eventSection
+                athleteSection
             }
 ```
 
 #### After
 
 ```swift
-            Section("Multi-Coach") {
-                Button {
-                    showShareConfig = true
-                } label: {
-                    Label("Share with Coaches", systemImage: "person.2.wave.2")
-                }
-            }
+            Form {
+                eventSection
+                athleteSection
 
-            Section {
-                Button {
-                    showStartConfirmation = true
-                } label: {
-                    Text("Start Race")
-                        .frame(maxWidth: .infinity)
+                Section("Multi-Coach") {
+                    Button {
+                        showShareConfig = true
+                    } label: {
+                        Label("Share with Coaches", systemImage: "person.2.wave.2")
+                    }
+                    .disabled(!vm.isValid)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Theme.runsmithPink)
             }
 ```
 
-### Change 3 â Add sheet modifier
+### Change 3 — Add sheet modifier
 
-Find the existing `.sheet` or `.alert` modifiers on the root `List` or `NavigationStack` in `RaceSetupView`. Add the `showShareConfig` sheet alongside them:
+Find the existing `.sheet(isPresented: $showAddAthlete)` modifier on the `NavigationStack`. Add the share config sheet alongside it:
 
 #### Before
 
 ```swift
-            .alert("Start Race?", isPresented: $showStartConfirmation) {
+            .sheet(isPresented: $showAddAthlete) {
+                addAthleteSheet
+            }
 ```
 
 #### After
@@ -282,7 +303,9 @@ Find the existing `.sheet` or `.alert` modifiers on the root `List` or `Navigati
             .sheet(isPresented: $showShareConfig) {
                 ShareRaceConfigView(config: vm.buildSharedConfig())
             }
-            .alert("Start Race?", isPresented: $showStartConfirmation) {
+            .sheet(isPresented: $showAddAthlete) {
+                addAthleteSheet
+            }
 ```
 
 ---
@@ -292,6 +315,7 @@ Find the existing `.sheet` or `.alert` modifiers on the root `List` or `Navigati
 - [ ] Build succeeds with no errors or warnings
 - [ ] `RaceSetupViewModel.buildSharedConfig()` compiles; calling it returns a `SharedRaceConfig` with the correct `raceName`, `eventType`, and `athletes`
 - [ ] Race Setup screen shows a "Multi-Coach" section with a "Share with Coaches" row (person.2.wave.2 icon)
+- [ ] The "Share with Coaches" button is disabled until the race setup is valid (at least 1 athlete selected for individual, 4 for relay)
 - [ ] Tapping "Share with Coaches" presents `ShareRaceConfigView` as a sheet
 - [ ] `ShareRaceConfigView` shows "Sharing as: [coach name from UserDefaults, or 'Host']"
 - [ ] `ShareRaceConfigView` shows the race name and athlete count
@@ -299,4 +323,4 @@ Find the existing `.sheet` or `.alert` modifiers on the root `List` or `Navigati
 - [ ] Tapping "Copy QR String" puts a non-empty string on the clipboard and briefly shows "Copied!"
 - [ ] Tapping "Share File" opens the system share sheet with a `race-config.json` file
 - [ ] Tapping "Done" dismisses the sheet and returns to Race Setup
-- [ ] If no athletes are selected, `buildSharedConfig()` returns an empty athletes array (no crash)
+- [ ] If no athletes are selected, the "Share with Coaches" button is disabled (no crash)

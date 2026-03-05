@@ -1,6 +1,6 @@
-# Step 08 â Add "Export for Merge" to ResultsView (Assistant Coach Exports Splits)
+# Step 08 — Add "Export for Merge" to ResultsView (Assistant Coach Exports Splits)
 
-**Depends on**: Steps 01â07 must be complete (`CoachIdentity.swift`, `SharedRaceConfig.swift`, `CoachSplitPayload.swift`, `PayloadEncoder.swift`, `QRScannerView.swift`, `ShareRaceConfigView.swift`, `ImportRaceView.swift`).
+**Depends on**: Steps 01–07 must be complete (`CoachIdentity.swift`, `SharedRaceConfig.swift`, `CoachSplitPayload.swift`, `PayloadEncoder.swift`, `QRScannerView.swift`, `ShareRaceConfigView.swift`, `ImportRaceView.swift`).
 
 ---
 
@@ -19,7 +19,7 @@ struct ExportSplitsView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    // MARK: â State
+    // MARK: — State
 
     @State private var coachName: String = CoachIdentity.name ?? ""
     @State private var qrImage: UIImage? = nil
@@ -28,7 +28,7 @@ struct ExportSplitsView: View {
     @State private var showNamePrompt = false
     @State private var promptName: String = ""
 
-    // MARK: â Computed
+    // MARK: — Computed
 
     /// Re-encode payload with the current coach name whenever it changes.
     private var currentPayload: CoachSplitPayload {
@@ -47,7 +47,7 @@ struct ExportSplitsView: View {
 
     private var athleteCount: Int { payload.athleteSplits.count }
 
-    // MARK: â Body
+    // MARK: — Body
 
     var body: some View {
         NavigationStack {
@@ -71,7 +71,7 @@ struct ExportSplitsView: View {
                     regenerateQR()
                 }
             }
-            .onChange(of: coachName) { _, _ in
+            .onChange(of: coachName) { _ in
                 regenerateQR()
             }
             .alert("Enter Your Name", isPresented: $showNamePrompt) {
@@ -93,7 +93,7 @@ struct ExportSplitsView: View {
         }
     }
 
-    // MARK: â Sections
+    // MARK: — Sections
 
     private var coachNameSection: some View {
         Section {
@@ -113,7 +113,7 @@ struct ExportSplitsView: View {
         } header: {
             Text("Coach Name")
         } footer: {
-            Text("Shown on the host's merge screen. Tap â to save for future exports.")
+            Text("Shown on the host's merge screen. Tap ✓ to save for future exports.")
                 .font(.caption)
         }
     }
@@ -155,7 +155,7 @@ struct ExportSplitsView: View {
                 ShareLink(
                     item: url,
                     preview: SharePreview(
-                        "\(coachName.isEmpty ? "Coach" : coachName) â Split Export",
+                        "\(coachName.isEmpty ? "Coach" : coachName) — Split Export",
                         icon: Image(systemName: "stopwatch")
                     )
                 ) {
@@ -182,7 +182,7 @@ struct ExportSplitsView: View {
         }
     }
 
-    // MARK: â Helpers
+    // MARK: — Helpers
 
     private var sanitizedCoachName: String {
         coachName
@@ -230,23 +230,46 @@ struct ExportSplitsView: View {
 
 ## MODIFY `SplitDeck/ViewModels/ResultsViewModel.swift`
 
-Add the following function to `ResultsViewModel`. Place it after the existing results-building functions (before the final closing brace of the class):
+Add the following function to `ResultsViewModel`. Place it **after** the `csvFileURL()` function and **before** the final closing brace of the class:
 
 ### Before
 
 ```swift
-    // MARK: â Share Card
+    func csvFileURL() -> URL? {
+        let csv = exportCSV()
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent(csvFilename())
+        do {
+            try csv.write(to: tmp, atomically: true, encoding: .utf8)
+            return tmp
+        } catch {
+            return nil
+        }
+    }
+}
 ```
 
 ### After
 
 ```swift
-    // MARK: â Merge Export
+    func csvFileURL() -> URL? {
+        let csv = exportCSV()
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent(csvFilename())
+        do {
+            try csv.write(to: tmp, atomically: true, encoding: .utf8)
+            return tmp
+        } catch {
+            return nil
+        }
+    }
+
+    // MARK: — Merge Export
 
     /// Builds a CoachSplitPayload from this ViewModel's current athletes and splits.
     /// Used by ExportSplitsView to generate the assistant coach's shareable QR code.
     func buildCoachSplitPayload() -> CoachSplitPayload {
-        let athleteTimingData: [AthleteTimingData] = athletes.map { athlete in
+        let athleteTimingData: [AthleteTimingData] = orderedAthletes.map { athlete in
             let sortedSplits = splits
                 .filter { $0.athleteId == athlete.id }
                 .sorted { $0.lapIndex < $1.lapIndex }
@@ -264,15 +287,16 @@ Add the following function to `ResultsViewModel`. Place it after the existing re
             athleteSplits: athleteTimingData
         )
     }
-
-    // MARK: â Share Card
+}
 ```
+
+**Note**: Uses `orderedAthletes` (existing computed property that returns athletes in race order) instead of `athletes` to ensure splits are matched correctly.
 
 ---
 
 ## MODIFY `SplitDeck/Views/Results/ResultsView.swift`
 
-### Change 1 â Add state variables
+### Change 1 — Add state variables
 
 Find the block of `@State` declarations in `ResultsView`. Add `showExport` and `showMerge` alongside the existing state:
 
@@ -290,64 +314,67 @@ Find the block of `@State` declarations in `ResultsView`. Add `showExport` and `
     @State private var showMerge = false
 ```
 
-### Change 2 â Replace the single Share toolbar button with a Menu
+### Change 2 — Replace the single Share toolbar button with a Menu
 
-Find the existing toolbar item that contains the Share button in `ResultsView`. It looks similar to:
+Find the existing toolbar item that contains the Share button in `ResultsView`:
 
 #### Before
 
 ```swift
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        let data = vm.buildCardData()
-                        previewImage = CardRenderer.render(data: data)
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
-                    }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    let data = vm.buildCardData()
+                    previewImage = CardRenderer.render(data: data)
+                } label: {
+                    Label("Share", systemImage: "square.and.arrow.up")
                 }
             }
+        }
 ```
 
 #### After
 
 ```swift
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button {
-                            let data = vm.buildCardData()
-                            previewImage = CardRenderer.render(data: data)
-                        } label: {
-                            Label("Share Results", systemImage: "square.and.arrow.up")
-                        }
-
-                        Button {
-                            showExport = true
-                        } label: {
-                            Label("Export for Merge", systemImage: "arrow.up.doc")
-                        }
-
-                        Button {
-                            showMerge = true
-                        } label: {
-                            Label("Merge Coach Data", systemImage: "person.2.badge.gearshape")
-                        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
+                    Button {
+                        let data = vm.buildCardData()
+                        previewImage = CardRenderer.render(data: data)
                     } label: {
-                        Image(systemName: "ellipsis.circle")
+                        Label("Share Results", systemImage: "square.and.arrow.up")
                     }
+
+                    Button {
+                        showExport = true
+                    } label: {
+                        Label("Export for Merge", systemImage: "arrow.up.doc")
+                    }
+
+                    Button {
+                        showMerge = true
+                    } label: {
+                        Label("Merge Coach Data", systemImage: "person.2.badge.gearshape")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
                 }
             }
+        }
 ```
 
-### Change 3 â Add sheet modifiers
+### Change 3 — Add sheet modifiers
 
-Find the existing `.sheet` modifiers on `ResultsView`'s root view (the one used for the share card preview). Add two new sheets alongside the existing one:
+Find the existing `.sheet(item:` modifier for the share preview (the one using `SharePreviewItem`). Add the two new sheets **before** it:
 
 #### Before
 
 ```swift
-        .sheet(isPresented: $showPreview) {
+        .sheet(item: Binding(
+            get: { previewImage.map { SharePreviewItem(image: $0) } },
+            set: { if $0 == nil { previewImage = nil } }
+        )) { item in
 ```
 
 #### After
@@ -361,7 +388,10 @@ Find the existing `.sheet` modifiers on `ResultsView`'s root view (the one used 
                 .font(.title2)
                 .foregroundStyle(.secondary)
         }
-        .sheet(isPresented: $showPreview) {
+        .sheet(item: Binding(
+            get: { previewImage.map { SharePreviewItem(image: $0) } },
+            set: { if $0 == nil { previewImage = nil } }
+        )) { item in
 ```
 
 ---
@@ -376,7 +406,7 @@ Find the existing `.sheet` modifiers on `ResultsView`'s root view (the one used 
 - [ ] "Export for Merge" presents `ExportSplitsView` as a sheet
 - [ ] `ExportSplitsView` shows the Coach Name text field, pre-filled from `CoachIdentity.name` if one is saved
 - [ ] If no coach name is saved, an alert prompts for entry on appear
-- [ ] Entering a name in the text field and tapping â saves it to `CoachIdentity` (persists after dismissing and reopening)
+- [ ] Entering a name in the text field and tapping ✓ saves it to `CoachIdentity` (persists after dismissing and reopening)
 - [ ] A QR code is rendered in the sheet (visible black-and-white pattern)
 - [ ] Editing the coach name field regenerates the QR code
 - [ ] "Copy QR String" copies a non-empty base64 string to the clipboard and briefly shows "Copied!"
