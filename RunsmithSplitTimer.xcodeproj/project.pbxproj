@@ -27,6 +27,7 @@
 		6F187688BACFD45F4B4C515A /* ResultsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F80EDA2F8E6EE9E75CE5CA /* ResultsViewModel.swift */; };
 		70B0D4AD1B94201087D79BAB /* RaceStateCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B548F352C6C7398141852A0 /* RaceStateCache.swift */; };
 		84C210A7BF88D39CCF2779BD /* ResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57BE85BF81644B8271FB4DD6 /* ResultsView.swift */; };
+		85DECC45C53B273E377E91CD /* CoachIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB0556F276BEC797727502A7 /* CoachIdentity.swift */; };
 		8AA329EB6209E9834CE1209B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7766A2D83FB4A1CC2FAAF8FB /* Theme.swift */; };
 		8E4B03044E2CB11C9C6C6057 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0621D38455ED4C89A659FBEB /* HomeViewModel.swift */; };
 		940224D3C4FDC3D31CD48F77 /* SplitDeck.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 73496D30D2CF2129FEC0EE5E /* SplitDeck.xcdatamodeld */; };
@@ -91,6 +92,7 @@
 		E108A36EE73BC01960F84847 /* LiveTimingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTimingViewModel.swift; sourceTree = "<group>"; };
 		E79BA0870757AAE4764F6F8B /* LiveTimingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTimingView.swift; sourceTree = "<group>"; };
 		EAE3B7B55B5AF96ACE36FBA1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		EB0556F276BEC797727502A7 /* CoachIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachIdentity.swift; sourceTree = "<group>"; };
 		F0F80EDA2F8E6EE9E75CE5CA /* ResultsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -276,6 +278,7 @@
 		F2BB918D2FA2CB19BCCD08B6 /* Domain */ = {
 			isa = PBXGroup;
 			children = (
+				EB0556F276BEC797727502A7 /* CoachIdentity.swift */,
 				69A334198E8BAC203BFC9E84 /* CSVExporter.swift */,
 				3F69683CF963EBDB3E8FFE22 /* RaceDomain.swift */,
 				0E729CE74F1588333BE72148 /* RelayRecommender.swift */,
@@ -374,6 +377,7 @@
 				DF03334583E3269DF466FF1D /* AthleteRosterView.swift in Sources */,
 				C4FD1725A503720660C328B4 /* CSVExporter.swift in Sources */,
 				258380E5BD4DF63F196726BE /* CardRenderer.swift in Sources */,
+				85DECC45C53B273E377E91CD /* CoachIdentity.swift in Sources */,
 				527F7D8CF38D86FE207F5504 /* ColorBar.swift in Sources */,
 				995BD75952DC44A550A5E450 /* CompactAthleteCardView.swift in Sources */,
 				2041D13B50C974804E7912CF /* HomeView.swift in Sources */,

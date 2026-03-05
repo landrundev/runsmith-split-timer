@@ -23,6 +23,10 @@ struct AthleteRosterView: View {
     // Delete athlete
     @State private var athleteToDelete: Athlete? = nil
 
+    // Coach name
+    @State private var coachName = CoachIdentity.name ?? ""
+    @State private var isEditingCoachName = false
+
     // Import from file
     @State private var showRosterImport = false
 
@@ -39,8 +43,68 @@ struct AthleteRosterView: View {
         return result
     }
 
+    private var coachNameSection: some View {
+        Section {
+            if isEditingCoachName {
+                HStack {
+                    Image(systemName: "person.text.rectangle")
+                        .foregroundStyle(Theme.runsmithPink)
+                        .frame(width: 24)
+
+                    TextField("Enter your name", text: $coachName)
+                        .textFieldStyle(.plain)
+                        .submitLabel(.done)
+                        .onSubmit { saveCoachName() }
+
+                    Button("Save") {
+                        saveCoachName()
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.runsmithPink)
+                }
+            } else {
+                HStack {
+                    Image(systemName: "person.text.rectangle")
+                        .foregroundStyle(Theme.runsmithPink)
+                        .frame(width: 24)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(coachName.isEmpty ? "Tap to set your name" : coachName)
+                            .foregroundStyle(coachName.isEmpty ? .secondary : .primary)
+                        if !coachName.isEmpty {
+                            Text("Coach Name")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "pencil.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(Theme.runsmithPink)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isEditingCoachName = true
+                }
+            }
+        } header: {
+            Text("Coach")
+        }
+    }
+
+    private func saveCoachName() {
+        let trimmed = coachName.trimmingCharacters(in: .whitespaces)
+        coachName = trimmed
+        CoachIdentity.name = trimmed.isEmpty ? nil : trimmed
+        isEditingCoachName = false
+    }
+
     var body: some View {
         List {
+            coachNameSection
+
             if athletes.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "person.3")

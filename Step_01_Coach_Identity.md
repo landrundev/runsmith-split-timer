@@ -1,4 +1,4 @@
-# Step 01 â Add Coach Name Storage with UserDefaults
+# Step 01 â Add Coach Name to the Athletes Screen
 
 ---
 
@@ -15,115 +15,126 @@ enum CoachIdentity {
         set { UserDefaults.standard.set(newValue, forKey: key) }
     }
 
-    static var hasName: Bool {
-        name?.isEmpty == false
-    }
+    static var hasName: Bool { name?.isEmpty == false }
 }
 ```
 
 ---
 
-## MODIFY `SplitDeck/Views/Home/AboutView.swift`
+## MODIFY `SplitDeck/Views/AthleteProfile/AthleteRosterView.swift`
 
-### Change 1: Add state properties for coach name editing
+### Change 1 â Add state variables for coach name editing
 
-**Find** (the opening of the struct body):
+Find this block near the top of the struct:
+
 ```swift
-struct AboutView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    private let runsmithURL = URL(string: "https://runsmith.app.link/")!
+    // Delete athlete
+    @State private var athleteToDelete: Athlete? = nil
 ```
 
-**Replace with**:
+Add these lines directly AFTER it:
+
 ```swift
-struct AboutView: View {
-    @Environment(\.dismiss) private var dismiss
 
-    private let runsmithURL = URL(string: "https://runsmith.app.link/")!
-
+    // Coach name
     @State private var coachName = CoachIdentity.name ?? ""
     @State private var isEditingCoachName = false
-    @State private var editingCoachNameDraft = ""
 ```
 
----
+### Change 2 â Add coach name section at the top of the List
 
-### Change 2: Insert the "Coach Name" section between the Features divider and "The Runsmith Platform" section
+Find this line inside `var body: some View`:
 
-**Find**:
 ```swift
-                Divider().padding(.horizontal)
-
-                // Runsmith platform CTA
-                VStack(spacing: 12) {
-                    sectionHeader("The Runsmith Platform", icon: "globe")
+        List {
+            if athletes.isEmpty {
 ```
 
-**Replace with**:
+Replace it with:
+
 ```swift
-                Divider().padding(.horizontal)
+        List {
+            coachNameSection
 
-                // Coach name
-                VStack(alignment: .leading, spacing: 12) {
-                    sectionHeader("Coach Name", icon: "person.crop.circle")
+            if athletes.isEmpty {
+```
 
-                    HStack {
-                        if coachName.isEmpty {
-                            Text("Not set")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        } else {
-                            Text(coachName)
-                                .font(.subheadline)
-                        }
-                        Spacer()
-                        Button {
-                            editingCoachNameDraft = coachName
-                            isEditingCoachName = true
-                        } label: {
-                            Image(systemName: "pencil")
-                                .foregroundStyle(Theme.runsmithPink)
-                        }
-                    }
-                    .padding(.horizontal, 4)
+### Change 3 â Add the coachNameSection computed property
 
-                    Text("Your name appears in exported split payloads so the host coach can identify your data during merge.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal)
-                .alert("Coach Name", isPresented: $isEditingCoachName) {
-                    TextField("e.g. Coach Williams", text: $editingCoachNameDraft)
-                        .autocorrectionDisabled()
+Add this new computed property AFTER the `filteredAthletes` computed property and BEFORE `var body: some View`:
+
+```swift
+    private var coachNameSection: some View {
+        Section {
+            HStack {
+                Image(systemName: "person.text.rectangle")
+                    .foregroundStyle(Theme.runsmithPink)
+                    .frame(width: 24)
+
+                if isEditingCoachName {
+                    TextField("Enter your name", text: $coachName, onCommit: {
+                        saveCoachName()
+                    })
+                    .textFieldStyle(.plain)
+                    .submitLabel(.done)
+
                     Button("Save") {
-                        let trimmed = editingCoachNameDraft.trimmingCharacters(in: .whitespaces)
-                        coachName = trimmed
-                        CoachIdentity.name = trimmed.isEmpty ? nil : trimmed
+                        saveCoachName()
                     }
-                    Button("Cancel", role: .cancel) { }
-                } message: {
-                    Text("Enter your name as it will appear to other coaches.")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.runsmithPink)
+                } else {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(coachName.isEmpty ? "Tap to set your name" : coachName)
+                            .foregroundStyle(coachName.isEmpty ? .secondary : .primary)
+                        if !coachName.isEmpty {
+                            Text("Coach Name")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    Button {
+                        isEditingCoachName = true
+                    } label: {
+                        Image(systemName: "pencil.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(Theme.runsmithPink)
+                    }
+                    .buttonStyle(.plain)
                 }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if !isEditingCoachName {
+                    isEditingCoachName = true
+                }
+            }
+        } header: {
+            Text("Coach")
+        }
+    }
 
-                Divider().padding(.horizontal)
-
-                // Runsmith platform CTA
-                VStack(spacing: 12) {
-                    sectionHeader("The Runsmith Platform", icon: "globe")
+    private func saveCoachName() {
+        let trimmed = coachName.trimmingCharacters(in: .whitespaces)
+        coachName = trimmed
+        CoachIdentity.name = trimmed.isEmpty ? nil : trimmed
+        isEditingCoachName = false
+    }
 ```
 
 ---
 
-## Verification Checklist
+## Verification
 
-- [ ] Build succeeds with no errors or warnings
-- [ ] `CoachIdentity.name` can be set and read back from `UserDefaults` (verify with a quick test: set a name, background the app, relaunch, check `CoachIdentity.name` returns the same value)
-- [ ] `CoachIdentity.hasName` returns `false` when no name is set, `true` when a non-empty name is saved
-- [ ] Opening the About screen shows a "Coach Name" section between Features and "The Runsmith Platform"
-- [ ] When no name is saved, the section displays "Not set" in secondary color
-- [ ] Tapping the pencil icon shows an alert with a text field pre-filled with the current name (or empty if none)
-- [ ] Typing a name and tapping "Save" updates the displayed name immediately
-- [ ] Tapping "Cancel" dismisses the alert without changing the displayed name
-- [ ] After saving, force-quitting and relaunching the app shows the saved name in the About screen (persists across restarts)
-- [ ] Saving an empty/whitespace-only string sets `CoachIdentity.name` to `nil` and displays "Not set"
+- [ ] Build succeeds
+- [ ] Open the **Athletes** screen (person.2 icon from Home)
+- [ ] At the top of the list, there is a **"Coach"** section with a row showing "Tap to set your name"
+- [ ] Tap the row â it switches to an editable text field
+- [ ] Type a name (e.g., "Coach Davis") and tap **Save** or press Return
+- [ ] The row now shows "Coach Davis" with "Coach Name" caption below it
+- [ ] Tap the **pencil icon** â the name becomes editable again
+- [ ] Kill the app completely and reopen â the name is still there
+- [ ] The coach name section appears above the athlete list (or the empty state) at all times
