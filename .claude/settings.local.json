@@ -25,7 +25,8 @@
       "Bash(brew list gh)",
       "Bash(brew install gh)",
       "Bash(gh repo create runsmith-split-timer --private --source=. --remote=origin --push)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'generic/platform=iOS' -quiet build)"
     ]
   }
 }
