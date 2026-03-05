@@ -10,6 +10,7 @@ struct AthleteRelayCandidate: Identifiable {
         case individualPB(raceId: UUID)
         case splitFromRace(raceId: UUID, lapIndex: Int)
         case average(count: Int)
+        case roster
     }
 }
 

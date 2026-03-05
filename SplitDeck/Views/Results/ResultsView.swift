@@ -103,15 +103,9 @@ struct ResultsView: View {
             dismiss()
         } label: {
             Text("Done")
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(Theme.runsmithPink)
-        .padding(.horizontal)
-        .padding(.bottom, 8)
-        .background(.bar)
+        .buttonStyle(GlassPrimaryButtonStyle())
+        .glassActionBar()
     }
 
     // MARK: – Individual Results Table
@@ -129,30 +123,37 @@ struct ResultsView: View {
     }
 
     private func athleteBlock(entry: (athlete: Athlete, place: Int?)) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        HStack(spacing: 0) {
+            Rectangle()
+                .fill(Theme.genderColor(entry.athlete.gender))
+                .frame(width: 4)
+                .clipShape(Capsule())
+                .padding(.trailing, 10)
 
-            HStack(spacing: 6) {
-                Text(entry.place.map { "\($0)" } ?? "—")
-                    .font(.footnote.weight(.bold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 20, alignment: .leading)
+            VStack(alignment: .leading, spacing: 8) {
 
-                Circle()
-                    .fill(Color(hex: entry.athlete.colorHex))
-                    .frame(width: 10, height: 10)
+                HStack(spacing: 6) {
+                    Text(entry.place.map { "\($0)" } ?? "—")
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 20, alignment: .leading)
 
-                Text(entry.athlete.name)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
+                    Circle()
+                        .fill(Color(hex: entry.athlete.colorHex))
+                        .frame(width: 10, height: 10)
 
-                Spacer()
+                    Text(entry.athlete.name)
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
 
-                let finalVal = vm.totalTimeValue(athlete: entry.athlete)
-                Text(finalVal.displayString)
-                    .font(.subheadline.weight(.bold))
-                    .monospacedDigit()
-                    .foregroundStyle(entry.place != nil ? .primary : .tertiary)
-            }
+                    Spacer()
+
+                    let finalVal = vm.totalTimeValue(athlete: entry.athlete)
+                    Text(finalVal.displayString)
+                        .font(.subheadline.weight(.bold))
+                        .monospacedDigit()
+                        .foregroundStyle(entry.place != nil ? .primary : .tertiary)
+                }
 
             if !vm.columnLabels.isEmpty {
                 HStack(spacing: 4) {
@@ -168,6 +169,7 @@ struct ResultsView: View {
                         .frame(maxWidth: .infinity)
                     }
                 }
+            }
             }
         }
         .padding(.vertical, 12)

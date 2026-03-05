@@ -45,6 +45,7 @@ final class RaceSetupViewModel: ObservableObject {
     @Published private(set) var availableAthletes: [Athlete] = []
     @Published private(set) var savedRelayTeams: [SavedRelayTeam] = []
     let meetId: UUID?
+    let existingRaceId: UUID?
     let store: SplitDeckStore
 
     // Predefined athlete colors assigned in rotation
@@ -60,8 +61,9 @@ final class RaceSetupViewModel: ObservableObject {
     ]
     static let relayEventTypes: [EventType] = [.relay4x400, .relay4x800, .relay4x1600, .relay4x3200]
 
-    init(meetId: UUID?, store: SplitDeckStore) {
+    init(meetId: UUID?, store: SplitDeckStore, existingRaceId: UUID? = nil) {
         self.meetId = meetId
+        self.existingRaceId = existingRaceId
         self.store = store
     }
 
@@ -71,6 +73,33 @@ final class RaceSetupViewModel: ObservableObject {
             savedRelayTeams = try store.fetchSavedRelayTeams()
         } catch {
             errorMessage = error.localizedDescription
+        }
+
+        // If editing an existing saved race, populate form fields
+        if let existingRaceId,
+           let races = try? store.fetchRaces(for: meetId),
+           let race = races.first(where: { $0.id == existingRaceId }) {
+            loadExistingRace(race)
+        }
+    }
+
+    private func loadExistingRace(_ race: Race) {
+        // Set raceType FIRST — its didSet clears raceName and selectedAthleteIds
+        raceType = race.eventType.isRelay ? .relay : .individual
+
+        // Now set everything else (overwriting what didSet cleared)
+        raceName = race.name
+        eventType = race.eventType
+        unlimitedSplits = race.isUnlimitedSplits
+        splitsPerLap = race.splitsPerLap
+        selectedAthleteIds = Set(race.athleteIds)
+
+        if race.eventType == .custom {
+            customDistance = race.distanceMeters > 0 ? String(race.distanceMeters) : ""
+        }
+
+        if race.eventType.isRelay {
+            relayAthleteOrder = race.athleteIds
         }
     }
 
@@ -209,9 +238,9 @@ final class RaceSetupViewModel: ObservableObject {
         }
     }
 
-    // MARK: – Start Race
+    // MARK: – Race building helpers
 
-    func startRace() -> Race? {
+    private func buildRaceFields() -> (orderedIds: [UUID], dist: Int, track: Int, name: String)? {
         guard isValid else { return nil }
 
         let orderedIds: [UUID]
@@ -222,7 +251,7 @@ final class RaceSetupViewModel: ObservableObject {
             orderedIds = relayAthleteOrder
             let legDist = eventType.legDistanceMeters!
             dist  = legDist
-            track = legDist // laps = 1 per relay athlete
+            track = legDist
         } else {
             orderedIds = availableAthletes
                 .filter { selectedAthleteIds.contains($0.id) }
@@ -234,15 +263,53 @@ final class RaceSetupViewModel: ObservableObject {
         let name = raceName.isEmpty
             ? (unlimitedSplits ? "Unlimited" : eventType.displayName)
             : raceName
+
+        return (orderedIds, dist, track, name)
+    }
+
+    // MARK: – Save Race (draft, not started)
+
+    func saveRace() -> Race? {
+        guard let fields = buildRaceFields() else { return nil }
+
         let race = Race(
+            id: existingRaceId ?? UUID(),
             meetId: meetId,
-            name: name,
+            name: fields.name,
             eventType: eventType,
-            distanceMeters: unlimitedSplits ? 0 : dist,
-            trackLengthMeters: track,
+            distanceMeters: unlimitedSplits ? 0 : fields.dist,
+            trackLengthMeters: fields.track,
             splitsPerLap: (eventType.isRelay || unlimitedSplits) ? 1 : splitsPerLap,
             isUnlimitedSplits: unlimitedSplits,
-            athleteIds: orderedIds,
+            athleteIds: fields.orderedIds,
+            startedAt: nil,
+            status: .notStarted
+        )
+
+        do {
+            try store.save(race)
+            return race
+        } catch {
+            errorMessage = error.localizedDescription
+            return nil
+        }
+    }
+
+    // MARK: – Start Race
+
+    func startRace() -> Race? {
+        guard let fields = buildRaceFields() else { return nil }
+
+        let race = Race(
+            id: existingRaceId ?? UUID(),
+            meetId: meetId,
+            name: fields.name,
+            eventType: eventType,
+            distanceMeters: unlimitedSplits ? 0 : fields.dist,
+            trackLengthMeters: fields.track,
+            splitsPerLap: (eventType.isRelay || unlimitedSplits) ? 1 : splitsPerLap,
+            isUnlimitedSplits: unlimitedSplits,
+            athleteIds: fields.orderedIds,
             startedAt: Date(),
             status: .inProgress
         )

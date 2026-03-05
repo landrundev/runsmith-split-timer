@@ -38,7 +38,7 @@ struct RaceSetupView: View {
                 eventSection
                 athleteSection
             }
-            .navigationTitle("Race Setup")
+            .navigationTitle(vm.existingRaceId != nil ? "Edit Race" : "Race Setup")
             .navigationBarTitleDisplayMode(.inline)
             .environment(\.editMode, .constant(.active))
             .toolbar {
@@ -47,7 +47,7 @@ struct RaceSetupView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                startButton
+                bottomButtons
             }
             .sheet(isPresented: $showAddAthlete) {
                 addAthleteSheet
@@ -516,28 +516,36 @@ struct RaceSetupView: View {
         }
     }
 
-    // MARK: – Start Button
+    // MARK: – Bottom Buttons
 
-    private var startButton: some View {
-        Button {
-            guard let race = vm.startRace() else { return }
-            createdRace = race
-            let athletes = (try? store.fetchAthletes()) ?? []
-            liveTimingVM = LiveTimingViewModel(
-                race: race, athletes: athletes, store: store, cache: cache
-            )
-            navigateToLiveTiming = true
-        } label: {
-            Text(vm.raceType == .relay ? "Start Relay" : "Start Race")
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
+    private var bottomButtons: some View {
+        HStack(spacing: 12) {
+            if vm.meetId != nil {
+                Button {
+                    guard vm.saveRace() != nil else { return }
+                    dismiss()
+                } label: {
+                    Text("Save Race")
+                }
+                .buttonStyle(GlassSecondaryButtonStyle())
+                .disabled(!vm.isValid)
+            }
+
+            Button {
+                guard let race = vm.startRace() else { return }
+                createdRace = race
+                let athletes = (try? store.fetchAthletes()) ?? []
+                liveTimingVM = LiveTimingViewModel(
+                    race: race, athletes: athletes, store: store, cache: cache
+                )
+                navigateToLiveTiming = true
+            } label: {
+                Text(vm.raceType == .relay ? "Start Relay" : "Start Race")
+            }
+            .buttonStyle(GlassPrimaryButtonStyle())
+            .disabled(!vm.isValid)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(Theme.runsmithPink)
-        .disabled(!vm.isValid)
-        .padding(.horizontal)
-        .padding(.bottom, 8)
+        .glassActionBar()
     }
 
     // MARK: – Edit Athlete Sheet

@@ -23,6 +23,9 @@ struct AthleteRosterView: View {
     // Delete athlete
     @State private var athleteToDelete: Athlete? = nil
 
+    // Import from file
+    @State private var showRosterImport = false
+
     private var filteredAthletes: [Athlete] {
         var result = athletes
         if let gender = genderFilter {
@@ -76,18 +79,7 @@ struct AthleteRosterView: View {
                                 .frame(width: 12, height: 12)
                                 .padding(.trailing, 8)
                             VStack(alignment: .leading, spacing: 1) {
-                                HStack(spacing: 6) {
-                                    Text(athlete.name).font(.body)
-                                    if let gender = athlete.gender {
-                                        Text(gender.rawValue)
-                                            .font(.caption2.weight(.semibold))
-                                            .foregroundStyle(.white)
-                                            .padding(.horizontal, 6)
-                                            .padding(.vertical, 2)
-                                            .background(Theme.genderTint(gender))
-                                            .clipShape(Capsule())
-                                    }
-                                }
+                                Text(athlete.name).font(.body)
                                 if let team = athlete.teamName {
                                     Text(team)
                                         .font(.caption)
@@ -120,12 +112,22 @@ struct AthleteRosterView: View {
         .searchable(text: $searchText, prompt: "Search athletes")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button {
-                    newName = ""
-                    newTeam = ""
-                    newGender = nil
-                    newColorHex = RaceSetupViewModel.colorPalette[athletes.count % RaceSetupViewModel.colorPalette.count]
-                    showAddSheet = true
+                Menu {
+                    Button {
+                        newName = ""
+                        newTeam = ""
+                        newGender = nil
+                        newColorHex = RaceSetupViewModel.colorPalette[athletes.count % RaceSetupViewModel.colorPalette.count]
+                        showAddSheet = true
+                    } label: {
+                        Label("Add Athlete", systemImage: "plus")
+                    }
+
+                    Button {
+                        showRosterImport = true
+                    } label: {
+                        Label("Import from File", systemImage: "square.and.arrow.down")
+                    }
                 } label: {
                     Image(systemName: "plus")
                 }
@@ -154,6 +156,12 @@ struct AthleteRosterView: View {
             }
         } message: {
             Text("This will permanently remove this athlete and cannot be undone.")
+        }
+        .sheet(isPresented: $showRosterImport) {
+            RosterImportView(store: store)
+        }
+        .onChange(of: showRosterImport) { showing in
+            if !showing { refreshAthletes() }
         }
         .onAppear { refreshAthletes() }
     }

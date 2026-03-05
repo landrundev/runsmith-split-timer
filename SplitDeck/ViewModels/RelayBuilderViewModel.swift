@@ -3,6 +3,7 @@ import Foundation
 enum RankingMode: String, CaseIterable {
     case pr = "PR"
     case average = "Average"
+    case roster = "Roster"
 }
 
 @MainActor
@@ -79,6 +80,11 @@ final class RelayBuilderViewModel: ObservableObject {
                 races: completedRaces,
                 splitsByRaceId: splitsByRaceId
             )
+        case .roster:
+            candidates = allAthletes
+                .filter { $0.gender == selectedGender }
+                .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+                .map { AthleteRelayCandidate(id: $0.id, athlete: $0, bestTimeMs: 0, source: .roster) }
         }
     }
 
@@ -97,7 +103,7 @@ final class RelayBuilderViewModel: ObservableObject {
         } else {
             guard chosenAthleteIds.count < 4 else { return }
             chosenAthleteIds.append(id)
-            if chosenAthleteIds.count == 4 {
+            if chosenAthleteIds.count == 4 && rankingMode != .roster {
                 suggestedOrder = RelayRecommender.suggestLegOrder(chosenCandidates)
             }
         }
@@ -186,7 +192,7 @@ final class RelayBuilderViewModel: ObservableObject {
     // MARK: – Computed
 
     var projectedTotalMs: Int? {
-        guard isTeamComplete else { return nil }
+        guard isTeamComplete, rankingMode != .roster else { return nil }
         let times = chosenCandidates.map(\.bestTimeMs)
         guard times.count == 4 else { return nil }
         return times.reduce(0, +)

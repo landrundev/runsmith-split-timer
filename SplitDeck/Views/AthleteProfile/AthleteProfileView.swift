@@ -170,24 +170,19 @@ struct AthleteProfileView: View {
 
     private var athleteHeader: some View {
         Section {
-            HStack(spacing: 12) {
+            HStack(spacing: 0) {
+                Rectangle()
+                    .fill(Theme.genderColor(vm.athlete.gender))
+                    .frame(width: 4)
+                    .clipShape(Capsule())
+                    .padding(.trailing, 10)
                 Circle()
                     .fill(Color(hex: vm.athlete.colorHex))
                     .frame(width: 40, height: 40)
+                    .padding(.trailing, 12)
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(vm.athlete.name)
-                            .font(.title3.weight(.bold))
-                        if let gender = vm.athlete.gender {
-                            Text(gender.rawValue)
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Theme.genderTint(gender))
-                                .clipShape(Capsule())
-                        }
-                    }
+                    Text(vm.athlete.name)
+                        .font(.title3.weight(.bold))
                     if let team = vm.athlete.teamName {
                         Text(team)
                             .font(.subheadline)

@@ -92,12 +92,16 @@ struct RelayBuilderView: View {
                         .frame(width: 12, height: 12)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(candidate.athlete.name).font(.body)
-                        Text(candidate.bestTimeMs.formattedSplitTime)
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
+                        if vm.rankingMode != .roster {
+                            Text(candidate.bestTimeMs.formattedSplitTime)
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     Spacer()
-                    sourceBadge(candidate.source)
+                    if vm.rankingMode != .roster {
+                        sourceBadge(candidate.source)
+                    }
                     Button { vm.toggleAthlete(candidate.id) } label: {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundStyle(Color(.quaternaryLabel))
@@ -112,7 +116,7 @@ struct RelayBuilderView: View {
             ForEach(vm.chosenAthleteIds.count..<4, id: \.self) { i in
                 HStack(spacing: 12) {
                     legBadge(i + 1, filled: false)
-                    Text("Select from rankings below")
+                    Text(vm.rankingMode == .roster ? "Select from roster below" : "Select from rankings below")
                         .font(.subheadline)
                         .foregroundStyle(.tertiary)
                 }
@@ -216,10 +220,17 @@ struct RelayBuilderView: View {
                         .foregroundStyle(.secondary)
                     Text("No Athletes Found")
                         .font(.headline)
-                    Text("No \(vm.selectedGender.displayName.lowercased()) athletes have \(vm.legDistanceDisplay) data yet.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+                    if vm.rankingMode == .roster {
+                        Text("No \(vm.selectedGender.displayName.lowercased()) athletes in your roster yet.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    } else {
+                        Text("No \(vm.selectedGender.displayName.lowercased()) athletes have \(vm.legDistanceDisplay) data yet. Try \"Roster\" to see all athletes.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
@@ -228,10 +239,12 @@ struct RelayBuilderView: View {
                 ForEach(Array(vm.candidates.enumerated()), id: \.element.id) { rank, candidate in
                     let isChosen = vm.chosenAthleteIds.contains(candidate.id)
                     HStack(spacing: 12) {
-                        Text("\(rank + 1)")
-                            .font(.footnote.weight(.bold).monospacedDigit())
-                            .foregroundStyle(.secondary)
-                            .frame(width: 24, alignment: .trailing)
+                        if vm.rankingMode != .roster {
+                            Text("\(rank + 1)")
+                                .font(.footnote.weight(.bold).monospacedDigit())
+                                .foregroundStyle(.secondary)
+                                .frame(width: 24, alignment: .trailing)
+                        }
                         Circle()
                             .fill(Color(hex: candidate.athlete.colorHex))
                             .frame(width: 12, height: 12)
@@ -242,9 +255,11 @@ struct RelayBuilderView: View {
                             }
                         }
                         Spacer()
-                        sourceBadge(candidate.source)
-                        Text(candidate.bestTimeMs.formattedSplitTime)
-                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                        if vm.rankingMode != .roster {
+                            sourceBadge(candidate.source)
+                            Text(candidate.bestTimeMs.formattedSplitTime)
+                                .font(.subheadline.weight(.semibold).monospacedDigit())
+                        }
                         if isChosen {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundStyle(Theme.runsmithPink)
@@ -260,7 +275,11 @@ struct RelayBuilderView: View {
             }
         } header: {
             HStack {
-                Text("\(vm.selectedRelayType.displayName) Rankings (\(vm.rankingMode.rawValue))")
+                if vm.rankingMode == .roster {
+                    Text("\(vm.selectedGender.displayName) Roster")
+                } else {
+                    Text("\(vm.selectedRelayType.displayName) Rankings (\(vm.rankingMode.rawValue))")
+                }
                 Spacer()
                 Text("\(vm.candidates.count) athletes")
                     .font(.caption)
@@ -278,11 +297,8 @@ struct RelayBuilderView: View {
                 showSaveTeamAlert = true
             } label: {
                 Label("Save Team", systemImage: "square.and.arrow.down")
-                    .font(.headline)
-                    .frame(height: 52)
             }
-            .buttonStyle(.bordered)
-            .tint(Theme.runsmithPink)
+            .buttonStyle(GlassSecondaryButtonStyle())
 
             Button {
                 guard let race = vm.startRace(meetId: nil) else { return }
@@ -293,15 +309,10 @@ struct RelayBuilderView: View {
                 navigateToLiveTiming = true
             } label: {
                 Label("Start Race", systemImage: "stopwatch")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Theme.runsmithPink)
+            .buttonStyle(GlassPrimaryButtonStyle())
         }
-        .padding(.horizontal)
-        .padding(.bottom, 8)
+        .glassActionBar()
     }
 
     // MARK: – Helpers
@@ -321,6 +332,7 @@ struct RelayBuilderView: View {
             case .individualPB: return ("PB", .green)
             case .splitFromRace: return ("Split", .secondary)
             case .average(let count): return ("Avg (\(count))", .blue)
+            case .roster: return ("", .clear)
             }
         }()
         return Text(label)

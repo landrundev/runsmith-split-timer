@@ -79,7 +79,11 @@ final class SplitDeckStore: ObservableObject {
         } else {
             req.predicate = NSPredicate(format: "meetId == nil")
         }
-        req.sortDescriptors = [NSSortDescriptor(key: "startedAt", ascending: false)]
+        req.sortDescriptors = [
+            NSSortDescriptor(key: "status", ascending: true),
+            NSSortDescriptor(key: "startedAt", ascending: false),
+            NSSortDescriptor(key: "name", ascending: true)
+        ]
         return try ctx.fetch(req).map(map)
     }
 

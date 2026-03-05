@@ -80,9 +80,15 @@ struct MeetDetailView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(race.name)
                         .font(.headline)
-                    Text(race.eventType.displayName)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Text(race.eventType.displayName)
+                        if race.status == .notStarted && !race.athleteIds.isEmpty {
+                            Text("·")
+                            Text("\(race.athleteIds.count) athlete\(race.athleteIds.count == 1 ? "" : "s")")
+                        }
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
                 }
                 Spacer()
                 statusBadge(race.status)
@@ -95,7 +101,7 @@ struct MeetDetailView: View {
     private func raceDestination(_ race: Race) -> some View {
         switch race.status {
         case .notStarted:
-            let setupVM = RaceSetupViewModel(meetId: vm.meet.id, store: store)
+            let setupVM = RaceSetupViewModel(meetId: vm.meet.id, store: store, existingRaceId: race.id)
             RaceSetupView(vm: setupVM, store: store, cache: cache)
 
         case .inProgress:
