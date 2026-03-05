@@ -3,6 +3,7 @@ import Foundation
 @MainActor
 final class MeetDetailViewModel: ObservableObject {
     @Published private(set) var races: [Race] = []
+    @Published private(set) var athletes: [Athlete] = []
     @Published var errorMessage: String?
 
     let meet: Meet
@@ -16,6 +17,7 @@ final class MeetDetailViewModel: ObservableObject {
     func load() {
         do {
             races = try store.fetchRaces(for: meet.id)
+            athletes = try store.fetchAthletes()
         } catch {
             errorMessage = error.localizedDescription
         }

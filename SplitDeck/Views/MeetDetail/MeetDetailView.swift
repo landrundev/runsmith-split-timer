@@ -7,6 +7,17 @@ struct MeetDetailView: View {
 
     @State private var showAddRace = false
     @State private var raceToDelete: Race? = nil
+    @State private var genderFilter: Gender? = nil
+
+    private var filteredRaces: [Race] {
+        guard let gender = genderFilter else { return vm.races }
+        return vm.races.filter { race in
+            let genders = race.athleteIds.compactMap { id in
+                vm.athletes.first(where: { $0.id == id })?.gender
+            }
+            return genders.contains(gender)
+        }
+    }
 
     var body: some View {
         List {
@@ -25,7 +36,9 @@ struct MeetDetailView: View {
                 .padding(.vertical, 40)
                 .listRowBackground(Color.clear)
             } else {
-                ForEach(vm.races) { race in
+                genderFilterRow
+
+                ForEach(filteredRaces) { race in
                     raceRow(race)
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button(role: .destructive) {
@@ -84,7 +97,9 @@ struct MeetDetailView: View {
     private func raceRow(_ race: Race) -> some View {
         let destination = raceDestination(race)
         NavigationLink(destination: destination) {
-            HStack {
+            HStack(spacing: 0) {
+                raceGenderBar(race)
+                    .padding(.trailing, 10)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(race.name)
                         .font(.headline)
@@ -123,6 +138,51 @@ struct MeetDetailView: View {
             let resultsVM = ResultsViewModel(race: race, athletes: athletes, splits: splits, meet: vm.meet)
             ResultsView(vm: resultsVM)
         }
+    }
+
+    private func raceGenderBar(_ race: Race) -> some View {
+        let genders = race.athleteIds.compactMap { id in
+            vm.athletes.first(where: { $0.id == id })?.gender
+        }
+        let hasMale = genders.contains(.male)
+        let hasFemale = genders.contains(.female)
+
+        let fill: AnyShapeStyle
+        if hasMale && hasFemale {
+            fill = AnyShapeStyle(LinearGradient(
+                colors: [.blue, Color(hex: "#FF5CA1")],
+                startPoint: .top, endPoint: .bottom
+            ))
+        } else if hasMale {
+            fill = AnyShapeStyle(Color.blue)
+        } else if hasFemale {
+            fill = AnyShapeStyle(Color(hex: "#FF5CA1"))
+        } else {
+            fill = AnyShapeStyle(Color(.quaternaryLabel))
+        }
+
+        return Rectangle()
+            .fill(fill)
+            .frame(width: 4)
+            .clipShape(Capsule())
+    }
+
+    private var genderFilterRow: some View {
+        HStack(spacing: 8) {
+            Text("Filter").foregroundStyle(.secondary)
+            Spacer()
+            genderFilterButton("All", gender: nil)
+            genderFilterButton("M", gender: .male)
+            genderFilterButton("F", gender: .female)
+        }
+    }
+
+    private func genderFilterButton(_ label: String, gender: Gender?) -> some View {
+        Button(label) {
+            genderFilter = genderFilter == gender ? nil : gender
+        }
+        .buttonStyle(.bordered)
+        .tint(genderFilter == gender ? (gender.map { Theme.genderTint($0) } ?? Theme.runsmithPink) : .secondary)
     }
 
     private func statusBadge(_ status: RaceStatus) -> some View {
