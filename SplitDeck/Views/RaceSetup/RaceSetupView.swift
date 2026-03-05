@@ -587,7 +587,8 @@ struct RaceSetupView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        vm.update(athlete: athlete, name: editName, teamName: editTeam, colorHex: editColorHex, gender: editGender)
+                        guard let gender = editGender else { return }
+                        vm.update(athlete: athlete, name: editName, teamName: editTeam, colorHex: editColorHex, gender: gender)
                         athleteToEdit = nil
                     }
                     .disabled(editName.trimmingCharacters(in: .whitespaces).isEmpty || editGender == nil)

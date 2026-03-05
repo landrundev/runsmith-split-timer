@@ -16,7 +16,7 @@ struct RelayBuilderView: View {
 
             List {
                 chosenTeamSection
-                if !vm.savedTeams.isEmpty {
+                if !vm.filteredSavedTeams.isEmpty {
                     savedTeamsSection
                 }
                 candidateListSection
@@ -158,7 +158,7 @@ struct RelayBuilderView: View {
 
     private var savedTeamsSection: some View {
         Section {
-            ForEach(vm.savedTeams) { team in
+            ForEach(vm.filteredSavedTeams) { team in
                 Button { vm.loadTeam(team) } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {

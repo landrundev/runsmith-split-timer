@@ -61,7 +61,7 @@ final class RelayBuilderViewModel: ObservableObject {
     }
 
     private func refreshCandidates() {
-        chosenAthleteIds = []
+        let previousChosenIds = chosenAthleteIds
         suggestedOrder = nil
         switch rankingMode {
         case .pr:
@@ -86,6 +86,10 @@ final class RelayBuilderViewModel: ObservableObject {
                 .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
                 .map { AthleteRelayCandidate(id: $0.id, athlete: $0, bestTimeMs: 0, source: .roster) }
         }
+
+        // Preserve selections that still exist in the new candidate list
+        let candidateIdSet = Set(candidates.map(\.id))
+        chosenAthleteIds = previousChosenIds.filter { candidateIdSet.contains($0) }
     }
 
     // MARK: – Selection
@@ -190,6 +194,10 @@ final class RelayBuilderViewModel: ObservableObject {
     }
 
     // MARK: – Computed
+
+    var filteredSavedTeams: [SavedRelayTeam] {
+        savedTeams.filter { $0.gender == selectedGender }
+    }
 
     var projectedTotalMs: Int? {
         guard isTeamComplete, rankingMode != .roster else { return nil }

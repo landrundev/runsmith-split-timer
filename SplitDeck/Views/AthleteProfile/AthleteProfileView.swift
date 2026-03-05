@@ -134,13 +134,14 @@ struct AthleteProfileView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        guard let gender = editGender else { return }
                         let updated = Athlete(
                             id: vm.athlete.id,
                             name: editName.trimmingCharacters(in: .whitespaces),
                             teamName: editTeam.trimmingCharacters(in: .whitespaces).isEmpty ? nil : editTeam,
                             colorHex: editColorHex,
                             notes: vm.athlete.notes,
-                            gender: editGender
+                            gender: gender
                         )
                         vm.save(updated)
                         vm.load()

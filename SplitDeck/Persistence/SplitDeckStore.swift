@@ -243,7 +243,7 @@ final class SplitDeckStore: ObservableObject {
             teamName: entity.teamName,
             colorHex: entity.colorHex!,
             notes: entity.notes,
-            gender: entity.gender.flatMap { Gender(rawValue: $0) }
+            gender: entity.gender.flatMap { Gender(rawValue: $0) } ?? .male
         )
     }
 
@@ -298,7 +298,7 @@ final class SplitDeckStore: ObservableObject {
         entity.teamName = athlete.teamName
         entity.colorHex = athlete.colorHex
         entity.notes = athlete.notes
-        entity.gender = athlete.gender?.rawValue
+        entity.gender = athlete.gender.rawValue
     }
 
     private func map(_ meet: Meet, into entity: MeetEntity) {

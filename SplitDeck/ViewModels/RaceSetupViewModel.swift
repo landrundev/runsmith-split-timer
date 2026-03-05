@@ -190,11 +190,12 @@ final class RaceSetupViewModel: ObservableObject {
         let trimmed = newAthleteName.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return nil }
         let color = Self.colorPalette[availableAthletes.count % Self.colorPalette.count]
+        guard let gender = newAthleteGender else { return nil }
         let athlete = Athlete(
             name: trimmed,
             teamName: newAthleteTeam.isEmpty ? nil : newAthleteTeam,
             colorHex: color,
-            gender: newAthleteGender
+            gender: gender
         )
         do {
             try store.save(athlete)
@@ -210,7 +211,7 @@ final class RaceSetupViewModel: ObservableObject {
         }
     }
 
-    func update(athlete: Athlete, name: String, teamName: String, colorHex: String, gender: Gender?) {
+    func update(athlete: Athlete, name: String, teamName: String, colorHex: String, gender: Gender) {
         let updated = Athlete(
             id: athlete.id,
             name: name.trimmingCharacters(in: .whitespaces),

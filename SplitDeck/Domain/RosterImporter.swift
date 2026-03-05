@@ -81,7 +81,8 @@ enum RosterImporter {
 
             let firstName = cols[firstNameIdx].trimmingCharacters(in: .whitespaces)
             let lastName = cols[lastNameIdx].trimmingCharacters(in: .whitespaces)
-            let genderStr = cols[genderIdx].trimmingCharacters(in: .whitespaces).uppercased()
+            let genderRaw = cols[genderIdx].trimmingCharacters(in: .whitespaces)
+            let genderNormalized = normalizeGender(genderRaw)
             let team = teamIdx.flatMap { idx -> String? in
                 guard idx < cols.count else { return nil }
                 let t = cols[idx].trimmingCharacters(in: .whitespaces)
@@ -95,8 +96,8 @@ enum RosterImporter {
                 continue
             }
 
-            guard let gender = Gender(rawValue: genderStr) else {
-                results.append(.error(line: lineNum, reason: "Gender must be M or F, got '\(cols[genderIdx])'"))
+            guard let gender = genderNormalized else {
+                results.append(.error(line: lineNum, reason: "Gender must be M, F, Male, or Female — got '\(genderRaw)'"))
                 continue
             }
 
@@ -118,6 +119,16 @@ enum RosterImporter {
         }
 
         return ImportResult(rows: results)
+    }
+
+    // MARK: — Gender Normalization
+
+    private static func normalizeGender(_ raw: String) -> Gender? {
+        switch raw.lowercased() {
+        case "m", "male":  return .male
+        case "f", "female": return .female
+        default: return nil
+        }
     }
 
     // MARK: — CSV Row Parsing (handles quoted fields with commas inside)

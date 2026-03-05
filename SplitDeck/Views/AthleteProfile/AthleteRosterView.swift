@@ -252,12 +252,13 @@ struct AthleteRosterView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
+                        guard let gender = newGender else { return }
                         let color = newColorHex
                         let athlete = Athlete(
                             name: newName.trimmingCharacters(in: .whitespaces),
                             teamName: newTeam.trimmingCharacters(in: .whitespaces).isEmpty ? nil : newTeam,
                             colorHex: color,
-                            gender: newGender
+                            gender: gender
                         )
                         try? store.save(athlete)
                         refreshAthletes()
@@ -291,13 +292,14 @@ struct AthleteRosterView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        guard let gender = editGender else { return }
                         let updated = Athlete(
                             id: athlete.id,
                             name: editName.trimmingCharacters(in: .whitespaces),
                             teamName: editTeam.trimmingCharacters(in: .whitespaces).isEmpty ? nil : editTeam,
                             colorHex: editColorHex,
                             notes: athlete.notes,
-                            gender: editGender
+                            gender: gender
                         )
                         try? store.save(updated)
                         refreshAthletes()
