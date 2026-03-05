@@ -4,7 +4,28 @@
       "Bash(xcodegen generate)",
       "Bash(sips -g pixelWidth -g pixelHeight \"/Users/daniel/Downloads/Runsmith_Logo_Symbol_Pink_v1.png\")",
       "Bash(sips -s hasAlpha false AppIcon.png)",
-      "Bash(python3 -c \":*)"
+      "Bash(python3 -c \":*)",
+      "Bash(xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'platform=iOS Simulator,name=iPhone 16' -quiet build)",
+      "Bash(swift --version)",
+      "Bash(sudo xcode-select -s /Applications/Xcode.app/Contents/Developer)",
+      "Bash(xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'platform=iOS Simulator,name=iPhone 16' -configuration Debug build)",
+      "Bash(ls -d /Applications/Xcode*.app)",
+      "Bash(mdfind \"kMDItemCFBundleIdentifier == ''com.apple.dt.Xcode''\")",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'platform=iOS Simulator,name=iPhone 16' -configuration Debug build)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -configuration Debug build)",
+      "WebFetch(domain:www.runsmith.com)",
+      "WebFetch(domain:www.landrunbrands.com)",
+      "Bash(xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'platform=iOS Simulator,name=iPhone 16' build)",
+      "Bash(xcode-select -p)",
+      "Bash(ls /Applications/Xcode*.app)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'platform=iOS Simulator,name=iPhone 16' build)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build)",
+      "Bash(zip -r ~/Downloads/Runsmith_Split_Timer_Export.zip SplitDeck/ project.yml Runsmith_Split_Timer_Project.md -x \"*.DS_Store\")",
+      "Bash(gh auth status)",
+      "Bash(brew list gh)",
+      "Bash(brew install gh)",
+      "Bash(gh repo create runsmith-split-timer --private --source=. --remote=origin --push)",
+      "Bash(python3:*)"
     ]
   }
 }
