@@ -94,6 +94,7 @@ struct Race: Identifiable, Codable, Hashable {
     var startedAt: Date?        // stored as UTC; never convert for calculations
     var endedAt: Date?
     var status: RaceStatus
+    var isArchived: Bool
 
     // Computed — never stored
     var laps: Int {
@@ -118,7 +119,8 @@ struct Race: Identifiable, Codable, Hashable {
         athleteIds: [UUID] = [],
         startedAt: Date? = nil,
         endedAt: Date? = nil,
-        status: RaceStatus = .notStarted
+        status: RaceStatus = .notStarted,
+        isArchived: Bool = false
     ) {
         self.id = id
         self.meetId = meetId
@@ -132,5 +134,6 @@ struct Race: Identifiable, Codable, Hashable {
         self.startedAt = startedAt
         self.endedAt = endedAt
         self.status = status
+        self.isArchived = isArchived
     }
 }

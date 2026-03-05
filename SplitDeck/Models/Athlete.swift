@@ -19,13 +19,15 @@ struct Athlete: Identifiable, Codable, Hashable {
     var colorHex: String // e.g. "#FF3B30"
     var notes: String?
     var gender: Gender
+    var isArchived: Bool
 
-    init(id: UUID = UUID(), name: String, teamName: String? = nil, colorHex: String, notes: String? = nil, gender: Gender) {
+    init(id: UUID = UUID(), name: String, teamName: String? = nil, colorHex: String, notes: String? = nil, gender: Gender, isArchived: Bool = false) {
         self.id = id
         self.name = name
         self.teamName = teamName
         self.colorHex = colorHex
         self.notes = notes
         self.gender = gender
+        self.isArchived = isArchived
     }
 }

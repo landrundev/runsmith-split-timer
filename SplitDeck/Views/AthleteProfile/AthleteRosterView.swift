@@ -168,6 +168,13 @@ struct AthleteRosterView: View {
                             Label("Edit", systemImage: "pencil")
                         }
                         .tint(.blue)
+                        Button {
+                            try? store.archive(athleteId: athlete.id)
+                            refreshAthletes()
+                        } label: {
+                            Label("Archive", systemImage: "archivebox")
+                        }
+                        .tint(.orange)
                     }
                 }
             }

@@ -67,4 +67,22 @@ final class HomeViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
     }
+
+    func archive(meet: Meet) {
+        do {
+            try store.archive(meetId: meet.id)
+            load()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func archive(race: Race) {
+        do {
+            try store.archive(raceId: race.id)
+            load()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 }

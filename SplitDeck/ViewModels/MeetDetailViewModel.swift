@@ -38,4 +38,13 @@ final class MeetDetailViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
     }
+
+    func archive(race: Race) {
+        do {
+            try store.archive(raceId: race.id)
+            load()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 }

@@ -33,6 +33,12 @@ struct MeetDetailView: View {
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }
+                            Button {
+                                vm.archive(race: race)
+                            } label: {
+                                Label("Archive", systemImage: "archivebox")
+                            }
+                            .tint(.orange)
                         }
                 }
             }

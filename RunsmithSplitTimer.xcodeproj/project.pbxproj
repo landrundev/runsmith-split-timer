@@ -23,6 +23,7 @@
 		52589224CDB614F54C383013 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3840295052F8A21EF390B087 /* Assets.xcassets */; };
 		527F7D8CF38D86FE207F5504 /* ColorBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C445F0828F08EA29C544354C /* ColorBar.swift */; };
 		69C00CBF5469BF00F8C0863E /* RosterImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B67926C4487DEF5BDDE86DEF /* RosterImporter.swift */; };
+		6A670E1E5B0A3319C08FB90F /* ArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32053B808398A44F4D58A590 /* ArchiveView.swift */; };
 		6E9F8F951D7B70921F5AD9A8 /* SavedRelayTeam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95C31A50A75DF2F947173240 /* SavedRelayTeam.swift */; };
 		6F187688BACFD45F4B4C515A /* ResultsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F80EDA2F8E6EE9E75CE5CA /* ResultsViewModel.swift */; };
 		70B0D4AD1B94201087D79BAB /* RaceStateCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B548F352C6C7398141852A0 /* RaceStateCache.swift */; };
@@ -34,6 +35,7 @@
 		9935B96036449CAF5F6A3BD3 /* Athlete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983B6342E3A87E4CD19AA2FD /* Athlete.swift */; };
 		995BD75952DC44A550A5E450 /* CompactAthleteCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5545723FBB96972FCEB8C7 /* CompactAthleteCardView.swift */; };
 		A00D125582AEF22BEAD3F96A /* RaceDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F69683CF963EBDB3E8FFE22 /* RaceDomain.swift */; };
+		A84244A8841FAD448DC262A2 /* ArchiveViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B3D16FAFB4CC317480C0164 /* ArchiveViewModel.swift */; };
 		AD7DC3B4451D460BD713550F /* AthleteCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22816F99276C67DC2F708AA1 /* AthleteCardView.swift */; };
 		B404F9C191B47860EBBF00E4 /* MeetDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A68AB182F1F2DB803B59A43F /* MeetDetailViewModel.swift */; };
 		C2C0132469CAE63A71E2B23B /* UnassignedMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592212AC0943EEECCA541243 /* UnassignedMark.swift */; };
@@ -62,6 +64,7 @@
 		1C491B6D663CB9FD6B5AC3BD /* CardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRenderer.swift; sourceTree = "<group>"; };
 		221CC82841835CBCD8E139A0 /* AthleteProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteProfileViewModel.swift; sourceTree = "<group>"; };
 		22816F99276C67DC2F708AA1 /* AthleteCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteCardView.swift; sourceTree = "<group>"; };
+		32053B808398A44F4D58A590 /* ArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveView.swift; sourceTree = "<group>"; };
 		34971AC10EB3458014C26665 /* SplitDeckStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitDeckStore.swift; sourceTree = "<group>"; };
 		3840295052F8A21EF390B087 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3D812937365A0963C9FE9958 /* RaceSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RaceSetupView.swift; sourceTree = "<group>"; };
@@ -77,6 +80,7 @@
 		7766A2D83FB4A1CC2FAAF8FB /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		7A031E4142C9058EF08DEBE9 /* RaceSetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RaceSetupViewModel.swift; sourceTree = "<group>"; };
 		88D3BAA858E22F979FCD3FAC /* AthleteRosterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteRosterView.swift; sourceTree = "<group>"; };
+		8B3D16FAFB4CC317480C0164 /* ArchiveViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveViewModel.swift; sourceTree = "<group>"; };
 		93175D56ABAEDC79E4C794B3 /* Race.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Race.swift; sourceTree = "<group>"; };
 		95C31A50A75DF2F947173240 /* SavedRelayTeam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedRelayTeam.swift; sourceTree = "<group>"; };
 		9616DB739E616548E3CC4AE6 /* RelayBuilderViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayBuilderViewModel.swift; sourceTree = "<group>"; };
@@ -173,6 +177,14 @@
 			);
 			sourceTree = "<group>";
 		};
+		6BAAB865E7837259BBCBC89E /* Archive */ = {
+			isa = PBXGroup;
+			children = (
+				32053B808398A44F4D58A590 /* ArchiveView.swift */,
+			);
+			path = Archive;
+			sourceTree = "<group>";
+		};
 		6C2532CF3B3325B7B8753F49 /* Persistence */ = {
 			isa = PBXGroup;
 			children = (
@@ -204,6 +216,7 @@
 		8CC93E4648775D79263DDB80 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				6BAAB865E7837259BBCBC89E /* Archive */,
 				2A93D6984A6F4865AF8A83C1 /* AthleteProfile */,
 				1DEF630A533101940FF56610 /* Home */,
 				50D5DC6BD25CA7DA8E1FD087 /* LiveTiming */,
@@ -256,6 +269,7 @@
 		CDF7922CD2FD47C879319746 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				8B3D16FAFB4CC317480C0164 /* ArchiveViewModel.swift */,
 				221CC82841835CBCD8E139A0 /* AthleteProfileViewModel.swift */,
 				0621D38455ED4C89A659FBEB /* HomeViewModel.swift */,
 				E108A36EE73BC01960F84847 /* LiveTimingViewModel.swift */,
@@ -370,6 +384,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				0CE05CDAD03DA81A55A16D71 /* AboutView.swift in Sources */,
+				6A670E1E5B0A3319C08FB90F /* ArchiveView.swift in Sources */,
+				A84244A8841FAD448DC262A2 /* ArchiveViewModel.swift in Sources */,
 				9935B96036449CAF5F6A3BD3 /* Athlete.swift in Sources */,
 				AD7DC3B4451D460BD713550F /* AthleteCardView.swift in Sources */,
 				37A6EB641D50763F0EC4E858 /* AthleteProfileView.swift in Sources */,

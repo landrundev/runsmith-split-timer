@@ -55,10 +55,17 @@ struct HomeView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showAddMeet = true
-                    } label: {
-                        Image(systemName: "plus")
+                    HStack(spacing: 16) {
+                        NavigationLink {
+                            ArchiveView(vm: ArchiveViewModel(store: store))
+                        } label: {
+                            Image(systemName: "archivebox")
+                        }
+                        Button {
+                            showAddMeet = true
+                        } label: {
+                            Image(systemName: "plus")
+                        }
                     }
                 }
             }
@@ -158,6 +165,12 @@ struct HomeView: View {
                                     Label("Edit", systemImage: "pencil")
                                 }
                                 .tint(.blue)
+                                Button {
+                                    vm.archive(meet: meet)
+                                } label: {
+                                    Label("Archive", systemImage: "archivebox")
+                                }
+                                .tint(.orange)
                             }
                         }
                     }
@@ -173,6 +186,12 @@ struct HomeView: View {
                                     } label: {
                                         Label("Delete", systemImage: "trash")
                                     }
+                                    Button {
+                                        vm.archive(race: race)
+                                    } label: {
+                                        Label("Archive", systemImage: "archivebox")
+                                    }
+                                    .tint(.orange)
                                 }
                         }
                     }

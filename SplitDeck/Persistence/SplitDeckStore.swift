@@ -22,6 +22,7 @@ final class SplitDeckStore: ObservableObject {
 
     func fetchAthletes() throws -> [Athlete] {
         let req = AthleteEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "isArchived == NO OR isArchived == nil")
         req.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
         return try ctx.fetch(req).map(map)
     }
@@ -47,6 +48,7 @@ final class SplitDeckStore: ObservableObject {
 
     func fetchMeets() throws -> [Meet] {
         let req = MeetEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "isArchived == NO OR isArchived == nil")
         req.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
         return try ctx.fetch(req).map(map)
     }
@@ -74,10 +76,13 @@ final class SplitDeckStore: ObservableObject {
 
     func fetchRaces(for meetId: UUID?) throws -> [Race] {
         let req = RaceEntity.fetchRequest()
+        let archiveFilter = NSPredicate(format: "isArchived == NO OR isArchived == nil")
         if let meetId {
-            req.predicate = NSPredicate(format: "meetId == %@", meetId as CVarArg)
+            let meetFilter = NSPredicate(format: "meetId == %@", meetId as CVarArg)
+            req.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [meetFilter, archiveFilter])
         } else {
-            req.predicate = NSPredicate(format: "meetId == nil")
+            let nilFilter = NSPredicate(format: "meetId == nil")
+            req.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [nilFilter, archiveFilter])
         }
         req.sortDescriptors = [
             NSSortDescriptor(key: "status", ascending: true),
@@ -176,7 +181,10 @@ final class SplitDeckStore: ObservableObject {
 
     func fetchAllCompletedRaces() throws -> [Race] {
         let req = RaceEntity.fetchRequest()
-        req.predicate = NSPredicate(format: "status == %d", RaceStatus.completed.rawValue)
+        req.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            NSPredicate(format: "status == %d", RaceStatus.completed.rawValue),
+            NSPredicate(format: "isArchived == NO OR isArchived == nil")
+        ])
         req.sortDescriptors = [NSSortDescriptor(key: "startedAt", ascending: false)]
         return try ctx.fetch(req).map(map)
     }
@@ -185,6 +193,7 @@ final class SplitDeckStore: ObservableObject {
 
     func fetchRaces(forAthlete athleteId: UUID) throws -> [Race] {
         let req = RaceEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "isArchived == NO OR isArchived == nil")
         req.sortDescriptors = [NSSortDescriptor(key: "startedAt", ascending: false)]
         let allRaces = try ctx.fetch(req).map(map)
         return allRaces.filter { $0.athleteIds.contains(athleteId) }
@@ -194,6 +203,67 @@ final class SplitDeckStore: ObservableObject {
         let req = SplitEntity.fetchRequest()
         req.predicate = NSPredicate(format: "athleteId == %@", athleteId as CVarArg)
         req.sortDescriptors = [NSSortDescriptor(key: "elapsedMs", ascending: true)]
+        return try ctx.fetch(req).map(map)
+    }
+
+    // MARK: – Archive / Unarchive
+
+    func archive(athleteId: UUID) throws {
+        guard let entity = try fetchAthleteEntity(id: athleteId) else { return }
+        entity.isArchived = true
+        try ctx.save()
+    }
+
+    func unarchive(athleteId: UUID) throws {
+        guard let entity = try fetchAthleteEntity(id: athleteId) else { return }
+        entity.isArchived = false
+        try ctx.save()
+    }
+
+    func archive(meetId: UUID) throws {
+        guard let entity = try fetchMeetEntity(id: meetId) else { return }
+        entity.isArchived = true
+        try ctx.save()
+    }
+
+    func unarchive(meetId: UUID) throws {
+        guard let entity = try fetchMeetEntity(id: meetId) else { return }
+        entity.isArchived = false
+        try ctx.save()
+    }
+
+    func archive(raceId: UUID) throws {
+        guard let entity = try fetchRaceEntity(id: raceId) else { return }
+        entity.isArchived = true
+        try ctx.save()
+    }
+
+    func unarchive(raceId: UUID) throws {
+        guard let entity = try fetchRaceEntity(id: raceId) else { return }
+        entity.isArchived = false
+        try ctx.save()
+    }
+
+    // MARK: – Fetch Archived
+
+    func fetchArchivedAthletes() throws -> [Athlete] {
+        let req = AthleteEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "isArchived == YES")
+        req.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+        return try ctx.fetch(req).map(map)
+    }
+
+    func fetchArchivedMeets() throws -> [Meet] {
+        let req = MeetEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "isArchived == YES")
+        req.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
+        return try ctx.fetch(req).map(map)
+    }
+
+    func fetchArchivedRaces() throws -> [Race] {
+        let req = RaceEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "isArchived == YES")
+        req.sortDescriptors = [NSSortDescriptor(key: "startedAt", ascending: false)]
         return try ctx.fetch(req).map(map)
     }
 
@@ -243,7 +313,8 @@ final class SplitDeckStore: ObservableObject {
             teamName: entity.teamName,
             colorHex: entity.colorHex!,
             notes: entity.notes,
-            gender: entity.gender.flatMap { Gender(rawValue: $0) } ?? .male
+            gender: entity.gender.flatMap { Gender(rawValue: $0) } ?? .male,
+            isArchived: entity.isArchived
         )
     }
 
@@ -252,7 +323,8 @@ final class SplitDeckStore: ObservableObject {
             id: entity.id!,
             name: entity.name!,
             date: entity.date!,
-            location: entity.location
+            location: entity.location,
+            isArchived: entity.isArchived
         )
     }
 
@@ -276,7 +348,8 @@ final class SplitDeckStore: ObservableObject {
             athleteIds: athleteIds,
             startedAt: entity.startedAt,
             endedAt: entity.endedAt,
-            status: RaceStatus(rawValue: entity.status) ?? .notStarted
+            status: RaceStatus(rawValue: entity.status) ?? .notStarted,
+            isArchived: entity.isArchived
         )
     }
 
@@ -299,6 +372,7 @@ final class SplitDeckStore: ObservableObject {
         entity.colorHex = athlete.colorHex
         entity.notes = athlete.notes
         entity.gender = athlete.gender.rawValue
+        entity.isArchived = athlete.isArchived
     }
 
     private func map(_ meet: Meet, into entity: MeetEntity) {
@@ -306,6 +380,7 @@ final class SplitDeckStore: ObservableObject {
         entity.name = meet.name
         entity.date = meet.date
         entity.location = meet.location
+        entity.isArchived = meet.isArchived
     }
 
     private func map(_ race: Race, into entity: RaceEntity) {
@@ -321,6 +396,7 @@ final class SplitDeckStore: ObservableObject {
         entity.startedAt = race.startedAt
         entity.endedAt = race.endedAt
         entity.status = race.status.rawValue
+        entity.isArchived = race.isArchived
     }
 
     private func map(_ split: Split, into entity: SplitEntity) {
