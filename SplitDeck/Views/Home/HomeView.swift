@@ -37,11 +37,22 @@ struct HomeView: View {
             .navigationTitle("Runsmith")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    NavigationLink {
+                        AthleteRosterView(store: store)
+                    } label: {
+                        Image(systemName: "person.2")
+                    }
+                }
                 ToolbarItem(placement: .principal) {
-                    Image("RunsmithLogo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 28)
+                    NavigationLink {
+                        AboutView()
+                    } label: {
+                        Image("RunsmithLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 28)
+                    }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -170,13 +181,17 @@ struct HomeView: View {
         }
         .listStyle(.insetGrouped)
         .background(Theme.screenBackground)
-        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 72) }
+        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 80) }
     }
 
     @ViewBuilder
     private func quickRaceRow(_ race: Race) -> some View {
         NavigationLink(destination: quickRaceDestination(race)) {
-            HStack {
+            HStack(spacing: 0) {
+                // Gender color bar
+                raceGenderBar(race)
+                    .padding(.trailing, 10)
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(race.name)
                         .font(.headline)
@@ -189,6 +204,34 @@ struct HomeView: View {
             }
             .padding(.vertical, 4)
         }
+    }
+
+    /// Gender bar for a race: blue if all male, pink if all female, split gradient if mixed.
+    private func raceGenderBar(_ race: Race) -> some View {
+        let genders = race.athleteIds.compactMap { id in
+            vm.athletes.first(where: { $0.id == id })?.gender
+        }
+        let hasMale = genders.contains(.male)
+        let hasFemale = genders.contains(.female)
+
+        let fill: AnyShapeStyle
+        if hasMale && hasFemale {
+            fill = AnyShapeStyle(LinearGradient(
+                colors: [.blue, Color(hex: "#FF5CA1")],
+                startPoint: .top, endPoint: .bottom
+            ))
+        } else if hasMale {
+            fill = AnyShapeStyle(Color.blue)
+        } else if hasFemale {
+            fill = AnyShapeStyle(Color(hex: "#FF5CA1"))
+        } else {
+            fill = AnyShapeStyle(Color(.quaternaryLabel))
+        }
+
+        return Rectangle()
+            .fill(fill)
+            .frame(width: 4)
+            .clipShape(Capsule())
     }
 
     @ViewBuilder
@@ -223,21 +266,40 @@ struct HomeView: View {
             .clipShape(Capsule())
     }
 
-    // MARK: – Quick Race FAB
+    // MARK: – Bottom Action Bar
 
     private var quickRaceButton: some View {
-        Button {
-            showQuickRaceSetup = true
-        } label: {
-            Label("Quick Race", systemImage: "stopwatch")
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
+        VStack(spacing: 0) {
+            Divider()
+            HStack(spacing: 12) {
+                NavigationLink {
+                    RelayBuilderView(
+                        vm: RelayBuilderViewModel(store: store)
+                    )
+                } label: {
+                    Label("Relay Builder", systemImage: "figure.run")
+                        .font(.headline)
+                        .frame(height: 52)
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.runsmithPink)
+
+                Button {
+                    showQuickRaceSetup = true
+                } label: {
+                    Label("Quick Race", systemImage: "stopwatch")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 52)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Theme.runsmithPink)
+            }
+            .padding(.horizontal)
+            .padding(.top, 8)
+            .padding(.bottom, 8)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(Theme.runsmithPink)
-        .padding(.horizontal)
-        .padding(.bottom, 8)
+        .background(.bar)
     }
 
     // MARK: – Edit Meet Sheet

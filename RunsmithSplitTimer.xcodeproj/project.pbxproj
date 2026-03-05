@@ -10,14 +10,18 @@
 		015C1B8193C18ED9DB197F9E /* Int+TimeFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 087D59B9479124D982BB1FF9 /* Int+TimeFormatting.swift */; };
 		0632FD6B63421AB1ADB06862 /* LiveTimingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E108A36EE73BC01960F84847 /* LiveTimingViewModel.swift */; };
 		09EB142480D65C9438106D49 /* RaceSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A031E4142C9058EF08DEBE9 /* RaceSetupViewModel.swift */; };
+		0CE05CDAD03DA81A55A16D71 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FC29C5EB6D64350600FC8AA /* AboutView.swift */; };
 		1A37159E60C57CAFD06D2BFB /* ResultsCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F17121B12636D402BE0494 /* ResultsCardView.swift */; };
 		1BA5055F711162EA2448A8E9 /* MeetDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02F8B89A3ACC98CEDE93E36 /* MeetDetailView.swift */; };
 		2041D13B50C974804E7912CF /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FF88CEB8B8D3ACF1C60D55 /* HomeView.swift */; };
 		258380E5BD4DF63F196726BE /* CardRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C491B6D663CB9FD6B5AC3BD /* CardRenderer.swift */; };
 		2CEF55566CD7EDD95C39CC01 /* RaceSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D812937365A0963C9FE9958 /* RaceSetupView.swift */; };
 		37171390CCA27BFA7683ECFF /* Race.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93175D56ABAEDC79E4C794B3 /* Race.swift */; };
+		37A6EB641D50763F0EC4E858 /* AthleteProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A190C975E445F6E55481E08 /* AthleteProfileView.swift */; };
+		43F40A75A46E51AAA2EF6891 /* AthleteProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221CC82841835CBCD8E139A0 /* AthleteProfileViewModel.swift */; };
 		52589224CDB614F54C383013 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3840295052F8A21EF390B087 /* Assets.xcassets */; };
 		527F7D8CF38D86FE207F5504 /* ColorBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C445F0828F08EA29C544354C /* ColorBar.swift */; };
+		6E9F8F951D7B70921F5AD9A8 /* SavedRelayTeam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95C31A50A75DF2F947173240 /* SavedRelayTeam.swift */; };
 		6F187688BACFD45F4B4C515A /* ResultsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F80EDA2F8E6EE9E75CE5CA /* ResultsViewModel.swift */; };
 		70B0D4AD1B94201087D79BAB /* RaceStateCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B548F352C6C7398141852A0 /* RaceStateCache.swift */; };
 		84C210A7BF88D39CCF2779BD /* ResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57BE85BF81644B8271FB4DD6 /* ResultsView.swift */; };
@@ -25,15 +29,20 @@
 		8E4B03044E2CB11C9C6C6057 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0621D38455ED4C89A659FBEB /* HomeViewModel.swift */; };
 		940224D3C4FDC3D31CD48F77 /* SplitDeck.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 73496D30D2CF2129FEC0EE5E /* SplitDeck.xcdatamodeld */; };
 		9935B96036449CAF5F6A3BD3 /* Athlete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983B6342E3A87E4CD19AA2FD /* Athlete.swift */; };
+		995BD75952DC44A550A5E450 /* CompactAthleteCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5545723FBB96972FCEB8C7 /* CompactAthleteCardView.swift */; };
 		A00D125582AEF22BEAD3F96A /* RaceDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F69683CF963EBDB3E8FFE22 /* RaceDomain.swift */; };
 		AD7DC3B4451D460BD713550F /* AthleteCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22816F99276C67DC2F708AA1 /* AthleteCardView.swift */; };
 		B404F9C191B47860EBBF00E4 /* MeetDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A68AB182F1F2DB803B59A43F /* MeetDetailViewModel.swift */; };
 		C2C0132469CAE63A71E2B23B /* UnassignedMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592212AC0943EEECCA541243 /* UnassignedMark.swift */; };
+		C49BD1AB78AEBDABB47AE608 /* RelayBuilderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9616DB739E616548E3CC4AE6 /* RelayBuilderViewModel.swift */; };
 		C4FD1725A503720660C328B4 /* CSVExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A334198E8BAC203BFC9E84 /* CSVExporter.swift */; };
+		C6234EA969FBFC1D9135365D /* RelayRecommender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E729CE74F1588333BE72148 /* RelayRecommender.swift */; };
+		D21D290F2A637FFBF106494D /* RelayBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110FB51AD12891B38900F30E /* RelayBuilderView.swift */; };
 		D5BA6F46579852204621A952 /* Meet.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF0BEBE348AD4BFEBF2C0CA7 /* Meet.swift */; };
 		D5FA8DBD6A47FF054FFC5070 /* LiveTimingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E79BA0870757AAE4764F6F8B /* LiveTimingView.swift */; };
 		D8DBD5629AF5F0C6688EAA3A /* SplitDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F4B6430C33ACA453B9239A /* SplitDeckApp.swift */; };
 		DE4A713C514100D11E216FEB /* SplitDeckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34971AC10EB3458014C26665 /* SplitDeckStore.swift */; };
+		DF03334583E3269DF466FF1D /* AthleteRosterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D3BAA858E22F979FCD3FAC /* AthleteRosterView.swift */; };
 		F6B2B00A5348B3453BFEBDA0 /* TimingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE33AB7DD72D84EA9C9CF75 /* TimingEngine.swift */; };
 		FC66AA0E1F24F4523C2F2467 /* Split.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D877B69427847289A6B51FF /* Split.swift */; };
 /* End PBXBuildFile section */
@@ -41,9 +50,14 @@
 /* Begin PBXFileReference section */
 		0621D38455ED4C89A659FBEB /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		087D59B9479124D982BB1FF9 /* Int+TimeFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Int+TimeFormatting.swift"; sourceTree = "<group>"; };
+		0D5545723FBB96972FCEB8C7 /* CompactAthleteCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactAthleteCardView.swift; sourceTree = "<group>"; };
+		0E729CE74F1588333BE72148 /* RelayRecommender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayRecommender.swift; sourceTree = "<group>"; };
+		110FB51AD12891B38900F30E /* RelayBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayBuilderView.swift; sourceTree = "<group>"; };
 		15415B5F64D5CF6C857AF04F /* RunsmithSplitTimer.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RunsmithSplitTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A190C975E445F6E55481E08 /* AthleteProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteProfileView.swift; sourceTree = "<group>"; };
 		1B548F352C6C7398141852A0 /* RaceStateCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RaceStateCache.swift; sourceTree = "<group>"; };
 		1C491B6D663CB9FD6B5AC3BD /* CardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRenderer.swift; sourceTree = "<group>"; };
+		221CC82841835CBCD8E139A0 /* AthleteProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteProfileViewModel.swift; sourceTree = "<group>"; };
 		22816F99276C67DC2F708AA1 /* AthleteCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteCardView.swift; sourceTree = "<group>"; };
 		34971AC10EB3458014C26665 /* SplitDeckStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitDeckStore.swift; sourceTree = "<group>"; };
 		3840295052F8A21EF390B087 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -52,12 +66,16 @@
 		57BE85BF81644B8271FB4DD6 /* ResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsView.swift; sourceTree = "<group>"; };
 		592212AC0943EEECCA541243 /* UnassignedMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnassignedMark.swift; sourceTree = "<group>"; };
 		5D877B69427847289A6B51FF /* Split.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Split.swift; sourceTree = "<group>"; };
+		5FC29C5EB6D64350600FC8AA /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		5FE33AB7DD72D84EA9C9CF75 /* TimingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimingEngine.swift; sourceTree = "<group>"; };
 		69A334198E8BAC203BFC9E84 /* CSVExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExporter.swift; sourceTree = "<group>"; };
 		72FF88CEB8B8D3ACF1C60D55 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		7766A2D83FB4A1CC2FAAF8FB /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		7A031E4142C9058EF08DEBE9 /* RaceSetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RaceSetupViewModel.swift; sourceTree = "<group>"; };
+		88D3BAA858E22F979FCD3FAC /* AthleteRosterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteRosterView.swift; sourceTree = "<group>"; };
 		93175D56ABAEDC79E4C794B3 /* Race.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Race.swift; sourceTree = "<group>"; };
+		95C31A50A75DF2F947173240 /* SavedRelayTeam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedRelayTeam.swift; sourceTree = "<group>"; };
+		9616DB739E616548E3CC4AE6 /* RelayBuilderViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayBuilderViewModel.swift; sourceTree = "<group>"; };
 		983B6342E3A87E4CD19AA2FD /* Athlete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Athlete.swift; sourceTree = "<group>"; };
 		A68AB182F1F2DB803B59A43F /* MeetDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetDetailViewModel.swift; sourceTree = "<group>"; };
 		ADE3532082051AEB1DDCBF08 /* SplitDeck.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = SplitDeck.xcdatamodel; sourceTree = "<group>"; };
@@ -84,9 +102,19 @@
 		1DEF630A533101940FF56610 /* Home */ = {
 			isa = PBXGroup;
 			children = (
+				5FC29C5EB6D64350600FC8AA /* AboutView.swift */,
 				72FF88CEB8B8D3ACF1C60D55 /* HomeView.swift */,
 			);
 			path = Home;
+			sourceTree = "<group>";
+		};
+		2A93D6984A6F4865AF8A83C1 /* AthleteProfile */ = {
+			isa = PBXGroup;
+			children = (
+				1A190C975E445F6E55481E08 /* AthleteProfileView.swift */,
+				88D3BAA858E22F979FCD3FAC /* AthleteRosterView.swift */,
+			);
+			path = AthleteProfile;
 			sourceTree = "<group>";
 		};
 		3DB85AF1406135547884D7BA /* App */ = {
@@ -102,6 +130,7 @@
 			isa = PBXGroup;
 			children = (
 				22816F99276C67DC2F708AA1 /* AthleteCardView.swift */,
+				0D5545723FBB96972FCEB8C7 /* CompactAthleteCardView.swift */,
 				E79BA0870757AAE4764F6F8B /* LiveTimingView.swift */,
 			);
 			path = LiveTiming;
@@ -161,10 +190,12 @@
 		8CC93E4648775D79263DDB80 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				2A93D6984A6F4865AF8A83C1 /* AthleteProfile */,
 				1DEF630A533101940FF56610 /* Home */,
 				50D5DC6BD25CA7DA8E1FD087 /* LiveTiming */,
 				0E3D8BBD3789AF9861E50B13 /* MeetDetail */,
 				80BAD936BD76F14F7C7D03A2 /* RaceSetup */,
+				B9ED572F1FC0BCE3D696510F /* RelayBuilder */,
 				82DEA81656E33B66DF7C151C /* Results */,
 			);
 			path = Views;
@@ -176,10 +207,19 @@
 				983B6342E3A87E4CD19AA2FD /* Athlete.swift */,
 				DF0BEBE348AD4BFEBF2C0CA7 /* Meet.swift */,
 				93175D56ABAEDC79E4C794B3 /* Race.swift */,
+				95C31A50A75DF2F947173240 /* SavedRelayTeam.swift */,
 				5D877B69427847289A6B51FF /* Split.swift */,
 				592212AC0943EEECCA541243 /* UnassignedMark.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		B9ED572F1FC0BCE3D696510F /* RelayBuilder */ = {
+			isa = PBXGroup;
+			children = (
+				110FB51AD12891B38900F30E /* RelayBuilderView.swift */,
+			);
+			path = RelayBuilder;
 			sourceTree = "<group>";
 		};
 		BA21CB9DABA34FCDDABEB83C /* Extensions */ = {
@@ -201,10 +241,12 @@
 		CDF7922CD2FD47C879319746 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				221CC82841835CBCD8E139A0 /* AthleteProfileViewModel.swift */,
 				0621D38455ED4C89A659FBEB /* HomeViewModel.swift */,
 				E108A36EE73BC01960F84847 /* LiveTimingViewModel.swift */,
 				A68AB182F1F2DB803B59A43F /* MeetDetailViewModel.swift */,
 				7A031E4142C9058EF08DEBE9 /* RaceSetupViewModel.swift */,
+				9616DB739E616548E3CC4AE6 /* RelayBuilderViewModel.swift */,
 				F0F80EDA2F8E6EE9E75CE5CA /* ResultsViewModel.swift */,
 			);
 			path = ViewModels;
@@ -223,6 +265,7 @@
 			children = (
 				69A334198E8BAC203BFC9E84 /* CSVExporter.swift */,
 				3F69683CF963EBDB3E8FFE22 /* RaceDomain.swift */,
+				0E729CE74F1588333BE72148 /* RelayRecommender.swift */,
 				5FE33AB7DD72D84EA9C9CF75 /* TimingEngine.swift */,
 			);
 			path = Domain;
@@ -309,11 +352,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0CE05CDAD03DA81A55A16D71 /* AboutView.swift in Sources */,
 				9935B96036449CAF5F6A3BD3 /* Athlete.swift in Sources */,
 				AD7DC3B4451D460BD713550F /* AthleteCardView.swift in Sources */,
+				37A6EB641D50763F0EC4E858 /* AthleteProfileView.swift in Sources */,
+				43F40A75A46E51AAA2EF6891 /* AthleteProfileViewModel.swift in Sources */,
+				DF03334583E3269DF466FF1D /* AthleteRosterView.swift in Sources */,
 				C4FD1725A503720660C328B4 /* CSVExporter.swift in Sources */,
 				258380E5BD4DF63F196726BE /* CardRenderer.swift in Sources */,
 				527F7D8CF38D86FE207F5504 /* ColorBar.swift in Sources */,
+				995BD75952DC44A550A5E450 /* CompactAthleteCardView.swift in Sources */,
 				2041D13B50C974804E7912CF /* HomeView.swift in Sources */,
 				8E4B03044E2CB11C9C6C6057 /* HomeViewModel.swift in Sources */,
 				015C1B8193C18ED9DB197F9E /* Int+TimeFormatting.swift in Sources */,
@@ -327,9 +375,13 @@
 				2CEF55566CD7EDD95C39CC01 /* RaceSetupView.swift in Sources */,
 				09EB142480D65C9438106D49 /* RaceSetupViewModel.swift in Sources */,
 				70B0D4AD1B94201087D79BAB /* RaceStateCache.swift in Sources */,
+				D21D290F2A637FFBF106494D /* RelayBuilderView.swift in Sources */,
+				C49BD1AB78AEBDABB47AE608 /* RelayBuilderViewModel.swift in Sources */,
+				C6234EA969FBFC1D9135365D /* RelayRecommender.swift in Sources */,
 				1A37159E60C57CAFD06D2BFB /* ResultsCardView.swift in Sources */,
 				84C210A7BF88D39CCF2779BD /* ResultsView.swift in Sources */,
 				6F187688BACFD45F4B4C515A /* ResultsViewModel.swift in Sources */,
+				6E9F8F951D7B70921F5AD9A8 /* SavedRelayTeam.swift in Sources */,
 				FC66AA0E1F24F4523C2F2467 /* Split.swift in Sources */,
 				940224D3C4FDC3D31CD48F77 /* SplitDeck.xcdatamodeld in Sources */,
 				D8DBD5629AF5F0C6688EAA3A /* SplitDeckApp.swift in Sources */,

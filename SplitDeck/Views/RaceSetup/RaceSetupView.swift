@@ -1,5 +1,10 @@
 import SwiftUI
 
+private enum RelaySource: String, CaseIterable {
+    case savedTeams = "Saved Teams"
+    case athletes = "Athletes"
+}
+
 struct RaceSetupView: View {
     @ObservedObject var vm: RaceSetupViewModel
     let store: SplitDeckStore
@@ -16,6 +21,16 @@ struct RaceSetupView: View {
     @State private var editName = ""
     @State private var editTeam = ""
     @State private var editColorHex = ""
+    @State private var editGender: Gender? = nil
+
+    // Athlete profile navigation (state-based, replaces inline NavigationLink)
+    @State private var profileAthlete: Athlete? = nil
+
+    // Relay source filter
+    @State private var relaySource: RelaySource = .athletes
+
+    // Relay builder navigation
+    @State private var navigateToRelayBuilder = false
 
     var body: some View {
         NavigationStack {
@@ -45,6 +60,21 @@ struct RaceSetupView: View {
                     LiveTimingView(vm: liveVM, cache: cache, onRaceComplete: { dismiss() })
                 }
             }
+            .navigationDestination(isPresented: Binding(
+                get: { profileAthlete != nil },
+                set: { if !$0 { profileAthlete = nil } }
+            )) {
+                if let athlete = profileAthlete {
+                    AthleteProfileView(
+                        vm: AthleteProfileViewModel(athlete: athlete, store: store)
+                    )
+                }
+            }
+            .navigationDestination(isPresented: $navigateToRelayBuilder) {
+                RelayBuilderView(
+                    vm: RelayBuilderViewModel(store: store)
+                )
+            }
             .onAppear { vm.load() }
         }
     }
@@ -64,22 +94,25 @@ struct RaceSetupView: View {
 
             // Distance picker — options depend on race type
             if vm.raceType == .individual {
-                Picker("Distance", selection: $vm.eventType) {
-                    ForEach(RaceSetupViewModel.individualEventTypes, id: \.self) { type in
-                        Text(type.displayName).tag(type)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .listRowInsets(.init(top: 8, leading: 16, bottom: 8, trailing: 16))
+                Toggle("Unlimited Splits", isOn: $vm.unlimitedSplits)
+                    .tint(Theme.runsmithPink)
 
-                if vm.eventType == .custom {
-                    HStack {
-                        Text("Distance (m)")
-                        Spacer()
-                        TextField("e.g. 1500", text: $vm.customDistance)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 100)
+                if !vm.unlimitedSplits {
+                    Picker("Distance", selection: $vm.eventType) {
+                        ForEach(RaceSetupViewModel.individualEventTypes, id: \.self) { type in
+                            Text(type.displayName).tag(type)
+                        }
+                    }
+
+                    if vm.eventType == .custom {
+                        HStack {
+                            Text("Distance (m)")
+                            Spacer()
+                            TextField("e.g. 1500", text: $vm.customDistance)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 100)
+                        }
                     }
                 }
             } else {
@@ -103,7 +136,6 @@ struct RaceSetupView: View {
 
             TextField("Race Name (optional)", text: $vm.raceName)
                 .onChange(of: vm.eventType) { newType in
-                    // Update name if it's still an auto-generated value or empty
                     let autoNames = EventType.allCases.map(\.displayName)
                     if vm.raceName.isEmpty || autoNames.contains(vm.raceName) {
                         vm.raceName = newType.displayName
@@ -127,17 +159,13 @@ struct RaceSetupView: View {
             }
             .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
 
-            if vm.raceType == .individual {
+            if vm.raceType == .individual && !vm.unlimitedSplits {
                 HStack {
                     Text("Track Length").foregroundStyle(.secondary)
                     Spacer()
                     Text("400m (outdoor)").foregroundStyle(.secondary)
                 }
-                HStack {
-                    Text("Splits per Lap").foregroundStyle(.secondary)
-                    Spacer()
-                    Text("1").foregroundStyle(.secondary)
-                }
+                Stepper("Splits per Lap: \(vm.splitsPerLap)", value: $vm.splitsPerLap, in: 1...4)
             }
         }
     }
@@ -158,30 +186,16 @@ struct RaceSetupView: View {
     private var regularAthleteSection: some View {
         Section {
             if !vm.availableAthletes.isEmpty {
+                genderFilterRow
                 TextField("Search athletes", text: $vm.athleteSearchText)
                     .autocorrectionDisabled()
             }
 
             ForEach(vm.filteredAthletes) { athlete in
-                HStack {
-                    Circle()
-                        .fill(Color(hex: athlete.colorHex))
-                        .frame(width: 12, height: 12)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(athlete.name).font(.body)
-                        if let team = athlete.teamName {
-                            Text(team).font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer()
-                    if vm.selectedAthleteIds.contains(athlete.id) {
-                        Image(systemName: "checkmark")
-                            .foregroundStyle(Theme.runsmithPink)
-                            .fontWeight(.semibold)
-                    }
+                let selected = vm.selectedAthleteIds.contains(athlete.id)
+                athleteRow(athlete: athlete, selected: selected) {
+                    vm.toggleAthlete(athlete.id)
                 }
-                .contentShape(Rectangle())
-                .onTapGesture { vm.toggleAthlete(athlete.id) }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     Button(role: .destructive) {
                         vm.delete(athlete: athlete)
@@ -192,12 +206,14 @@ struct RaceSetupView: View {
                         editName = athlete.name
                         editTeam = athlete.teamName ?? ""
                         editColorHex = athlete.colorHex
+                        editGender = athlete.gender
                         athleteToEdit = athlete
                     } label: {
                         Label("Edit", systemImage: "pencil")
                     }
                     .tint(.blue)
                 }
+                .opacity(vm.isAthleteCapReached && !selected ? 0.4 : 1.0)
             }
             .onMove { vm.moveAthletes(from: $0, to: $1) }
             .deleteDisabled(true)
@@ -212,12 +228,63 @@ struct RaceSetupView: View {
                 Text("Athletes")
                 Spacer()
                 if !vm.selectedAthleteIds.isEmpty {
-                    Text("\(vm.selectedAthleteIds.count) selected")
+                    Text("\(vm.selectedAthleteIds.count)/\(RaceSetupViewModel.maxIndividualAthletes) selected")
                         .font(.caption)
-                        .foregroundStyle(Theme.runsmithPink)
+                        .foregroundStyle(vm.isAthleteCapReached ? .orange : Theme.runsmithPink)
                 }
             }
         }
+    }
+
+    // MARK: – Shared Athlete Row
+
+    /// Row with gender bar, color dot, name, info button, and selection indicator.
+    /// Tapping anywhere on the row (except the ⓘ button) toggles selection.
+    private func athleteRow(athlete: Athlete, selected: Bool, onToggle: @escaping () -> Void) -> some View {
+        HStack(spacing: 0) {
+            // Gender color bar
+            Rectangle()
+                .fill(Theme.genderColor(athlete.gender))
+                .frame(width: 4)
+                .clipShape(Capsule())
+                .padding(.trailing, 10)
+
+            // Color dot
+            Circle()
+                .fill(Color(hex: athlete.colorHex))
+                .frame(width: 12, height: 12)
+                .padding(.trailing, 8)
+
+            // Name + team
+            VStack(alignment: .leading, spacing: 1) {
+                Text(athlete.name).font(.body)
+                if let team = athlete.teamName {
+                    Text(team).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            // Info button — opens profile
+            Button {
+                profileAthlete = athlete
+            } label: {
+                Image(systemName: "info.circle")
+                    .foregroundStyle(.blue)
+                    .font(.body)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 4)
+            }
+            .buttonStyle(.plain)
+            .contentShape(Rectangle())
+
+            // Selection checkmark
+            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                .foregroundStyle(selected ? Theme.runsmithPink : Color(.quaternaryLabel))
+                .font(.title3)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { onToggle() }
     }
 
     // MARK: Relay Athlete Section
@@ -234,6 +301,10 @@ struct RaceSetupView: View {
                             .frame(width: 24, height: 24)
                             .background(Theme.runsmithPink)
                             .clipShape(Circle())
+                        Rectangle()
+                            .fill(Theme.genderColor(athlete.gender))
+                            .frame(width: 4)
+                            .clipShape(Capsule())
                         Circle()
                             .fill(Color(hex: athlete.colorHex))
                             .frame(width: 12, height: 12)
@@ -283,61 +354,165 @@ struct RaceSetupView: View {
                 }
             }
 
-            // Available athletes section
-            Section("Available Athletes") {
-                let unselected = vm.filteredAthletes.filter { !vm.selectedAthleteIds.contains($0.id) }
-                if unselected.isEmpty && vm.availableAthletes.isEmpty {
-                    Text("No athletes yet — add one below")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                } else if unselected.isEmpty {
-                    Text("All athletes assigned")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(unselected) { athlete in
-                        HStack(spacing: 12) {
-                            Circle()
-                                .fill(Color(hex: athlete.colorHex))
-                                .frame(width: 12, height: 12)
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(athlete.name).font(.body)
-                                if let team = athlete.teamName {
-                                    Text(team).font(.caption).foregroundStyle(.secondary)
-                                }
-                            }
-                            Spacer()
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundStyle(Theme.runsmithPink)
-                                .font(.title3)
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture { vm.toggleAthlete(athlete.id) }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) {
-                                vm.delete(athlete: athlete)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                            Button {
-                                editName = athlete.name
-                                editTeam = athlete.teamName ?? ""
-                                editColorHex = athlete.colorHex
-                                athleteToEdit = athlete
-                            } label: {
-                                Label("Edit", systemImage: "pencil")
-                            }
-                            .tint(.blue)
-                        }
+            // Source picker + content
+            Section {
+                Picker("Pick From", selection: $relaySource) {
+                    ForEach(RelaySource.allCases, id: \.self) { src in
+                        Text(src.rawValue).tag(src)
                     }
                 }
+                .pickerStyle(.segmented)
+                .listRowInsets(.init(top: 8, leading: 16, bottom: 8, trailing: 16))
 
+                if relaySource == .savedTeams {
+                    savedTeamsContent
+                } else {
+                    athletesContent
+                }
+            } header: {
+                Text(relaySource == .savedTeams ? "Saved Teams" : "Available Athletes")
+            }
+        }
+    }
+
+    // MARK: – Relay: Saved Teams Content
+
+    @ViewBuilder
+    private var savedTeamsContent: some View {
+        let matching = vm.matchingSavedTeams
+        if matching.isEmpty {
+            // Combined empty state + build button in one row
+            Button {
+                navigateToRelayBuilder = true
+            } label: {
+                VStack(spacing: 8) {
+                    Image(systemName: "person.3")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                    Text("No saved teams for \(vm.eventType.displayName)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text("Build New Team")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.runsmithPink)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+            }
+        } else {
+            ForEach(matching) { team in
                 Button {
-                    showAddAthlete = true
+                    vm.loadSavedTeam(team)
                 } label: {
-                    Label("New Athlete", systemImage: "person.badge.plus")
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(team.name)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text(team.gender.displayName)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        savedTeamMembersRow(team.athleteIds)
+                    }
                 }
             }
+
+            // Build New Team — uses state-based navigation
+            Button {
+                navigateToRelayBuilder = true
+            } label: {
+                Label("Build New Team", systemImage: "plus.circle")
+            }
+        }
+    }
+
+    private func savedTeamMembersRow(_ athleteIds: [UUID]) -> some View {
+        HStack(spacing: 4) {
+            ForEach(Array(athleteIds.enumerated()), id: \.offset) { i, id in
+                if let athlete = vm.athlete(for: id) {
+                    HStack(spacing: 3) {
+                        Circle()
+                            .fill(Color(hex: athlete.colorHex))
+                            .frame(width: 8, height: 8)
+                        Text(athlete.name)
+                            .font(.caption)
+                            .lineLimit(1)
+                    }
+                    if i < athleteIds.count - 1 {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 7, weight: .bold))
+                            .foregroundStyle(.quaternary)
+                    }
+                }
+            }
+        }
+        .foregroundStyle(.secondary)
+    }
+
+    // MARK: – Relay: Athletes Content
+
+    @ViewBuilder
+    private var athletesContent: some View {
+        genderFilterRow
+        let unselected = vm.filteredAthletes.filter { !vm.selectedAthleteIds.contains($0.id) }
+        if unselected.isEmpty && vm.availableAthletes.isEmpty {
+            Text("No athletes yet — add one below")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        } else if unselected.isEmpty {
+            Text("All athletes assigned")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        } else {
+            ForEach(unselected) { athlete in
+                HStack(spacing: 0) {
+                    Rectangle()
+                        .fill(Theme.genderColor(athlete.gender))
+                        .frame(width: 4)
+                        .clipShape(Capsule())
+                        .padding(.trailing, 10)
+                    Circle()
+                        .fill(Color(hex: athlete.colorHex))
+                        .frame(width: 12, height: 12)
+                        .padding(.trailing, 8)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(athlete.name).font(.body)
+                        if let team = athlete.teamName {
+                            Text(team).font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundStyle(Theme.runsmithPink)
+                        .font(.title3)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { vm.toggleAthlete(athlete.id) }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        vm.delete(athlete: athlete)
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                    Button {
+                        editName = athlete.name
+                        editTeam = athlete.teamName ?? ""
+                        editColorHex = athlete.colorHex
+                        athleteToEdit = athlete
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                    .tint(.blue)
+                }
+            }
+        }
+
+        Button {
+            showAddAthlete = true
+        } label: {
+            Label("New Athlete", systemImage: "person.badge.plus")
         }
     }
 
@@ -373,6 +548,7 @@ struct RaceSetupView: View {
                 Section("Details") {
                     TextField("Name (required)", text: $editName)
                     TextField("Team (optional)", text: $editTeam)
+                    genderPicker(selection: $editGender)
                 }
                 Section("Color") {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 12) {
@@ -403,11 +579,47 @@ struct RaceSetupView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        vm.update(athlete: athlete, name: editName, teamName: editTeam, colorHex: editColorHex)
+                        vm.update(athlete: athlete, name: editName, teamName: editTeam, colorHex: editColorHex, gender: editGender)
                         athleteToEdit = nil
                     }
-                    .disabled(editName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(editName.trimmingCharacters(in: .whitespaces).isEmpty || editGender == nil)
                 }
+            }
+        }
+    }
+
+    // MARK: – Gender Filter
+
+    private var genderFilterRow: some View {
+        HStack(spacing: 8) {
+            Text("Filter").foregroundStyle(.secondary)
+            Spacer()
+            genderFilterButton("All", gender: nil)
+            genderFilterButton("M", gender: .male)
+            genderFilterButton("F", gender: .female)
+        }
+    }
+
+    private func genderFilterButton(_ label: String, gender: Gender?) -> some View {
+        Button(label) {
+            vm.genderFilter = vm.genderFilter == gender ? nil : gender
+        }
+        .buttonStyle(.bordered)
+        .tint(vm.genderFilter == gender ? (gender.map { Theme.genderTint($0) } ?? Theme.runsmithPink) : .secondary)
+    }
+
+    // MARK: – Gender Picker (mandatory, M=blue, F=pink)
+
+    private func genderPicker(selection: Binding<Gender?>) -> some View {
+        HStack(spacing: 12) {
+            Text("Gender").foregroundStyle(.secondary)
+            Spacer()
+            ForEach(Gender.allCases, id: \.self) { g in
+                Button(g.rawValue) {
+                    selection.wrappedValue = g
+                }
+                .buttonStyle(.bordered)
+                .tint(selection.wrappedValue == g ? Theme.genderTint(g) : .secondary)
             }
         }
     }
@@ -420,6 +632,7 @@ struct RaceSetupView: View {
                 Section {
                     TextField("Name (required)", text: $vm.newAthleteName)
                     TextField("Team (optional)", text: $vm.newAthleteTeam)
+                    genderPicker(selection: $vm.newAthleteGender)
                 }
             }
             .navigationTitle("New Athlete")
@@ -433,7 +646,7 @@ struct RaceSetupView: View {
                         vm.addNewAthlete()
                         showAddAthlete = false
                     }
-                    .disabled(vm.newAthleteName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(vm.newAthleteName.trimmingCharacters(in: .whitespaces).isEmpty || vm.newAthleteGender == nil)
                 }
             }
         }

@@ -10,7 +10,7 @@ enum CSVExporter {
         splits: [Split],
         meet: Meet?
     ) -> String {
-        let labels = RaceDomain.cumulativeColumnLabels(for: race)
+        let labels = RaceDomain.cumulativeColumnLabels(for: race, splits: splits)
         var rows: [String] = []
 
         // Header
@@ -21,9 +21,9 @@ enum CSVExporter {
         for entry in rankedAthletes {
             let place = entry.place.map { String($0) } ?? "\u{2014}"
             let lapCells = labels.enumerated().map { (i, _) -> String in
-                RaceDomain.cumulativeDisplay(
+                RaceDomain.cumulativeDisplayByOrdinal(
                     athlete: entry.athlete,
-                    lapIndex: i + 1,
+                    splitOrdinal: i + 1,
                     splits: splits,
                     race: race
                 ).displayString

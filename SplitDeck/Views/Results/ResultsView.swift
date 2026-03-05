@@ -161,7 +161,7 @@ struct ResultsView: View {
                             Text(label)
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
-                            let val = vm.cellValue(athlete: entry.athlete, lapIndex: i + 1)
+                            let val = vm.cellValue(athlete: entry.athlete, splitOrdinal: i + 1)
                             Text(val.displayString)
                                 .font(.caption.monospacedDigit())
                         }

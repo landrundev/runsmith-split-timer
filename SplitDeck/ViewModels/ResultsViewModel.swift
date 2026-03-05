@@ -42,23 +42,31 @@ final class ResultsViewModel: ObservableObject {
     }
 
     var columnLabels: [String] {
-        RaceDomain.cumulativeColumnLabels(for: race)
+        RaceDomain.cumulativeColumnLabels(for: race, splits: splits)
     }
 
-    func cellValue(athlete: Athlete, lapIndex: Int) -> CellValue {
+    func cellValue(athlete: Athlete, splitOrdinal: Int) -> CellValue {
         switch displayMode {
         case .cumulative:
-            return RaceDomain.cumulativeDisplay(
-                athlete: athlete, lapIndex: lapIndex, splits: splits, race: race)
+            return RaceDomain.cumulativeDisplayByOrdinal(
+                athlete: athlete, splitOrdinal: splitOrdinal, splits: splits, race: race)
         case .lapTimes:
-            return RaceDomain.lapTimeDisplay(
-                athlete: athlete, lapIndex: lapIndex, splits: splits, race: race)
+            return RaceDomain.lapTimeDisplayByOrdinal(
+                athlete: athlete, splitOrdinal: splitOrdinal, splits: splits, race: race)
         }
     }
 
     /// Always returns the cumulative total time regardless of display mode — used for the header row.
     func totalTimeValue(athlete: Athlete) -> CellValue {
-        RaceDomain.cumulativeDisplay(athlete: athlete, lapIndex: race.laps, splits: splits, race: race)
+        if race.isUnlimitedSplits {
+            let athleteSplits = splits.filter { $0.athleteId == athlete.id }
+                .sorted { $0.elapsedMs < $1.elapsedMs }
+            guard let last = athleteSplits.last else { return .missing }
+            return .time(last.elapsedMs)
+        }
+        let totalSplits = race.expectedSplitsPerAthlete
+        return RaceDomain.cumulativeDisplayByOrdinal(
+            athlete: athlete, splitOrdinal: totalSplits, splits: splits, race: race)
     }
 
     func exportCSV() -> String {
@@ -78,7 +86,7 @@ final class ResultsViewModel: ObservableObject {
         let labels = columnLabels
         let athleteRows = rankedAthletes.map { entry in
             let splitStrings = labels.indices.map { i in
-                cellValue(athlete: entry.athlete, lapIndex: i + 1).displayString
+                cellValue(athlete: entry.athlete, splitOrdinal: i + 1).displayString
             }
             return CardData.CardAthlete(
                 name: entry.athlete.name,

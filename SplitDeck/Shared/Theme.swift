@@ -15,6 +15,23 @@ enum Theme {
     static let colorBarWidth: CGFloat = 6
     static let cardCornerRadius: CGFloat = 12
 
+    // MARK: – Gender Colors
+    static func genderColor(_ gender: Gender?) -> Color {
+        switch gender {
+        case .male:   return .blue
+        case .female: return Color(hex: "#FF5CA1")
+        case nil:     return Color(.quaternaryLabel)
+        }
+    }
+
+    /// Tint for gender toggle buttons: M=blue, F=pink
+    static func genderTint(_ gender: Gender) -> Color {
+        switch gender {
+        case .male:   return .blue
+        case .female: return Color(hex: "#FF5CA1")
+        }
+    }
+
     // MARK: – Status Badge Colors
     static func statusColor(_ status: RaceStatus) -> Color {
         switch status {

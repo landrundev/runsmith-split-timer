@@ -143,6 +143,56 @@ final class SplitDeckStore: ObservableObject {
         try ctx.save()
     }
 
+    // MARK: – Saved Relay Teams
+
+    func fetchSavedRelayTeams() throws -> [SavedRelayTeam] {
+        let req = SavedRelayTeamEntity.fetchRequest()
+        req.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
+        return try ctx.fetch(req).map(map)
+    }
+
+    func save(_ team: SavedRelayTeam) throws {
+        let entity: SavedRelayTeamEntity
+        if let existing = try fetchSavedRelayTeamEntity(id: team.id) {
+            entity = existing
+        } else {
+            entity = SavedRelayTeamEntity(context: ctx)
+        }
+        map(team, into: entity)
+        try ctx.save()
+    }
+
+    func delete(relayTeamId: UUID) throws {
+        guard let entity = try fetchSavedRelayTeamEntity(id: relayTeamId) else { return }
+        ctx.delete(entity)
+        try ctx.save()
+    }
+
+    // MARK: – Cross-meet queries
+
+    func fetchAllCompletedRaces() throws -> [Race] {
+        let req = RaceEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "status == %d", RaceStatus.completed.rawValue)
+        req.sortDescriptors = [NSSortDescriptor(key: "startedAt", ascending: false)]
+        return try ctx.fetch(req).map(map)
+    }
+
+    // MARK: – Athlete-centric queries (for profiles)
+
+    func fetchRaces(forAthlete athleteId: UUID) throws -> [Race] {
+        let req = RaceEntity.fetchRequest()
+        req.sortDescriptors = [NSSortDescriptor(key: "startedAt", ascending: false)]
+        let allRaces = try ctx.fetch(req).map(map)
+        return allRaces.filter { $0.athleteIds.contains(athleteId) }
+    }
+
+    func fetchSplits(forAthlete athleteId: UUID) throws -> [Split] {
+        let req = SplitEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "athleteId == %@", athleteId as CVarArg)
+        req.sortDescriptors = [NSSortDescriptor(key: "elapsedMs", ascending: true)]
+        return try ctx.fetch(req).map(map)
+    }
+
     // MARK: – Private fetch helpers
 
     private func fetchAthleteEntity(id: UUID) throws -> AthleteEntity? {
@@ -173,6 +223,13 @@ final class SplitDeckStore: ObservableObject {
         return try ctx.fetch(req).first
     }
 
+    private func fetchSavedRelayTeamEntity(id: UUID) throws -> SavedRelayTeamEntity? {
+        let req = SavedRelayTeamEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        req.fetchLimit = 1
+        return try ctx.fetch(req).first
+    }
+
     // MARK: – Mapping: entity → domain struct
 
     private func map(_ entity: AthleteEntity) -> Athlete {
@@ -181,7 +238,8 @@ final class SplitDeckStore: ObservableObject {
             name: entity.name!,
             teamName: entity.teamName,
             colorHex: entity.colorHex!,
-            notes: entity.notes
+            notes: entity.notes,
+            gender: entity.gender.flatMap { Gender(rawValue: $0) }
         )
     }
 
@@ -210,6 +268,7 @@ final class SplitDeckStore: ObservableObject {
             distanceMeters: Int(entity.distanceMeters),
             trackLengthMeters: Int(entity.trackLengthMeters),
             splitsPerLap: Int(entity.splitsPerLap),
+            isUnlimitedSplits: entity.isUnlimitedSplits,
             athleteIds: athleteIds,
             startedAt: entity.startedAt,
             endedAt: entity.endedAt,
@@ -235,6 +294,7 @@ final class SplitDeckStore: ObservableObject {
         entity.teamName = athlete.teamName
         entity.colorHex = athlete.colorHex
         entity.notes = athlete.notes
+        entity.gender = athlete.gender?.rawValue
     }
 
     private func map(_ meet: Meet, into entity: MeetEntity) {
@@ -252,6 +312,7 @@ final class SplitDeckStore: ObservableObject {
         entity.distanceMeters = Int32(race.distanceMeters)
         entity.trackLengthMeters = Int32(race.trackLengthMeters)
         entity.splitsPerLap = Int16(race.splitsPerLap)
+        entity.isUnlimitedSplits = race.isUnlimitedSplits
         entity.athleteIdsData = try? JSONEncoder().encode(race.athleteIds)
         entity.startedAt = race.startedAt
         entity.endedAt = race.endedAt
@@ -264,5 +325,32 @@ final class SplitDeckStore: ObservableObject {
         entity.athleteId = split.athleteId
         entity.lapIndex = Int32(split.lapIndex)
         entity.elapsedMs = Int64(split.elapsedMs)
+    }
+
+    private func map(_ entity: SavedRelayTeamEntity) -> SavedRelayTeam {
+        let athleteIds: [UUID]
+        if let data = entity.athleteIdsData,
+           let decoded = try? JSONDecoder().decode([UUID].self, from: data) {
+            athleteIds = decoded
+        } else {
+            athleteIds = []
+        }
+        return SavedRelayTeam(
+            id: entity.id!,
+            name: entity.name!,
+            eventType: EventType(rawValue: entity.eventType) ?? .relay4x400,
+            gender: Gender(rawValue: entity.gender!) ?? .male,
+            athleteIds: athleteIds,
+            createdAt: entity.createdAt!
+        )
+    }
+
+    private func map(_ team: SavedRelayTeam, into entity: SavedRelayTeamEntity) {
+        entity.id = team.id
+        entity.name = team.name
+        entity.eventType = team.eventType.rawValue
+        entity.gender = team.gender.rawValue
+        entity.athleteIdsData = try? JSONEncoder().encode(team.athleteIds)
+        entity.createdAt = team.createdAt
     }
 }

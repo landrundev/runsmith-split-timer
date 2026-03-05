@@ -2,6 +2,7 @@
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23G93" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="NO" userDefinedModelVersionIdentifier="">
     <entity name="AthleteEntity" representedClassName="AthleteEntity" syncable="YES" codeGenerationType="class">
         <attribute name="colorHex" attributeType="String"/>
+        <attribute name="gender" optional="YES" attributeType="String"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
@@ -25,6 +26,15 @@
         <attribute name="startedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="status" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="trackLengthMeters" attributeType="Integer 32" defaultValueString="400" usesScalarValueType="YES"/>
+        <attribute name="isUnlimitedSplits" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="SavedRelayTeamEntity" representedClassName="SavedRelayTeamEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="athleteIdsData" attributeType="Binary"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="eventType" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="gender" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
     </entity>
     <entity name="SplitEntity" representedClassName="SplitEntity" syncable="YES" codeGenerationType="class">
         <attribute name="athleteId" attributeType="UUID" usesScalarValueType="NO"/>

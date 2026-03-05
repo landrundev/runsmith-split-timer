@@ -26,12 +26,14 @@ enum RaceDomain {
     // MARK: Highest lap shown in the "Lap X of Y" header
     static func currentDisplayLap(splits: [Split], race: Race) -> Int {
         let maxCompleted = splits.map(\.lapIndex).max() ?? 0
+        if race.isUnlimitedSplits { return maxCompleted + 1 }
         return min(maxCompleted + 1, race.laps)
     }
 
     // MARK: A valid final time exists ONLY if lapIndex == race.laps exists for athlete
     static func finalTime(athlete: Athlete, splits: [Split], race: Race) -> Int? {
-        splits.first {
+        guard !race.isUnlimitedSplits else { return nil }
+        return splits.first {
             $0.athleteId == athlete.id && $0.lapIndex == race.laps
         }?.elapsedMs
     }
@@ -62,6 +64,18 @@ enum RaceDomain {
         splits: [Split],
         race: Race
     ) -> [(athlete: Athlete, place: Int?)] {
+        if race.isUnlimitedSplits {
+            // Unlimited: sort by split count desc, then last time asc
+            let sorted = athletes.sorted { a, b in
+                let aCount = splits.filter { $0.athleteId == a.id }.count
+                let bCount = splits.filter { $0.athleteId == b.id }.count
+                if aCount != bCount { return aCount > bCount }
+                let aMax = splits.filter { $0.athleteId == a.id }.map(\.elapsedMs).max() ?? 0
+                let bMax = splits.filter { $0.athleteId == b.id }.map(\.elapsedMs).max() ?? 0
+                return aMax < bMax
+            }
+            return sorted.map { (athlete: $0, place: nil as Int?) }
+        }
         let complete = athletes
             .filter { isComplete(athlete: $0, splits: splits, race: race) }
             .sorted {
@@ -76,12 +90,42 @@ enum RaceDomain {
     }
 
     // MARK: Dynamic column labels for any race — no hardcoding for 1600/3200
-    static func cumulativeColumnLabels(for race: Race) -> [String] {
-        let lapDistance = race.distanceMeters / race.laps // integer division
-        return (1...race.laps).map { "\(lapDistance * $0)m" }
+    static func cumulativeColumnLabels(for race: Race, splits: [Split] = []) -> [String] {
+        if race.isUnlimitedSplits {
+            let maxCount = Dictionary(grouping: splits, by: \.athleteId)
+                .values.map(\.count).max() ?? 0
+            guard maxCount > 0 else { return [] }
+            return (1...maxCount).map { "Split \($0)" }
+        }
+        let totalColumns = race.laps * race.splitsPerLap
+        let splitDistance = race.trackLengthMeters / race.splitsPerLap
+        return (1...totalColumns).map { "\(splitDistance * $0)m" }
     }
 
-    // MARK: Cell value for results table (both display and CSV share this path)
+    // MARK: Ordinal-based cell values (used by Results + CSV)
+    // Splits sorted by elapsed time; ordinal = 1-based position in that sorted list.
+
+    static func cumulativeDisplayByOrdinal(
+        athlete: Athlete, splitOrdinal: Int, splits: [Split], race: Race
+    ) -> CellValue {
+        let sorted = splits.filter { $0.athleteId == athlete.id }
+            .sorted { $0.elapsedMs < $1.elapsedMs }
+        guard splitOrdinal >= 1, splitOrdinal <= sorted.count else { return .missing }
+        return .time(sorted[splitOrdinal - 1].elapsedMs)
+    }
+
+    static func lapTimeDisplayByOrdinal(
+        athlete: Athlete, splitOrdinal: Int, splits: [Split], race: Race
+    ) -> CellValue {
+        let sorted = splits.filter { $0.athleteId == athlete.id }
+            .sorted { $0.elapsedMs < $1.elapsedMs }
+        guard splitOrdinal >= 1, splitOrdinal <= sorted.count else { return .missing }
+        let cur = sorted[splitOrdinal - 1].elapsedMs
+        let prev = splitOrdinal > 1 ? sorted[splitOrdinal - 2].elapsedMs : 0
+        return .time(cur - prev)
+    }
+
+    // MARK: Legacy lapIndex-based cell values (used by live timing, backwards compat for splitsPerLap==1)
     static func cumulativeDisplay(
         athlete: Athlete, lapIndex: Int, splits: [Split], race: Race
     ) -> CellValue {

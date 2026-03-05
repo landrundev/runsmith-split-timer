@@ -26,15 +26,11 @@ struct LiveTimingView: View {
                 }
             }
         }
-        .confirmationDialog(
-            "Finish Race?",
-            isPresented: $vm.showFinishConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Finish Race", role: .destructive) { vm.finishRace() }
+        .alert("Finish Race?", isPresented: $vm.showFinishConfirmation) {
+            Button("Finish", role: .destructive) { vm.finishRace() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This will mark the race as completed and save all results.")
+            Text("This will end the race and save all results.")
         }
         .alert("Resume Race?", isPresented: $vm.showResumePrompt) {
             Button("Resume") { vm.resumeRace() }
@@ -126,23 +122,46 @@ struct LiveTimingView: View {
         }
     }
 
+    private var useCompactGrid: Bool { vm.athletes.count > 8 }
+
     private var regularAthleteList: some View {
         ScrollView {
-            LazyVStack(spacing: 10) {
-                ForEach(vm.athletes) { athlete in
-                    AthleteCardView(
-                        athlete: athlete,
-                        lastSplitSummary: vm.lastSplitSummary(for: athlete),
-                        lapProgress: vm.lapProgress(for: athlete),
-                        isComplete: RaceDomain.isComplete(
-                            athlete: athlete, splits: vm.splits, race: vm.race)
-                    ) {
-                        vm.assign(to: athlete)
+            if useCompactGrid {
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)],
+                    spacing: 8
+                ) {
+                    ForEach(vm.athletes) { athlete in
+                        CompactAthleteCardView(
+                            athlete: athlete,
+                            lastLapDelta: vm.lastLapDelta(for: athlete),
+                            lapProgress: vm.lapProgress(for: athlete),
+                            isComplete: RaceDomain.isComplete(
+                                athlete: athlete, splits: vm.splits, race: vm.race)
+                        ) {
+                            vm.assign(to: athlete)
+                        }
                     }
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+            } else {
+                LazyVStack(spacing: 10) {
+                    ForEach(vm.athletes) { athlete in
+                        AthleteCardView(
+                            athlete: athlete,
+                            splitTimes: vm.splitTimesForDisplay(for: athlete),
+                            lapProgress: vm.lapProgress(for: athlete),
+                            isComplete: RaceDomain.isComplete(
+                                athlete: athlete, splits: vm.splits, race: vm.race)
+                        ) {
+                            vm.assign(to: athlete)
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
         }
     }
 

@@ -133,11 +133,62 @@ final class LiveTimingViewModel: ObservableObject {
 
     func lastSplitSummary(for athlete: Athlete) -> String? {
         guard let last = splits(for: athlete).last else { return nil }
+        if race.isUnlimitedSplits {
+            return "\(last.elapsedMs.formattedSplitTime) (Split \(last.lapIndex))"
+        }
         return "\(last.elapsedMs.formattedSplitTime) (Lap \(last.lapIndex))"
+    }
+
+    func lastSplitTime(for athlete: Athlete) -> String? {
+        splits(for: athlete).last.map { $0.elapsedMs.formattedSplitTime }
+    }
+
+    /// All recorded splits for display on full-size cards: (label, cumulative, lapDelta)
+    func splitTimesForDisplay(for athlete: Athlete) -> [(label: String, cumulative: String, lap: String)] {
+        let sorted = splits(for: athlete)
+        guard !sorted.isEmpty else { return [] }
+
+        let splitDistance: Int? = {
+            guard !race.isUnlimitedSplits else { return nil }
+            return race.trackLengthMeters / race.splitsPerLap
+        }()
+
+        return sorted.enumerated().map { i, split in
+            let label: String
+            if let dist = splitDistance {
+                label = "\(dist * (i + 1))m"
+            } else {
+                label = "Split \(i + 1)"
+            }
+            let cumulative = split.elapsedMs.formattedSplitTime
+            let prev = i > 0 ? sorted[i - 1].elapsedMs : 0
+            let lap = (split.elapsedMs - prev).formattedSplitTime
+            return (label: label, cumulative: cumulative, lap: lap)
+        }
+    }
+
+    /// Last lap delta time for compact cards
+    func lastLapDelta(for athlete: Athlete) -> String? {
+        let sorted = splits(for: athlete)
+        guard let last = sorted.last else { return nil }
+        let prev = sorted.count >= 2 ? sorted[sorted.count - 2].elapsedMs : 0
+        return (last.elapsedMs - prev).formattedSplitTime
+    }
+
+    /// Last cumulative time for compact cards
+    func lastCumulativeTime(for athlete: Athlete) -> String? {
+        splits(for: athlete).last.map { $0.elapsedMs.formattedSplitTime }
     }
 
     func lapProgress(for athlete: Athlete) -> String {
         let completed = splits(for: athlete).count
+        if race.isUnlimitedSplits {
+            return "Split \(completed)"
+        }
+        if race.splitsPerLap > 1 {
+            let total = race.expectedSplitsPerAthlete
+            return "Split \(min(completed + 1, total)) / \(total)"
+        }
         return "Lap \(min(completed + 1, race.laps)) / \(race.laps)"
     }
 
@@ -150,6 +201,17 @@ final class LiveTimingViewModel: ObservableObject {
             let name = currentRelayAthlete?.name ?? ""
             return "\(race.eventType.displayName) — Leg \(leg) of 4: \(name)"
         }
+        if race.isUnlimitedSplits {
+            let totalSplits = splits.count
+            return "Unlimited — \(totalSplits) split\(totalSplits == 1 ? "" : "s") recorded"
+        }
+        if race.splitsPerLap > 1 {
+            let totalSplits = race.expectedSplitsPerAthlete
+            let maxCompleted = Dictionary(grouping: splits, by: \.athleteId)
+                .values.map(\.count).max() ?? 0
+            let currentSplit = min(maxCompleted + 1, totalSplits)
+            return "\(race.distanceMeters)m – Split \(currentSplit) of \(totalSplits)"
+        }
         let current = RaceDomain.currentDisplayLap(splits: splits, race: race)
         return "\(race.distanceMeters)m – Lap \(current) of \(race.laps)"
     }
@@ -160,7 +222,7 @@ final class LiveTimingViewModel: ObservableObject {
 
     /// True when every athlete in the race has recorded all expected splits.
     var allAthletesComplete: Bool {
-        guard !isRelay, !athletes.isEmpty else { return false }
+        guard !isRelay, !athletes.isEmpty, !race.isUnlimitedSplits else { return false }
         return athletes.allSatisfy { RaceDomain.isComplete(athlete: $0, splits: splits, race: race) }
     }
 

@@ -9,12 +9,22 @@ enum EventType: Int16, Codable, CaseIterable {
     case relay4x800  = 5
     case relay4x1600 = 6
     case relay4x3200 = 7
+    case m400   = 8
+    case m1500  = 9
+    case m5000  = 10
+    case m10000 = 11
+    case mile   = 12
 
     var displayName: String {
         switch self {
+        case .m400:      return "400m"
         case .m800:      return "800m"
+        case .m1500:     return "1500m"
+        case .mile:      return "Mile"
         case .m1600:     return "1600m"
         case .m3200:     return "3200m"
+        case .m5000:     return "5000m"
+        case .m10000:    return "10000m"
         case .custom:    return "Custom"
         case .relay4x400:  return "4\u{00D7}400m"
         case .relay4x800:  return "4\u{00D7}800m"
@@ -43,9 +53,14 @@ enum EventType: Int16, Codable, CaseIterable {
 
     var defaultDistance: Int? {
         switch self {
+        case .m400:   return 400
         case .m800:   return 800
+        case .m1500:  return 1500
+        case .mile:   return 1609
         case .m1600:  return 1600
         case .m3200:  return 3200
+        case .m5000:  return 5000
+        case .m10000: return 10000
         case .custom: return nil
         default:      return legDistanceMeters
         }
@@ -74,6 +89,7 @@ struct Race: Identifiable, Codable, Hashable {
     var distanceMeters: Int
     var trackLengthMeters: Int  // MVP: always 400 (or legDistance for relay)
     var splitsPerLap: Int       // MVP: always 1
+    var isUnlimitedSplits: Bool // true = no predetermined lap count
     var athleteIds: [UUID]      // display order; leg order for relay
     var startedAt: Date?        // stored as UTC; never convert for calculations
     var endedAt: Date?
@@ -81,10 +97,14 @@ struct Race: Identifiable, Codable, Hashable {
 
     // Computed — never stored
     var laps: Int {
-        Int(ceil(Double(distanceMeters) / Double(trackLengthMeters)))
+        guard !isUnlimitedSplits else { return Int.max }
+        return Int(ceil(Double(distanceMeters) / Double(trackLengthMeters)))
     }
 
-    var expectedSplitsPerAthlete: Int { laps * splitsPerLap }
+    var expectedSplitsPerAthlete: Int {
+        guard !isUnlimitedSplits else { return Int.max }
+        return laps * splitsPerLap
+    }
 
     init(
         id: UUID = UUID(),
@@ -94,6 +114,7 @@ struct Race: Identifiable, Codable, Hashable {
         distanceMeters: Int,
         trackLengthMeters: Int = 400,
         splitsPerLap: Int = 1,
+        isUnlimitedSplits: Bool = false,
         athleteIds: [UUID] = [],
         startedAt: Date? = nil,
         endedAt: Date? = nil,
@@ -106,6 +127,7 @@ struct Race: Identifiable, Codable, Hashable {
         self.distanceMeters = distanceMeters
         self.trackLengthMeters = trackLengthMeters
         self.splitsPerLap = splitsPerLap
+        self.isUnlimitedSplits = isUnlimitedSplits
         self.athleteIds = athleteIds
         self.startedAt = startedAt
         self.endedAt = endedAt

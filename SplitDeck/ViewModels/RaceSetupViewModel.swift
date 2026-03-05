@@ -14,6 +14,7 @@ final class RaceSetupViewModel: ObservableObject {
     @Published var customDistance: String = ""
     @Published var selectedAthleteIds: Set<UUID> = []
     @Published var athleteSearchText: String = ""
+    @Published var genderFilter: Gender? = nil
     @Published var raceType: RaceTypeSelection = .individual {
         didSet {
             guard raceType != oldValue else { return }
@@ -31,16 +32,20 @@ final class RaceSetupViewModel: ObservableObject {
         }
     }
     @Published var relayAthleteOrder: [UUID] = [] // leg-ordered athlete IDs for relay
+    @Published var unlimitedSplits: Bool = false
+    @Published var splitsPerLap: Int = 1
 
     // Athlete creation
     @Published var newAthleteName: String = ""
     @Published var newAthleteTeam: String = ""
+    @Published var newAthleteGender: Gender? = nil
 
     @Published var errorMessage: String?
 
     @Published private(set) var availableAthletes: [Athlete] = []
+    @Published private(set) var savedRelayTeams: [SavedRelayTeam] = []
     let meetId: UUID?
-    private let store: SplitDeckStore
+    let store: SplitDeckStore
 
     // Predefined athlete colors assigned in rotation
     static let colorPalette = [
@@ -49,8 +54,11 @@ final class RaceSetupViewModel: ObservableObject {
         "#AF52DE", "#A2845E"
     ]
 
-    static let individualEventTypes: [EventType] = [.m800, .m1600, .m3200, .custom]
-    static let relayEventTypes: [EventType]       = [.relay4x400, .relay4x800, .relay4x1600, .relay4x3200]
+    static let maxIndividualAthletes = 50
+    static let individualEventTypes: [EventType] = [
+        .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
+    ]
+    static let relayEventTypes: [EventType] = [.relay4x400, .relay4x800, .relay4x1600, .relay4x3200]
 
     init(meetId: UUID?, store: SplitDeckStore) {
         self.meetId = meetId
@@ -60,6 +68,7 @@ final class RaceSetupViewModel: ObservableObject {
     func load() {
         do {
             availableAthletes = try store.fetchAthletes()
+            savedRelayTeams = try store.fetchSavedRelayTeams()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -68,10 +77,16 @@ final class RaceSetupViewModel: ObservableObject {
     // MARK: – Derived
 
     var filteredAthletes: [Athlete] {
-        guard !athleteSearchText.isEmpty else { return availableAthletes }
-        return availableAthletes.filter {
-            $0.name.localizedCaseInsensitiveContains(athleteSearchText)
+        var result = availableAthletes
+        if let gender = genderFilter {
+            result = result.filter { $0.gender == gender }
         }
+        if !athleteSearchText.isEmpty {
+            result = result.filter {
+                $0.name.localizedCaseInsensitiveContains(athleteSearchText)
+            }
+        }
+        return result
     }
 
     /// Athletes in relay leg order (ordered by relayAthleteOrder, not alpha)
@@ -83,20 +98,39 @@ final class RaceSetupViewModel: ObservableObject {
         if eventType.isRelay {
             return relayAthleteOrder.count == 4
         }
+        if unlimitedSplits {
+            return !selectedAthleteIds.isEmpty
+        }
         return distanceMeters > 0 && !selectedAthleteIds.isEmpty
     }
 
     var distanceMeters: Int {
-        switch eventType {
-        case .m800:   return 800
-        case .m1600:  return 1600
-        case .m3200:  return 3200
-        case .custom: return Int(customDistance) ?? 0
-        default:      return eventType.legDistanceMeters ?? 0
+        if eventType == .custom { return Int(customDistance) ?? 0 }
+        return eventType.defaultDistance ?? eventType.legDistanceMeters ?? 0
+    }
+
+    var matchingSavedTeams: [SavedRelayTeam] {
+        savedRelayTeams.filter { $0.eventType == eventType }
+    }
+
+    func loadSavedTeam(_ team: SavedRelayTeam) {
+        eventType = team.eventType
+        relayAthleteOrder = team.athleteIds.filter { id in
+            availableAthletes.contains { $0.id == id }
         }
+        selectedAthleteIds = Set(relayAthleteOrder)
+    }
+
+    func athlete(for id: UUID) -> Athlete? {
+        availableAthletes.first { $0.id == id }
     }
 
     // MARK: – Athlete selection
+
+    var isAthleteCapReached: Bool {
+        if eventType.isRelay { return relayAthleteOrder.count >= 4 }
+        return selectedAthleteIds.count >= Self.maxIndividualAthletes
+    }
 
     func toggleAthlete(_ id: UUID) {
         if selectedAthleteIds.contains(id) {
@@ -104,6 +138,7 @@ final class RaceSetupViewModel: ObservableObject {
             relayAthleteOrder.removeAll { $0 == id }
         } else {
             if eventType.isRelay && relayAthleteOrder.count >= 4 { return }
+            if !eventType.isRelay && selectedAthleteIds.count >= Self.maxIndividualAthletes { return }
             selectedAthleteIds.insert(id)
             if eventType.isRelay { relayAthleteOrder.append(id) }
         }
@@ -129,7 +164,8 @@ final class RaceSetupViewModel: ObservableObject {
         let athlete = Athlete(
             name: trimmed,
             teamName: newAthleteTeam.isEmpty ? nil : newAthleteTeam,
-            colorHex: color
+            colorHex: color,
+            gender: newAthleteGender
         )
         do {
             try store.save(athlete)
@@ -137,6 +173,7 @@ final class RaceSetupViewModel: ObservableObject {
             toggleAthlete(athlete.id)
             newAthleteName = ""
             newAthleteTeam = ""
+            newAthleteGender = nil
             return athlete
         } catch {
             errorMessage = error.localizedDescription
@@ -144,13 +181,14 @@ final class RaceSetupViewModel: ObservableObject {
         }
     }
 
-    func update(athlete: Athlete, name: String, teamName: String, colorHex: String) {
+    func update(athlete: Athlete, name: String, teamName: String, colorHex: String, gender: Gender?) {
         let updated = Athlete(
             id: athlete.id,
             name: name.trimmingCharacters(in: .whitespaces),
             teamName: teamName.trimmingCharacters(in: .whitespaces).isEmpty ? nil : teamName,
             colorHex: colorHex,
-            notes: athlete.notes
+            notes: athlete.notes,
+            gender: gender
         )
         do {
             try store.save(updated)
@@ -193,14 +231,17 @@ final class RaceSetupViewModel: ObservableObject {
             track = 400
         }
 
-        let name = raceName.isEmpty ? eventType.displayName : raceName
+        let name = raceName.isEmpty
+            ? (unlimitedSplits ? "Unlimited" : eventType.displayName)
+            : raceName
         let race = Race(
             meetId: meetId,
             name: name,
             eventType: eventType,
-            distanceMeters: dist,
+            distanceMeters: unlimitedSplits ? 0 : dist,
             trackLengthMeters: track,
-            splitsPerLap: 1,
+            splitsPerLap: (eventType.isRelay || unlimitedSplits) ? 1 : splitsPerLap,
+            isUnlimitedSplits: unlimitedSplits,
             athleteIds: orderedIds,
             startedAt: Date(),
             status: .inProgress
