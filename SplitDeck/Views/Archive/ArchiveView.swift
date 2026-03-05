@@ -145,11 +145,15 @@ struct ArchiveView: View {
     }
 
     private func raceRow(_ race: Race) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(race.name).font(.headline)
-            Text(race.startedAt.map { Self.dateFormatter.string(from: $0) } ?? "")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        HStack(spacing: 0) {
+            raceGenderBar(race)
+                .padding(.trailing, 10)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(race.name).font(.headline)
+                Text(race.startedAt.map { Self.dateFormatter.string(from: $0) } ?? "")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(.vertical, 4)
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
@@ -204,5 +208,32 @@ struct ArchiveView: View {
                 Label("Delete", systemImage: "trash")
             }
         }
+    }
+
+    private func raceGenderBar(_ race: Race) -> some View {
+        let genders = race.athleteIds.compactMap { id in
+            vm.allAthletes.first(where: { $0.id == id })?.gender
+        }
+        let hasMale = genders.contains(.male)
+        let hasFemale = genders.contains(.female)
+
+        let fill: AnyShapeStyle
+        if hasMale && hasFemale {
+            fill = AnyShapeStyle(LinearGradient(
+                colors: [.blue, Color(hex: "#FF5CA1")],
+                startPoint: .top, endPoint: .bottom
+            ))
+        } else if hasMale {
+            fill = AnyShapeStyle(Color.blue)
+        } else if hasFemale {
+            fill = AnyShapeStyle(Color(hex: "#FF5CA1"))
+        } else {
+            fill = AnyShapeStyle(Color(.quaternaryLabel))
+        }
+
+        return Rectangle()
+            .fill(fill)
+            .frame(width: 4)
+            .clipShape(Capsule())
     }
 }

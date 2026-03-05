@@ -5,6 +5,7 @@ final class ArchiveViewModel: ObservableObject {
     @Published private(set) var archivedMeets: [Meet] = []
     @Published private(set) var archivedRaces: [Race] = []
     @Published private(set) var archivedAthletes: [Athlete] = []
+    @Published private(set) var allAthletes: [Athlete] = []
     @Published var errorMessage: String?
 
     let store: SplitDeckStore
@@ -23,6 +24,7 @@ final class ArchiveViewModel: ObservableObject {
             archivedMeets = try store.fetchArchivedMeets()
             archivedRaces = try store.fetchArchivedRaces()
             archivedAthletes = try store.fetchArchivedAthletes()
+            allAthletes = try store.fetchAthletes() + archivedAthletes
         } catch {
             errorMessage = error.localizedDescription
         }
