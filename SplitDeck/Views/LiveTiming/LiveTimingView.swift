@@ -10,6 +10,19 @@ struct LiveTimingView: View {
     var body: some View {
         VStack(spacing: 0) {
             clockHeader
+            if !vm.isRelay {
+                TipCardView(
+                    tipId: "markSplit",
+                    icon: "hand.tap",
+                    message: "Tap MARK SPLIT when a runner crosses the line. Then tap the athlete\u{2019}s card to assign it. Unassigned marks are held until you assign them."
+                )
+            } else {
+                TipCardView(
+                    tipId: "relayTiming",
+                    icon: "figure.run",
+                    message: "Tap the current runner\u{2019}s row or the bottom button to record each leg. Drag rows to reorder legs mid-race."
+                )
+            }
             athleteList
             bottomBar
         }
@@ -22,7 +35,11 @@ struct LiveTimingView: View {
             if vm.race.status == .inProgress {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Finish") {
-                        vm.showFinishConfirmation = true
+                        if vm.hasIncompleteAthletes {
+                            vm.showDNFConfirmation = true
+                        } else {
+                            vm.showFinishConfirmation = true
+                        }
                     }
                     .foregroundStyle(.red)
                 }
@@ -33,6 +50,17 @@ struct LiveTimingView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This will end the race and save all results.")
+        }
+        .confirmationDialog(
+            "Not all athletes have finished",
+            isPresented: $vm.showDNFConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("End & Record DNFs") { vm.finishRace() }
+            Button("End Without Saving", role: .destructive) { vm.discardRace() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Some athletes have incomplete splits. You can save with DNFs or discard this race.")
         }
         .alert("Resume Race?", isPresented: $vm.showResumePrompt) {
             Button("Resume") { vm.resumeRace() }

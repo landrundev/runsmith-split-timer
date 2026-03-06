@@ -84,6 +84,7 @@ enum RaceStatus: Int16, Codable {
 struct Race: Identifiable, Codable, Hashable {
     let id: UUID
     var meetId: UUID?           // nil for Quick Race
+    var configId: UUID?         // links to SharedRaceConfig.configId for merge validation
     var name: String            // e.g. "Boys 1600m – Heat 1"
     var eventType: EventType
     var distanceMeters: Int
@@ -95,6 +96,7 @@ struct Race: Identifiable, Codable, Hashable {
     var endedAt: Date?
     var status: RaceStatus
     var isArchived: Bool
+    var isMerged: Bool
 
     // Computed — never stored
     var laps: Int {
@@ -110,6 +112,7 @@ struct Race: Identifiable, Codable, Hashable {
     init(
         id: UUID = UUID(),
         meetId: UUID? = nil,
+        configId: UUID? = nil,
         name: String,
         eventType: EventType,
         distanceMeters: Int,
@@ -120,10 +123,12 @@ struct Race: Identifiable, Codable, Hashable {
         startedAt: Date? = nil,
         endedAt: Date? = nil,
         status: RaceStatus = .notStarted,
-        isArchived: Bool = false
+        isArchived: Bool = false,
+        isMerged: Bool = false
     ) {
         self.id = id
         self.meetId = meetId
+        self.configId = configId
         self.name = name
         self.eventType = eventType
         self.distanceMeters = distanceMeters
@@ -135,5 +140,6 @@ struct Race: Identifiable, Codable, Hashable {
         self.endedAt = endedAt
         self.status = status
         self.isArchived = isArchived
+        self.isMerged = isMerged
     }
 }

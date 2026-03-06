@@ -28,8 +28,8 @@ targets:
         CFBundleName: Runsmith Split Timer
         CFBundleDisplayName: Runsmith Split Timer
         CFBundleIdentifier: com.runsmith.splitdeck
-        CFBundleVersion: "19"
-        CFBundleShortVersionString: "1.6"
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
         UILaunchScreen:
           UIColorName: ""
         UISupportedInterfaceOrientations:
@@ -46,5 +46,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.runsmith.splitdeck
         INFOPLIST_FILE: SplitDeck/App/Info.plist
+        MARKETING_VERSION: "1.6"
+        CURRENT_PROJECT_VERSION: "21"
         DEVELOPMENT_TEAM: "8N9TUSKDW3"
         CODE_SIGN_STYLE: Automatic

@@ -48,6 +48,10 @@ final class RaceSetupViewModel: ObservableObject {
 
     @Published var errorMessage: String?
 
+    /// Cached configId — set when buildSharedConfig() is called, or loaded from an imported race.
+    /// Persisted on the Race so merge validation can match CoachSplitPayload.configId.
+    @Published var sharedConfigId: UUID? = nil
+
     @Published private(set) var availableAthletes: [Athlete] = []
     @Published private(set) var savedRelayTeams: [SavedRelayTeam] = []
     let meetId: UUID?
@@ -113,6 +117,8 @@ final class RaceSetupViewModel: ObservableObject {
         if race.eventType.isRelay {
             relayAthleteOrder = race.athleteIds
         }
+
+        sharedConfigId = race.configId
     }
 
     // MARK: – Derived
@@ -288,6 +294,7 @@ final class RaceSetupViewModel: ObservableObject {
         let race = Race(
             id: existingRaceId ?? UUID(),
             meetId: meetId,
+            configId: sharedConfigId,
             name: fields.name,
             eventType: eventType,
             distanceMeters: unlimitedSplits ? 0 : fields.dist,
@@ -341,9 +348,12 @@ final class RaceSetupViewModel: ObservableObject {
             resolvedMeetName = nil
         }
 
+        let configId = sharedConfigId ?? UUID()
+        sharedConfigId = configId
+
         return SharedRaceConfig(
             version: 1,
-            configId: UUID(),
+            configId: configId,
             hostCoachName: CoachIdentity.name ?? "Host",
             meetName: resolvedMeetName,
             raceName: raceName.isEmpty ? eventType.displayName : raceName,
@@ -371,6 +381,7 @@ final class RaceSetupViewModel: ObservableObject {
         let race = Race(
             id: existingRaceId ?? UUID(),
             meetId: meetId,
+            configId: sharedConfigId,
             name: fields.name,
             eventType: eventType,
             distanceMeters: unlimitedSplits ? 0 : fields.dist,

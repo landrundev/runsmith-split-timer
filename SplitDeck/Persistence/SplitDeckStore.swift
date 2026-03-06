@@ -140,6 +140,7 @@ final class SplitDeckStore: ObservableObject {
         // Create the race (Quick Race on this device, no meet association)
         let race = Race(
             meetId: nil,
+            configId: config.configId,
             name: config.raceName,
             eventType: config.eventType,
             distanceMeters: config.distanceMeters,
@@ -187,6 +188,7 @@ final class SplitDeckStore: ObservableObject {
 
             let race = Race(
                 meetId: meet.id,
+                configId: raceConfig.configId,
                 name: raceConfig.raceName,
                 eventType: raceConfig.eventType,
                 distanceMeters: raceConfig.distanceMeters,
@@ -259,6 +261,14 @@ final class SplitDeckStore: ObservableObject {
             map(split, into: entity)
         }
 
+        try ctx.save()
+    }
+
+    func markAsMerged(raceId: UUID) throws {
+        let req = RaceEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "id == %@", raceId as CVarArg)
+        guard let entity = try ctx.fetch(req).first else { return }
+        entity.isMerged = true
         try ctx.save()
     }
 
@@ -449,6 +459,7 @@ final class SplitDeckStore: ObservableObject {
         return Race(
             id: entity.id!,
             meetId: entity.meetId,
+            configId: entity.configId,
             name: entity.name!,
             eventType: EventType(rawValue: entity.eventType) ?? .custom,
             distanceMeters: Int(entity.distanceMeters),
@@ -459,7 +470,8 @@ final class SplitDeckStore: ObservableObject {
             startedAt: entity.startedAt,
             endedAt: entity.endedAt,
             status: RaceStatus(rawValue: entity.status) ?? .notStarted,
-            isArchived: entity.isArchived
+            isArchived: entity.isArchived,
+            isMerged: entity.isMerged
         )
     }
 
@@ -496,6 +508,7 @@ final class SplitDeckStore: ObservableObject {
     private func map(_ race: Race, into entity: RaceEntity) {
         entity.id = race.id
         entity.meetId = race.meetId
+        entity.configId = race.configId
         entity.name = race.name
         entity.eventType = race.eventType.rawValue
         entity.distanceMeters = Int32(race.distanceMeters)
@@ -507,6 +520,7 @@ final class SplitDeckStore: ObservableObject {
         entity.endedAt = race.endedAt
         entity.status = race.status.rawValue
         entity.isArchived = race.isArchived
+        entity.isMerged = race.isMerged
     }
 
     private func map(_ split: Split, into entity: SplitEntity) {

@@ -8,6 +8,7 @@ final class LiveTimingViewModel: ObservableObject {
     @Published private(set) var athletes: [Athlete]
     @Published private(set) var splits: [Split] = []
     @Published var showFinishConfirmation = false
+    @Published var showDNFConfirmation = false
     @Published var showResumePrompt = false
     @Published var navigateToResults = false
     @Published var resultsViewModel: ResultsViewModel?
@@ -101,6 +102,13 @@ final class LiveTimingViewModel: ObservableObject {
     func undo() {
         engine.undo()
         splits = engine.allCurrentSplits
+    }
+
+    func discardRace() {
+        engine.stop()
+        cache.clear()
+        try? store.delete(raceId: race.id)
+        shouldDismiss = true
     }
 
     func finishRace() {
@@ -224,6 +232,12 @@ final class LiveTimingViewModel: ObservableObject {
     var allAthletesComplete: Bool {
         guard !isRelay, !athletes.isEmpty, !race.isUnlimitedSplits else { return false }
         return athletes.allSatisfy { RaceDomain.isComplete(athlete: $0, splits: splits, race: race) }
+    }
+
+    /// True when at least one athlete hasn't finished (bounded individual races only).
+    var hasIncompleteAthletes: Bool {
+        guard !isRelay, !athletes.isEmpty, !race.isUnlimitedSplits else { return false }
+        return !allAthletesComplete
     }
 
     /// Number of legs completed so far (0–4).

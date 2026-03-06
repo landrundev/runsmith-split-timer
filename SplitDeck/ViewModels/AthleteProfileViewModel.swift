@@ -9,6 +9,7 @@ struct AthleteRaceResult: Identifiable {
     let place: Int?        // nil if incomplete or unlimited
     let splitCount: Int
     let isUnlimited: Bool
+    let meetName: String?        // non-nil when race belongs to a meet
     let splitLabels: [String]    // e.g. ["400m", "800m"] or ["Split 1", "Split 2"]
     let cumulativeTimesMs: [Int] // elapsed times per split, sorted by lap index
     let lapTimesMs: [Int]        // per-split deltas
@@ -55,6 +56,8 @@ final class AthleteProfileViewModel: ObservableObject {
             let races = try store.fetchRaces(forAthlete: athlete.id)
                 .filter { $0.status == .completed }
             let allAthletes = try store.fetchAthletes()
+            let meets = try store.fetchMeets()
+            let meetLookup = Dictionary(uniqueKeysWithValues: meets.map { ($0.id, $0.name) })
 
             var results: [AthleteRaceResult] = []
             var bests: [EventType: Int] = [:]
@@ -90,6 +93,7 @@ final class AthleteProfileViewModel: ObservableObject {
                     place: place,
                     splitCount: athleteSplits.count,
                     isUnlimited: race.isUnlimitedSplits,
+                    meetName: race.meetId.flatMap { meetLookup[$0] },
                     splitLabels: labels,
                     cumulativeTimesMs: cumulativeTimes,
                     lapTimesMs: lapTimes

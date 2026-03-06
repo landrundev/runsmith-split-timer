@@ -19,6 +19,11 @@ struct ResultsView: View {
     var body: some View {
         VStack(spacing: 0) {
             raceInfoHeader
+            TipCardView(
+                tipId: "coachMerge",
+                icon: "person.2.badge.gearshape",
+                message: "Tap the \u{00B7}\u{00B7}\u{00B7} menu to share or merge splits. Use Export for Merge to send your splits to a head coach via QR code. Use Merge Coach Data if you\u{2019}re the head coach combining splits from assistants."
+            )
             Divider()
 
             if vm.race.eventType.isRelay {
@@ -42,7 +47,7 @@ struct ResultsView: View {
         .background(Theme.screenBackground.ignoresSafeArea())
         .navigationTitle("Results")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
+        .navigationBarBackButtonHidden(onDone != nil)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
@@ -119,6 +124,15 @@ struct ResultsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+
+            if vm.race.isMerged {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.seal.fill")
+                    Text("WA Official")
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.green)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
@@ -180,10 +194,16 @@ struct ResultsView: View {
                     Spacer()
 
                     let finalVal = vm.totalTimeValue(athlete: entry.athlete)
-                    Text(finalVal.displayString)
-                        .font(.subheadline.weight(.bold))
-                        .monospacedDigit()
-                        .foregroundStyle(entry.place != nil ? .primary : .tertiary)
+                    if case .missing = finalVal, entry.place == nil {
+                        Text("DNF")
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(.red)
+                    } else {
+                        Text(finalVal.displayString)
+                            .font(.subheadline.weight(.bold))
+                            .monospacedDigit()
+                            .foregroundStyle(entry.place != nil ? .primary : .tertiary)
+                    }
                 }
 
             if !vm.columnLabels.isEmpty {

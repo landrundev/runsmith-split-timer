@@ -88,7 +88,12 @@ struct RaceSetupView: View {
                     vm: RelayBuilderViewModel(store: store)
                 )
             }
-            .onAppear { vm.load() }
+            .onAppear {
+                vm.load()
+                if vm.raceName.isEmpty {
+                    vm.raceName = "\(genderLabel) \(vm.eventType.displayName)"
+                }
+            }
         }
     }
 

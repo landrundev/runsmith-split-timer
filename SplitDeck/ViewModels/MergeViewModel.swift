@@ -28,6 +28,9 @@ final class MergeViewModel: ObservableObject {
     /// Set to `true` after `commitMerge()` succeeds.
     @Published var isMerged = false
 
+    /// Set to `true` when an imported payload's configId doesn't match this race.
+    @Published var showWrongRaceError = false
+
     // MARK: – Inputs (immutable after init)
 
     /// The race whose splits are being merged.
@@ -56,9 +59,15 @@ final class MergeViewModel: ObservableObject {
 
     /// Imports a `CoachSplitPayload` from an assistant coach.
     ///
-    /// Deduplicates by `coachName` + `exportedAt` so scanning the same QR twice
-    /// does not add a duplicate entry.
+    /// Validates configId match (if the race has one) to prevent merging splits
+    /// from a different race. Deduplicates by `coachName` + `exportedAt` so
+    /// scanning the same QR twice does not add a duplicate entry.
     func importPayload(_ payload: CoachSplitPayload) {
+        if let raceConfigId = race.configId, payload.configId != raceConfigId {
+            showWrongRaceError = true
+            return
+        }
+
         let isDuplicate = importedPayloads.contains {
             $0.coachName == payload.coachName && $0.exportedAt == payload.exportedAt
         }
@@ -134,6 +143,7 @@ final class MergeViewModel: ObservableObject {
                 with: newSplits
             )
         }
+        try? store.markAsMerged(raceId: race.id)
         isMerged = true
     }
 }

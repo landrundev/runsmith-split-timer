@@ -116,7 +116,8 @@ final class ResultsViewModel: ObservableObject {
             athletes: athleteRows,
             columnLabels: labels,
             relayLegs: relayRows,
-            totalRelayTime: totalRelayMs.map { $0.formattedSplitTime }
+            totalRelayTime: totalRelayMs.map { $0.formattedSplitTime },
+            isMerged: race.isMerged
         )
     }
 
@@ -160,7 +161,7 @@ final class ResultsViewModel: ObservableObject {
         }
         return CoachSplitPayload(
             version: 1,
-            configId: UUID(),
+            configId: race.configId ?? UUID(),
             coachName: CoachIdentity.name ?? "Coach",
             exportedAt: Date(),
             athleteSplits: athleteTimingData

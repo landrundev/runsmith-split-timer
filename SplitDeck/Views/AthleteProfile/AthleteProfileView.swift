@@ -257,6 +257,11 @@ struct AthleteProfileView: View {
                     .font(.subheadline.weight(.semibold))
                 HStack(spacing: 4) {
                     Text(result.eventType.displayName)
+                    if let meetName = result.meetName {
+                        Text("\u{00B7}")
+                        Text(meetName)
+                            .foregroundStyle(Theme.runsmithPink.opacity(0.8))
+                    }
                     if let date = result.date {
                         Text("\u{00B7}")
                         Text(Self.dateFormatter.string(from: date))
@@ -276,13 +281,13 @@ struct AthleteProfileView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     Text("DNF")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(.red)
                 }
                 if let place = result.place {
                     Text(placeString(place))
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(place <= 3 ? Theme.runsmithPink : .secondary)
+                        .foregroundStyle(placeColor(place))
                 }
             }
         }
@@ -332,5 +337,14 @@ struct AthleteProfileView: View {
         default: suffix = "th"
         }
         return "\(place)\(suffix) place"
+    }
+
+    private func placeColor(_ place: Int) -> Color {
+        switch place {
+        case 1: return Color(hex: "#B8960C")  // gold
+        case 2: return Color(hex: "#6E6E6E")  // silver
+        case 3: return Color(hex: "#8B4513")  // bronze
+        default: return .secondary
+        }
     }
 }

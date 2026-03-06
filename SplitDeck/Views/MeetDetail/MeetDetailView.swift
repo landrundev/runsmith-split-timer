@@ -9,6 +9,7 @@ struct MeetDetailView: View {
     @State private var showShareMeet = false
     @State private var raceToDelete: Race? = nil
     @State private var genderFilter: Gender? = nil
+    @State private var pendingRaceToSetup: Race? = nil
 
     private var filteredRaces: [Race] {
         guard let gender = genderFilter else { return vm.races }
@@ -84,6 +85,13 @@ struct MeetDetailView: View {
                 cache: cache
             )
         }
+        .sheet(item: $pendingRaceToSetup, onDismiss: { vm.load() }) { race in
+            RaceSetupView(
+                vm: RaceSetupViewModel(meetId: vm.meet.id, store: store, existingRaceId: race.id),
+                store: store,
+                cache: cache
+            )
+        }
         .confirmationDialog(
             "Delete \"\(raceToDelete?.name ?? "")\"?",
             isPresented: Binding(
@@ -106,29 +114,51 @@ struct MeetDetailView: View {
 
     @ViewBuilder
     private func raceRow(_ race: Race) -> some View {
-        let destination = raceDestination(race)
-        NavigationLink(destination: destination) {
-            HStack(spacing: 0) {
-                raceGenderBar(race)
-                    .padding(.trailing, 10)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(race.name)
-                        .font(.headline)
-                    HStack(spacing: 4) {
-                        Text(race.eventType.displayName)
-                        if race.status == .notStarted && !race.athleteIds.isEmpty {
-                            Text("·")
-                            Text("\(race.athleteIds.count) athlete\(race.athleteIds.count == 1 ? "" : "s")")
-                        }
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                }
-                Spacer()
-                statusBadge(race.status)
+        if race.status == .notStarted {
+            Button { pendingRaceToSetup = race } label: {
+                raceRowContent(race)
             }
-            .padding(.vertical, 4)
+            .buttonStyle(.plain)
+        } else {
+            NavigationLink(destination: raceDestination(race)) {
+                raceRowContent(race)
+            }
         }
+    }
+
+    private func raceRowContent(_ race: Race) -> some View {
+        HStack(spacing: 0) {
+            raceGenderBar(race)
+                .padding(.trailing, 10)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(race.name)
+                    .font(.headline)
+                HStack(spacing: 4) {
+                    Text(race.eventType.displayName)
+                    if race.status == .notStarted && !race.athleteIds.isEmpty {
+                        Text("·")
+                        Text("\(race.athleteIds.count) athlete\(race.athleteIds.count == 1 ? "" : "s")")
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            }
+            Spacer()
+            if race.isMerged { waBadge }
+            statusBadge(race.status)
+        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+    }
+
+    private var waBadge: some View {
+        HStack(spacing: 2) {
+            Image(systemName: "checkmark.seal.fill")
+            Text("WA")
+        }
+        .font(.caption2.weight(.semibold))
+        .foregroundStyle(.green)
+        .padding(.trailing, 6)
     }
 
     @ViewBuilder

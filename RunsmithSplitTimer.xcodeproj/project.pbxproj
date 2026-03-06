@@ -41,6 +41,7 @@
 		940224D3C4FDC3D31CD48F77 /* SplitDeck.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 73496D30D2CF2129FEC0EE5E /* SplitDeck.xcdatamodeld */; };
 		9935B96036449CAF5F6A3BD3 /* Athlete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983B6342E3A87E4CD19AA2FD /* Athlete.swift */; };
 		995BD75952DC44A550A5E450 /* CompactAthleteCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5545723FBB96972FCEB8C7 /* CompactAthleteCardView.swift */; };
+		9EC0E0D3893535A20D4FD7BC /* TipManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26A33CB6B47D69EAF3ECB2BD /* TipManager.swift */; };
 		A00D125582AEF22BEAD3F96A /* RaceDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F69683CF963EBDB3E8FFE22 /* RaceDomain.swift */; };
 		A0359F2523B9F947CF057685 /* ExportSplitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55DBD7F6F485F4DDCB7776E8 /* ExportSplitsView.swift */; };
 		A68AA825821F7788B14E7BEC /* MergeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A84B2B09BC023E2A0F1047 /* MergeView.swift */; };
@@ -63,6 +64,7 @@
 		F6B2B00A5348B3453BFEBDA0 /* TimingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE33AB7DD72D84EA9C9CF75 /* TimingEngine.swift */; };
 		F6B6FB1ABD22E62E2BD5405B /* AnalyticsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12CE3E6B8D19009BF55087D /* AnalyticsViewModel.swift */; };
 		FC66AA0E1F24F4523C2F2467 /* Split.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D877B69427847289A6B51FF /* Split.swift */; };
+		FD8C949981C552EFF46683FB /* TipCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3C9814AEFCFD5EB2BE0CE9F /* TipCardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -77,6 +79,7 @@
 		1C491B6D663CB9FD6B5AC3BD /* CardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRenderer.swift; sourceTree = "<group>"; };
 		221CC82841835CBCD8E139A0 /* AthleteProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteProfileViewModel.swift; sourceTree = "<group>"; };
 		22816F99276C67DC2F708AA1 /* AthleteCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteCardView.swift; sourceTree = "<group>"; };
+		26A33CB6B47D69EAF3ECB2BD /* TipManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TipManager.swift; sourceTree = "<group>"; };
 		2C80CEB71BCBFD4A3B4B37FD /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
 		32053B808398A44F4D58A590 /* ArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveView.swift; sourceTree = "<group>"; };
 		34971AC10EB3458014C26665 /* SplitDeckStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitDeckStore.swift; sourceTree = "<group>"; };
@@ -117,6 +120,7 @@
 		D79CFC9494F0155770A77B1D /* ShareMeetConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareMeetConfigView.swift; sourceTree = "<group>"; };
 		DF0BEBE348AD4BFEBF2C0CA7 /* Meet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meet.swift; sourceTree = "<group>"; };
 		E108A36EE73BC01960F84847 /* LiveTimingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTimingViewModel.swift; sourceTree = "<group>"; };
+		E3C9814AEFCFD5EB2BE0CE9F /* TipCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TipCardView.swift; sourceTree = "<group>"; };
 		E5410BAA8809763650674736 /* SplitMerger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitMerger.swift; sourceTree = "<group>"; };
 		E79BA0870757AAE4764F6F8B /* LiveTimingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTimingView.swift; sourceTree = "<group>"; };
 		EAE3B7B55B5AF96ACE36FBA1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -305,6 +309,7 @@
 			isa = PBXGroup;
 			children = (
 				C445F0828F08EA29C544354C /* ColorBar.swift */,
+				E3C9814AEFCFD5EB2BE0CE9F /* TipCardView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -353,6 +358,7 @@
 				B67926C4487DEF5BDDE86DEF /* RosterImporter.swift */,
 				E5410BAA8809763650674736 /* SplitMerger.swift */,
 				5FE33AB7DD72D84EA9C9CF75 /* TimingEngine.swift */,
+				26A33CB6B47D69EAF3ECB2BD /* TipManager.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -492,6 +498,8 @@
 				CF3797158F6E225479D5DC05 /* SplitMerger.swift in Sources */,
 				8AA329EB6209E9834CE1209B /* Theme.swift in Sources */,
 				F6B2B00A5348B3453BFEBDA0 /* TimingEngine.swift in Sources */,
+				FD8C949981C552EFF46683FB /* TipCardView.swift in Sources */,
+				9EC0E0D3893535A20D4FD7BC /* TipManager.swift in Sources */,
 				C2C0132469CAE63A71E2B23B /* UnassignedMark.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -505,12 +513,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 21;
 				DEVELOPMENT_TEAM = 8N9TUSKDW3;
 				INFOPLIST_FILE = SplitDeck/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.runsmith.splitdeck;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -646,12 +656,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 21;
 				DEVELOPMENT_TEAM = 8N9TUSKDW3;
 				INFOPLIST_FILE = SplitDeck/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.runsmith.splitdeck;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";

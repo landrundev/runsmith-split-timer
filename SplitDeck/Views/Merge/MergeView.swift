@@ -61,6 +61,11 @@ struct MergeView: View {
             } message: {
                 Text("Splits have been updated with the merged values.")
             }
+            .alert("Wrong Race", isPresented: $vm.showWrongRaceError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("This split data belongs to a different race and cannot be merged here.")
+            }
             .onChange(of: vm.mergeStrategy) { _ in
                 vm.computePreview()
             }
@@ -149,7 +154,7 @@ struct MergeView: View {
         }
     }
 
-    /// Renders the side-by-side split table for one athlete.
+    /// Renders the side-by-side split table for one athlete with horizontal scrolling.
     @ViewBuilder
     private func athletePreviewTable(_ result: SplitMerger.MergedResult) -> some View {
         let splitCount = max(
@@ -157,54 +162,53 @@ struct MergeView: View {
             result.mergedSplits.count
         )
         if splitCount > 0 {
-            // Column headers row
-            HStack(spacing: 0) {
-                Text("Source")
-                    .frame(width: 90, alignment: .leading)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                ForEach(0..<splitCount, id: \.self) { i in
-                    Text("Split \(i + 1)")
-                        .frame(maxWidth: .infinity)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+            ScrollView(.horizontal, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    // Column headers
+                    splitGridRow(
+                        label: "Source",
+                        values: (0..<splitCount).map { "Split \($0 + 1)" },
+                        splitCount: splitCount,
+                        bold: false,
+                        isHeader: true
+                    )
+
+                    Divider()
+
+                    // Host row
+                    splitGridRow(
+                        label: "You",
+                        values: paddedValues(result.originalSplits, count: splitCount),
+                        splitCount: splitCount,
+                        bold: false
+                    )
+
+                    // Each imported coach's row
+                    ForEach(Array(vm.importedPayloads.enumerated()), id: \.offset) { idx, payload in
+                        let coachSplits = idx < result.coachSplits.count ? result.coachSplits[idx] : []
+                        splitGridRow(
+                            label: payload.coachName,
+                            values: paddedValues(coachSplits, count: splitCount),
+                            splitCount: splitCount,
+                            bold: false,
+                            flags: result.flags,
+                            coachIndex: idx + 1
+                        )
+                    }
+
+                    Divider().padding(.vertical, 2)
+
+                    // Merged row (bold)
+                    splitGridRow(
+                        label: "Merged",
+                        values: paddedValues(result.mergedSplits, count: splitCount),
+                        splitCount: splitCount,
+                        bold: true
+                    )
                 }
+                .padding(.vertical, 4)
             }
-            .listRowBackground(Color(.systemGroupedBackground))
-
-            // Host row
-            splitRow(
-                label: "You",
-                splits: result.originalSplits,
-                splitCount: splitCount,
-                flags: [],
-                bold: false
-            )
-
-            // Each imported coach's row
-            ForEach(Array(vm.importedPayloads.enumerated()), id: \.offset) { idx, payload in
-                let coachSplits = idx < result.coachSplits.count ? result.coachSplits[idx] : []
-                splitRow(
-                    label: payload.coachName,
-                    splits: coachSplits,
-                    splitCount: splitCount,
-                    flags: result.flags,
-                    coachIndex: idx + 1,
-                    bold: false
-                )
-            }
-
-            Divider()
-
-            // Merged row (bold)
-            splitRow(
-                label: "Merged",
-                splits: result.mergedSplits,
-                splitCount: splitCount,
-                flags: [],
-                bold: true
-            )
+            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
         } else {
             Text("No splits recorded")
                 .foregroundStyle(.secondary)
@@ -212,47 +216,72 @@ struct MergeView: View {
         }
     }
 
-    /// A single row in the preview table.
-    private func splitRow(
+    private let labelWidth: CGFloat = 90
+    private let splitColumnWidth: CGFloat = 72
+
+    /// A single row in the horizontally scrolling split grid.
+    private func splitGridRow(
         label: String,
-        splits: [Int],
+        values: [String],
         splitCount: Int,
-        flags: [SplitMerger.SplitFlag],
-        coachIndex: Int = 0,
-        bold: Bool
+        bold: Bool,
+        isHeader: Bool = false,
+        flags: [SplitMerger.SplitFlag] = [],
+        coachIndex: Int = 0
     ) -> some View {
         HStack(spacing: 0) {
             Text(label)
-                .frame(width: 90, alignment: .leading)
-                .font(bold ? .subheadline.bold() : .subheadline)
-                .foregroundStyle(bold ? .primary : .secondary)
+                .frame(width: labelWidth, alignment: .leading)
+                .font(isHeader ? .caption : (bold ? .subheadline.bold() : .subheadline))
+                .foregroundStyle(isHeader ? .secondary : (bold ? .primary : .secondary))
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
-            ForEach(0..<splitCount, id: \.self) { i in
-                let ms = i < splits.count ? splits[i] : nil
-                let isOutlier: Bool = {
-                    guard coachIndex > 0, i < flags.count else { return false }
-                    if case .outlier(let ci) = flags[i], ci == coachIndex { return true }
-                    return false
-                }()
-
-                HStack(spacing: 2) {
-                    if isOutlier {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.caption2)
-                            .foregroundStyle(.orange)
-                    }
-                    Text(ms.map { formatElapsedMs($0) } ?? "\u{2014}")
-                        .font(bold ? .subheadline.bold() : .subheadline)
-                        .foregroundStyle(isOutlier ? .orange : (bold ? .primary : .secondary))
-                        .monospacedDigit()
-                }
-                .frame(maxWidth: .infinity)
-                .multilineTextAlignment(.center)
+            ForEach(Array(values.enumerated()), id: \.offset) { i, value in
+                splitCell(
+                    value: value,
+                    isHeader: isHeader,
+                    bold: bold,
+                    isOutlier: isOutlierAt(i, flags: flags, coachIndex: coachIndex)
+                )
             }
         }
-        .listRowBackground(bold ? Color(.systemGray6) : Color(.systemBackground))
+        .padding(.vertical, 4)
+        .background(bold ? Color(.systemGray6) : Color.clear)
+    }
+
+    private func splitCell(value: String, isHeader: Bool, bold: Bool, isOutlier: Bool) -> some View {
+        let color: Color = {
+            if isHeader { return Color.secondary }
+            if isOutlier { return Color.orange }
+            if bold { return Color.primary }
+            return Color.secondary
+        }()
+        return HStack(spacing: 2) {
+            if isOutlier {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.caption2)
+                    .foregroundStyle(Color.orange)
+            }
+            Text(value)
+                .font(isHeader ? .caption : (bold ? .subheadline.bold() : .subheadline))
+                .foregroundColor(color)
+                .monospacedDigit()
+        }
+        .frame(width: splitColumnWidth)
+    }
+
+    private func isOutlierAt(_ index: Int, flags: [SplitMerger.SplitFlag], coachIndex: Int) -> Bool {
+        guard coachIndex > 0, index < flags.count else { return false }
+        if case .outlier(let ci) = flags[index], ci == coachIndex { return true }
+        return false
+    }
+
+    /// Pads elapsed-ms values to formatted strings, filling with em-dash for missing splits.
+    private func paddedValues(_ splits: [Int], count: Int) -> [String] {
+        (0..<count).map { i in
+            i < splits.count ? formatElapsedMs(splits[i]) : "\u{2014}"
+        }
     }
 
     // MARK: — Save Button

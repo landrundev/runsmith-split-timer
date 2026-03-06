@@ -13,6 +13,7 @@ struct CardData {
     let columnLabels: [String]   // e.g. ["400m", "800m", "1200m", "1600m"]
     let relayLegs: [CardRelayLeg]
     let totalRelayTime: String?
+    let isMerged: Bool
 
     struct CardAthlete {
         let name: String
@@ -88,6 +89,15 @@ struct ResultsCardView: View {
                 Text(data.displayModeName)
                     .font(.caption.weight(.semibold))
                     .foregroundColor(.white.opacity(0.6))
+            }
+
+            if data.isMerged {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.seal.fill")
+                    Text("WA Official")
+                }
+                .font(.caption2.weight(.semibold))
+                .foregroundColor(.white.opacity(0.9))
             }
         }
         .padding(.horizontal, 24)

@@ -17,6 +17,9 @@ struct HomeView: View {
     @State private var meetToDelete: Meet? = nil
     @State private var quickRaceToDelete: Race? = nil
 
+    // Pending race setup (sheet-based to avoid nested NavigationStack)
+    @State private var pendingRaceToSetup: Race? = nil
+
     // Meet editing
     @State private var meetToEdit: Meet? = nil
     @State private var editMeetName = ""
@@ -89,6 +92,13 @@ struct HomeView: View {
                     cache: cache
                 )
             }
+            .sheet(item: $pendingRaceToSetup, onDismiss: { vm.load() }) { race in
+                RaceSetupView(
+                    vm: RaceSetupViewModel(meetId: nil, store: store, existingRaceId: race.id),
+                    store: store,
+                    cache: cache
+                )
+            }
             .confirmationDialog(
                 "Delete \"\(meetToDelete?.name ?? "")\"?",
                 isPresented: Binding(
@@ -140,11 +150,26 @@ struct HomeView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
+
+                    TipCardView(
+                        tipId: "quickRace",
+                        icon: "stopwatch",
+                        message: "Quick Race lets you time a race instantly \u{2014} no meet needed. To organize races by event and date, tap + to create a meet first."
+                    )
+                    .padding(.top, 8)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
                 .listRowBackground(Color.clear)
             } else {
+                TipCardView(
+                    tipId: "swipeActions",
+                    icon: "hand.draw",
+                    message: "Swipe left on any race or meet to edit or delete it. Swipe right to archive it."
+                )
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+
                 if !vm.meets.isEmpty {
                     Section("Meets") {
                         ForEach(vm.meets) { meet in
@@ -155,7 +180,7 @@ struct HomeView: View {
                                     cache: cache
                                 )
                             } label: {
-                                MeetRowView(meet: meet)
+                                MeetRowView(meet: meet, raceCount: vm.meetRaces[meet.id]?.count ?? 0, status: vm.meetStatus(for: meet))
                             }
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
@@ -188,7 +213,7 @@ struct HomeView: View {
                 if !pendingQuickRaces.isEmpty {
                     Section("Pending Races") {
                         ForEach(pendingQuickRaces) { race in
-                            quickRaceRow(race)
+                            pendingRaceRow(race)
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                     Button(role: .destructive) {
                                         quickRaceToDelete = race
@@ -237,6 +262,30 @@ struct HomeView: View {
         .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 80) }
     }
 
+    /// Pending race row — opens sheet instead of push to avoid nested NavigationStack.
+    @ViewBuilder
+    private func pendingRaceRow(_ race: Race) -> some View {
+        Button { pendingRaceToSetup = race } label: {
+            HStack(spacing: 0) {
+                raceGenderBar(race)
+                    .padding(.trailing, 10)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(race.name)
+                        .font(.headline)
+                    Text(race.startedAt.map { Self.dateFormatter.string(from: $0) } ?? "")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if race.isMerged { waBadge }
+                statusBadge(race.status)
+            }
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
     @ViewBuilder
     private func quickRaceRow(_ race: Race) -> some View {
         NavigationLink(destination: quickRaceDestination(race)) {
@@ -253,6 +302,7 @@ struct HomeView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
+                if race.isMerged { waBadge }
                 statusBadge(race.status)
             }
             .padding(.vertical, 4)
@@ -318,6 +368,16 @@ struct HomeView: View {
             .background(Theme.statusColor(status).opacity(0.15))
             .foregroundStyle(Theme.statusColor(status))
             .clipShape(Capsule())
+    }
+
+    private var waBadge: some View {
+        HStack(spacing: 2) {
+            Image(systemName: "checkmark.seal.fill")
+            Text("WA")
+        }
+        .font(.caption2.weight(.semibold))
+        .foregroundStyle(.green)
+        .padding(.trailing, 6)
     }
 
     // MARK: – Bottom Action Bar
@@ -587,6 +647,8 @@ struct HomeView: View {
 
 struct MeetRowView: View {
     let meet: Meet
+    var raceCount: Int = 0
+    var status: RaceStatus = .notStarted
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -596,18 +658,32 @@ struct MeetRowView: View {
     }()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(meet.name)
-                .font(.headline)
-            HStack {
-                Text(Self.dateFormatter.string(from: meet.date))
-                if let loc = meet.location {
-                    Text("·")
-                    Text(loc)
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(meet.name)
+                    .font(.headline)
+                HStack(spacing: 4) {
+                    Text(Self.dateFormatter.string(from: meet.date))
+                    if let loc = meet.location {
+                        Text("·")
+                        Text(loc)
+                    }
+                    if raceCount > 0 {
+                        Text("·")
+                        Text("\(raceCount) race\(raceCount == 1 ? "" : "s")")
+                    }
                 }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
             }
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
+            Spacer()
+            Text(status.displayName)
+                .font(.caption.weight(.semibold))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Theme.statusColor(status).opacity(0.15))
+                .foregroundStyle(Theme.statusColor(status))
+                .clipShape(Capsule())
         }
         .padding(.vertical, 4)
     }

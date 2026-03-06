@@ -19,7 +19,7 @@ enum CardRenderer {
     static func render(data: CardData) -> UIImage {
         // Calculate total height
         let hasExtraLines = data.meetName != nil || !data.isRelay
-        let headerHeight: CGFloat = hasExtraLines ? 140 : 116
+        let headerHeight: CGFloat = (hasExtraLines ? 140 : 116) + (data.isMerged ? 20 : 0)
         let nameRowHeight: CGFloat = 40
         let splitsRowHeight: CGFloat = 32
         let footerHeight: CGFloat = 28
@@ -157,6 +157,21 @@ enum CardRenderer {
             (data.displayModeName as NSString).draw(
                 at: CGPoint(x: (cardWidth - modeSize.width) / 2, y: cursorY),
                 withAttributes: modeAttrs
+            )
+            cursorY += modeSize.height + 4
+        }
+
+        // WA Official badge for merged results
+        if data.isMerged {
+            let badgeText = "\u{2713} WA Official"
+            let badgeAttrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 11, weight: .semibold),
+                .foregroundColor: UIColor.white.withAlphaComponent(0.9)
+            ]
+            let badgeSize = (badgeText as NSString).size(withAttributes: badgeAttrs)
+            (badgeText as NSString).draw(
+                at: CGPoint(x: (cardWidth - badgeSize.width) / 2, y: cursorY),
+                withAttributes: badgeAttrs
             )
         }
 
