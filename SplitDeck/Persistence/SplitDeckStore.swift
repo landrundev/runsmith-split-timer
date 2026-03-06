@@ -241,6 +241,27 @@ final class SplitDeckStore: ObservableObject {
         try ctx.save()
     }
 
+    // MARK: – Merge Support
+
+    /// Atomically replaces all splits for one athlete in one race with a new set.
+    func replaceSplits(for raceId: UUID, athleteId: UUID, with newSplits: [Split]) throws {
+        let req = SplitEntity.fetchRequest()
+        req.predicate = NSPredicate(
+            format: "raceId == %@ AND athleteId == %@",
+            raceId as CVarArg,
+            athleteId as CVarArg
+        )
+        let existing = try ctx.fetch(req)
+        existing.forEach { ctx.delete($0) }
+
+        for split in newSplits {
+            let entity = SplitEntity(context: ctx)
+            map(split, into: entity)
+        }
+
+        try ctx.save()
+    }
+
     // MARK: – Saved Relay Teams
 
     func fetchSavedRelayTeams() throws -> [SavedRelayTeam] {
