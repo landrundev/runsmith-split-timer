@@ -535,18 +535,28 @@ struct RaceSetupView: View {
     // MARK: – Bottom Buttons
 
     private var bottomButtons: some View {
-        HStack(spacing: 12) {
-            if vm.meetId != nil {
-                Button {
-                    guard vm.saveRace() != nil else { return }
-                    dismiss()
-                } label: {
-                    Text("Save Race")
+        HStack(spacing: 10) {
+            // Save — compact, understated
+            Button {
+                guard vm.saveRace() != nil else { return }
+                dismiss()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "square.and.arrow.down")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text("Save")
+                        .font(.subheadline.weight(.semibold))
                 }
-                .buttonStyle(GlassSecondaryButtonStyle())
-                .disabled(!vm.isValid)
+                .foregroundStyle(Theme.runsmithPink)
+                .padding(.horizontal, 14)
+                .frame(height: 52)
+                .background(Theme.runsmithPink.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
             }
+            .disabled(!vm.isValid)
+            .opacity(vm.isValid ? 1.0 : 0.4)
 
+            // Start Race — primary, full-width
             Button {
                 guard let race = vm.startRace() else { return }
                 createdRace = race

@@ -30,6 +30,14 @@ struct HomeView: View {
         return f
     }()
 
+    private var pendingQuickRaces: [Race] {
+        vm.quickRaces.filter { $0.status == .notStarted }
+    }
+
+    private var startedQuickRaces: [Race] {
+        vm.quickRaces.filter { $0.status != .notStarted }
+    }
+
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
@@ -177,9 +185,32 @@ struct HomeView: View {
                     }
                 }
 
-                if !vm.quickRaces.isEmpty {
+                if !pendingQuickRaces.isEmpty {
+                    Section("Pending Races") {
+                        ForEach(pendingQuickRaces) { race in
+                            quickRaceRow(race)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button(role: .destructive) {
+                                        quickRaceToDelete = race
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                    Button {
+                                        vm.archive(race: race)
+                                    } label: {
+                                        Label("Archive", systemImage: "archivebox")
+                                    }
+                                    .tint(.orange)
+                                }
+                        }
+                    }
+                }
+
+                if !startedQuickRaces.isEmpty {
                     Section("Quick Race History") {
-                        ForEach(vm.quickRaces) { race in
+                        ForEach(startedQuickRaces) { race in
                             quickRaceRow(race)
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                     Button(role: .destructive) {
@@ -274,7 +305,8 @@ struct HomeView: View {
             LiveTimingView(vm: liveVM, cache: cache)
 
         case .notStarted:
-            EmptyView()
+            let setupVM = RaceSetupViewModel(meetId: nil, store: store, existingRaceId: race.id)
+            RaceSetupView(vm: setupVM, store: store, cache: cache)
         }
     }
 
