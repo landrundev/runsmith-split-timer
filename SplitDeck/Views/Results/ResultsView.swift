@@ -209,7 +209,7 @@ struct ResultsView: View {
                             .fill(Color(hex: entry.athlete.colorHex))
                             .frame(width: 10, height: 10)
 
-                        Text(entry.athlete.name)
+                        Text(entry.athlete.firstName)
                             .font(.subheadline)
                             .lineLimit(1)
 

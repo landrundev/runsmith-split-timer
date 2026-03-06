@@ -30,4 +30,9 @@ struct Athlete: Identifiable, Codable, Hashable {
         self.gender = gender
         self.isArchived = isArchived
     }
+
+    /// First name only — use in space-constrained relay contexts.
+    var firstName: String {
+        name.components(separatedBy: " ").first ?? name
+    }
 }

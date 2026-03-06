@@ -99,7 +99,7 @@ final class ResultsViewModel: ObservableObject {
         let relayRows = relayLegData.map { entry in
             CardData.CardRelayLeg(
                 leg: entry.leg,
-                athleteName: entry.athlete.name,
+                athleteName: entry.athlete.firstName,
                 colorHex: entry.athlete.colorHex,
                 legTime: entry.legMs.map { $0.formattedSplitTime } ?? "—",
                 cumulativeTime: entry.cumulativeMs.map { $0.formattedSplitTime } ?? "—"

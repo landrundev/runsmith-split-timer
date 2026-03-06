@@ -205,7 +205,7 @@ struct LiveTimingView: View {
                 .clipShape(Capsule())
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(athlete.name)
+                Text(athlete.firstName)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(isCurrent ? .primary : (isDone ? .secondary : .tertiary))
                 if isCurrent {

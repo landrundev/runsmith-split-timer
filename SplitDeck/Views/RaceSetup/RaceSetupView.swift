@@ -452,7 +452,7 @@ struct RaceSetupView: View {
                         Circle()
                             .fill(Color(hex: athlete.colorHex))
                             .frame(width: 8, height: 8)
-                        Text(athlete.name)
+                        Text(athlete.firstName)
                             .font(.caption)
                             .lineLimit(1)
                     }

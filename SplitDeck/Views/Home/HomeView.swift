@@ -394,7 +394,25 @@ struct HomeView: View {
 
                     // Menu items — least used at top, most used at bottom
                     VStack(spacing: 0) {
-                        // Archive (least used — top)
+                        // Analytics
+                        NavigationLink {
+                            AnalyticsView(store: store)
+                        } label: {
+                            drawerRow(
+                                icon: "chart.xyaxis.line",
+                                title: "Analytics",
+                                subtitle: "PRs, leaderboards, and insights"
+                            )
+                        }
+                        .simultaneousGesture(TapGesture().onEnded {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                showDrawer = false
+                            }
+                        })
+
+                        Divider().padding(.leading, 66)
+
+                        // Archive
                         NavigationLink {
                             ArchiveView(vm: ArchiveViewModel(store: store))
                         } label: {
