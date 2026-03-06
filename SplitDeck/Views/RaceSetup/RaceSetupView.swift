@@ -96,7 +96,7 @@ struct RaceSetupView: View {
 
     private var eventSection: some View {
         Section("Event") {
-            // Race type toggle: Individual / Relay
+            // 1. Race type toggle: Individual / Relay
             Picker("Type", selection: $vm.raceType) {
                 ForEach(RaceTypeSelection.allCases, id: \.self) { type in
                     Text(type.rawValue).tag(type)
@@ -105,30 +105,33 @@ struct RaceSetupView: View {
             .pickerStyle(.segmented)
             .listRowInsets(.init(top: 8, leading: 16, bottom: 8, trailing: 16))
 
-            // Distance picker — options depend on race type
+            // 2. Gender filter
+            HStack(spacing: 10) {
+                genderFilterButton("Mixed", gender: nil)
+                genderFilterButton("M", gender: .male)
+                genderFilterButton("F", gender: .female)
+            }
+            .listRowInsets(.init(top: 8, leading: 16, bottom: 8, trailing: 16))
+
+            // 3. Distance picker
             if vm.raceType == .individual {
-                Toggle("Unlimited Splits", isOn: $vm.unlimitedSplits)
-                    .tint(Theme.runsmithPink)
-
-                if !vm.unlimitedSplits {
-                    Picker("Distance", selection: $vm.eventType) {
-                        ForEach(RaceSetupViewModel.individualEventTypes, id: \.self) { type in
-                            Text(type.displayName).tag(type)
-                        }
-                    }
-
-                    if vm.eventType == .custom {
-                        HStack {
-                            Text("Distance (m)")
-                            Spacer()
-                            TextField("e.g. 1500", text: $vm.customDistance)
-                                .keyboardType(.numberPad)
-                                .multilineTextAlignment(.trailing)
-                                .frame(width: 100)
-                        }
+                Picker("Distance", selection: $vm.eventType) {
+                    ForEach(RaceSetupViewModel.individualEventTypes, id: \.self) { type in
+                        Text(type.displayName).tag(type)
                     }
                 }
-            } else {
+
+                if vm.eventType == .custom {
+                    HStack {
+                        Text("Distance (m)")
+                        Spacer()
+                        TextField("e.g. 1500", text: $vm.customDistance)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 100)
+                    }
+                }
+            } else if vm.raceType == .relay {
                 Picker("Relay Distance", selection: $vm.eventType) {
                     ForEach(RaceSetupViewModel.relayEventTypes, id: \.self) { type in
                         Text(type.displayName).tag(type)
@@ -147,6 +150,7 @@ struct RaceSetupView: View {
                 }
             }
 
+            // 4. Race Name
             TextField("Race Name (optional)", text: $vm.raceName)
                 .onChange(of: vm.eventType) { newType in
                     let autoNames = EventType.allCases.map(\.displayName)
@@ -155,7 +159,7 @@ struct RaceSetupView: View {
                     }
                 }
 
-            // Quick-label chips
+            // 5. Heat quick-label chips
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(["Heat 1", "Heat 2", "Heat 3", "Semifinal", "Final"], id: \.self) { label in
@@ -172,7 +176,8 @@ struct RaceSetupView: View {
             }
             .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
 
-            if vm.raceType == .individual && !vm.unlimitedSplits {
+            // 6. Track Length + Splits per Lap
+            if vm.raceType == .individual {
                 HStack {
                     Text("Track Length").foregroundStyle(.secondary)
                     Spacer()
@@ -199,7 +204,6 @@ struct RaceSetupView: View {
     private var regularAthleteSection: some View {
         Section {
             if !vm.availableAthletes.isEmpty {
-                genderFilterRow
                 TextField("Search athletes", text: $vm.athleteSearchText)
                     .autocorrectionDisabled()
             }
@@ -468,7 +472,6 @@ struct RaceSetupView: View {
 
     @ViewBuilder
     private var athletesContent: some View {
-        genderFilterRow
         let unselected = vm.filteredAthletes.filter { !vm.selectedAthleteIds.contains($0.id) }
         if unselected.isEmpty && vm.availableAthletes.isEmpty {
             Text("No athletes yet — add one below")
@@ -622,22 +625,23 @@ struct RaceSetupView: View {
 
     // MARK: – Gender Filter
 
-    private var genderFilterRow: some View {
-        HStack(spacing: 8) {
-            Text("Filter").foregroundStyle(.secondary)
-            Spacer()
-            genderFilterButton("All", gender: nil)
-            genderFilterButton("M", gender: .male)
-            genderFilterButton("F", gender: .female)
-        }
-    }
-
     private func genderFilterButton(_ label: String, gender: Gender?) -> some View {
-        Button(label) {
-            vm.genderFilter = vm.genderFilter == gender ? nil : gender
+        Button {
+            vm.genderFilter = gender
+        } label: {
+            Text(label)
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(
+                    vm.genderFilter == gender
+                        ? (gender.map { Theme.genderTint($0) } ?? Theme.runsmithPink)
+                        : Color(.tertiarySystemFill)
+                )
+                .foregroundStyle(vm.genderFilter == gender ? .white : .primary)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
         }
-        .buttonStyle(.bordered)
-        .tint(vm.genderFilter == gender ? (gender.map { Theme.genderTint($0) } ?? Theme.runsmithPink) : .secondary)
+        .buttonStyle(.plain)
     }
 
     // MARK: – Gender Picker (mandatory, M=blue, F=pink)

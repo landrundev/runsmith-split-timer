@@ -6,6 +6,7 @@ enum DisplayMode: String, CaseIterable {
     case lapTimes   = "Lap Times"
 }
 
+
 @MainActor
 final class ResultsViewModel: ObservableObject {
     @Published var displayMode: DisplayMode = .cumulative

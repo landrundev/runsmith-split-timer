@@ -2,6 +2,7 @@ import Foundation
 
 enum RaceTypeSelection: String, CaseIterable {
     case individual = "Individual"
+    case free = "Free"
     case relay = "Relay"
 }
 
@@ -14,7 +15,7 @@ final class RaceSetupViewModel: ObservableObject {
     @Published var customDistance: String = ""
     @Published var selectedAthleteIds: Set<UUID> = []
     @Published var athleteSearchText: String = ""
-    @Published var genderFilter: Gender? = nil
+    @Published var genderFilter: Gender? = .male
     @Published var raceType: RaceTypeSelection = .individual {
         didSet {
             guard raceType != oldValue else { return }
@@ -22,10 +23,15 @@ final class RaceSetupViewModel: ObservableObject {
             switch raceType {
             case .individual:
                 eventType = .m1600
+                unlimitedSplits = false
                 selectedAthleteIds = []
-                // relayAthleteOrder intentionally preserved — restored if user switches back
+            case .free:
+                eventType = .m1600
+                unlimitedSplits = true
+                selectedAthleteIds = []
             case .relay:
                 eventType = .relay4x400
+                unlimitedSplits = false
                 // restore relay selection from preserved order
                 selectedAthleteIds = Set(relayAthleteOrder)
             }
@@ -85,7 +91,13 @@ final class RaceSetupViewModel: ObservableObject {
 
     private func loadExistingRace(_ race: Race) {
         // Set raceType FIRST — its didSet clears raceName and selectedAthleteIds
-        raceType = race.eventType.isRelay ? .relay : .individual
+        if race.eventType.isRelay {
+            raceType = .relay
+        } else if race.isUnlimitedSplits {
+            raceType = .free
+        } else {
+            raceType = .individual
+        }
 
         // Now set everything else (overwriting what didSet cleared)
         raceName = race.name
