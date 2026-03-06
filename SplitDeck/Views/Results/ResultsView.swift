@@ -39,6 +39,7 @@ struct ResultsView: View {
         .background(Theme.screenBackground.ignoresSafeArea())
         .navigationTitle("Results")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {

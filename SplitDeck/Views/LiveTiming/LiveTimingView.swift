@@ -15,7 +15,9 @@ struct LiveTimingView: View {
         }
         .background(Theme.screenBackground.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(vm.race.status == .inProgress)
+        .navigationBarBackButtonHidden(vm.race.status == .inProgress || vm.race.status == .completed)
+        .interactiveDismissDisabled(vm.race.status == .inProgress)
+        .gesture(vm.race.status == .inProgress ? DragGesture() : nil)
         .toolbar {
             if vm.race.status == .inProgress {
                 ToolbarItem(placement: .navigationBarTrailing) {
