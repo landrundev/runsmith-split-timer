@@ -18,6 +18,7 @@
 		2CEF55566CD7EDD95C39CC01 /* RaceSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D812937365A0963C9FE9958 /* RaceSetupView.swift */; };
 		37171390CCA27BFA7683ECFF /* Race.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93175D56ABAEDC79E4C794B3 /* Race.swift */; };
 		37A6EB641D50763F0EC4E858 /* AthleteProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A190C975E445F6E55481E08 /* AthleteProfileView.swift */; };
+		3E69ADA79ACE1FD30A094C55 /* PayloadEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD61869AF46FB9DA543E8E4 /* PayloadEncoder.swift */; };
 		43F40A75A46E51AAA2EF6891 /* AthleteProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221CC82841835CBCD8E139A0 /* AthleteProfileViewModel.swift */; };
 		46A713C3E39CE8FF16EEC744 /* RosterImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E67BEC18DA7A13812ED302 /* RosterImportView.swift */; };
 		52589224CDB614F54C383013 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3840295052F8A21EF390B087 /* Assets.xcassets */; };
@@ -94,6 +95,7 @@
 		B8F17121B12636D402BE0494 /* ResultsCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsCardView.swift; sourceTree = "<group>"; };
 		C445F0828F08EA29C544354C /* ColorBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorBar.swift; sourceTree = "<group>"; };
 		C7F4B6430C33ACA453B9239A /* SplitDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitDeckApp.swift; sourceTree = "<group>"; };
+		CCD61869AF46FB9DA543E8E4 /* PayloadEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayloadEncoder.swift; sourceTree = "<group>"; };
 		CEF97A96A4A096239BF7DF70 /* SharedRaceConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedRaceConfig.swift; sourceTree = "<group>"; };
 		DF0BEBE348AD4BFEBF2C0CA7 /* Meet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meet.swift; sourceTree = "<group>"; };
 		E108A36EE73BC01960F84847 /* LiveTimingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTimingViewModel.swift; sourceTree = "<group>"; };
@@ -300,6 +302,7 @@
 			children = (
 				EB0556F276BEC797727502A7 /* CoachIdentity.swift */,
 				69A334198E8BAC203BFC9E84 /* CSVExporter.swift */,
+				CCD61869AF46FB9DA543E8E4 /* PayloadEncoder.swift */,
 				3F69683CF963EBDB3E8FFE22 /* RaceDomain.swift */,
 				0E729CE74F1588333BE72148 /* RelayRecommender.swift */,
 				B67926C4487DEF5BDDE86DEF /* RosterImporter.swift */,
@@ -411,6 +414,7 @@
 				D5BA6F46579852204621A952 /* Meet.swift in Sources */,
 				1BA5055F711162EA2448A8E9 /* MeetDetailView.swift in Sources */,
 				B404F9C191B47860EBBF00E4 /* MeetDetailViewModel.swift in Sources */,
+				3E69ADA79ACE1FD30A094C55 /* PayloadEncoder.swift in Sources */,
 				37171390CCA27BFA7683ECFF /* Race.swift in Sources */,
 				A00D125582AEF22BEAD3F96A /* RaceDomain.swift in Sources */,
 				2CEF55566CD7EDD95C39CC01 /* RaceSetupView.swift in Sources */,

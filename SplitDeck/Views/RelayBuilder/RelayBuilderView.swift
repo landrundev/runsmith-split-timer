@@ -91,7 +91,7 @@ struct RelayBuilderView: View {
                         .fill(Color(hex: candidate.athlete.colorHex))
                         .frame(width: 12, height: 12)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(candidate.athlete.name).font(.body)
+                        Text(candidate.athlete.name.components(separatedBy: " ").first ?? candidate.athlete.name).font(.body)
                         if vm.rankingMode != .roster {
                             Text(candidate.bestTimeMs.formattedSplitTime)
                                 .font(.caption.monospacedDigit())
@@ -249,7 +249,7 @@ struct RelayBuilderView: View {
                             .fill(Color(hex: candidate.athlete.colorHex))
                             .frame(width: 12, height: 12)
                         VStack(alignment: .leading, spacing: 1) {
-                            Text(candidate.athlete.name).font(.body)
+                            Text(candidate.athlete.name.components(separatedBy: " ").first ?? candidate.athlete.name).font(.body)
                             if let team = candidate.athlete.teamName {
                                 Text(team).font(.caption).foregroundStyle(.secondary)
                             }
