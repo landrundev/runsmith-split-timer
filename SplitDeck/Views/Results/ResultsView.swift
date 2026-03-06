@@ -4,6 +4,8 @@ struct ResultsView: View {
     @ObservedObject var vm: ResultsViewModel
     var onDone: (() -> Void)? = nil
     @State private var previewImage: UIImage? = nil
+    @State private var showExport = false
+    @State private var showMerge = false
     @Environment(\.dismiss) private var dismiss
 
     private static let dateFormatter: DateFormatter = {
@@ -42,11 +44,27 @@ struct ResultsView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    let data = vm.buildCardData()
-                    previewImage = CardRenderer.render(data: data)
+                Menu {
+                    Button {
+                        let data = vm.buildCardData()
+                        previewImage = CardRenderer.render(data: data)
+                    } label: {
+                        Label("Share Results", systemImage: "square.and.arrow.up")
+                    }
+
+                    Button {
+                        showExport = true
+                    } label: {
+                        Label("Export for Merge", systemImage: "arrow.up.doc")
+                    }
+
+                    Button {
+                        showMerge = true
+                    } label: {
+                        Label("Merge Coach Data", systemImage: "person.2.badge.gearshape")
+                    }
                 } label: {
-                    Label("Share", systemImage: "square.and.arrow.up")
+                    Image(systemName: "ellipsis.circle")
                 }
             }
         }
@@ -54,6 +72,14 @@ struct ResultsView: View {
             if onDone != nil {
                 doneButton
             }
+        }
+        .sheet(isPresented: $showExport) {
+            ExportSplitsView(payload: vm.buildCoachSplitPayload())
+        }
+        .sheet(isPresented: $showMerge) {
+            Text("Coming soon")
+                .font(.title2)
+                .foregroundStyle(.secondary)
         }
         .sheet(item: Binding(
             get: { previewImage.map { SharePreviewItem(image: $0) } },

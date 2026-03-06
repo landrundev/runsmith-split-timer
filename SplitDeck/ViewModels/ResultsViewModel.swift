@@ -142,4 +142,28 @@ final class ResultsViewModel: ObservableObject {
             return nil
         }
     }
+
+    // MARK: – Merge Export
+
+    /// Builds a CoachSplitPayload from this ViewModel's current athletes and splits.
+    /// Used by ExportSplitsView to generate the assistant coach's shareable QR code.
+    func buildCoachSplitPayload() -> CoachSplitPayload {
+        let athleteTimingData: [AthleteTimingData] = orderedAthletes.map { athlete in
+            let sortedSplits = splits
+                .filter { $0.athleteId == athlete.id }
+                .sorted { $0.lapIndex < $1.lapIndex }
+                .map { $0.elapsedMs }
+            return AthleteTimingData(
+                athleteId: athlete.id,
+                splits: sortedSplits
+            )
+        }
+        return CoachSplitPayload(
+            version: 1,
+            configId: UUID(),
+            coachName: CoachIdentity.name ?? "Coach",
+            exportedAt: Date(),
+            athleteSplits: athleteTimingData
+        )
+    }
 }
