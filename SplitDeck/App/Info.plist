@@ -20,6 +20,8 @@
 	<string>1.5</string>
 	<key>CFBundleVersion</key>
 	<string>18</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Runsmith needs camera access to scan QR codes for multi-coach race sharing.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save race result cards to your photo library.</string>
 	<key>UILaunchScreen</key>

@@ -113,6 +113,95 @@ final class SplitDeckStore: ObservableObject {
         try ctx.save()
     }
 
+    // MARK: – Import Support
+
+    /// Create a Race and any missing Athletes from a SharedRaceConfig.
+    ///
+    /// - Upserts athletes by UUID: if an Athlete with the same UUID already exists, it is
+    ///   left unchanged. Otherwise a new Athlete is created from the SharedAthlete data.
+    /// - Creates a new Race with `meetId: nil` and `status: .notStarted`.
+    /// - Returns the created Race for immediate navigation to LiveTimingView.
+    func importRace(from config: SharedRaceConfig) throws -> Race {
+        // Upsert athletes
+        for sharedAthlete in config.athletes {
+            if (try? fetchAthleteEntity(id: sharedAthlete.id)) == nil {
+                let athlete = Athlete(
+                    id: sharedAthlete.id,
+                    name: sharedAthlete.name,
+                    teamName: nil,
+                    colorHex: sharedAthlete.colorHex,
+                    notes: nil,
+                    gender: sharedAthlete.gender ?? .male
+                )
+                try save(athlete)
+            }
+        }
+
+        // Create the race (Quick Race on this device, no meet association)
+        let race = Race(
+            meetId: nil,
+            name: config.raceName,
+            eventType: config.eventType,
+            distanceMeters: config.distanceMeters,
+            trackLengthMeters: config.trackLengthMeters,
+            splitsPerLap: config.splitsPerLap,
+            isUnlimitedSplits: config.isUnlimitedSplits,
+            athleteIds: config.athletes.map(\.id),
+            status: .notStarted
+        )
+        try save(race)
+        return race
+    }
+
+    /// Create a Meet, its Races, and any missing Athletes from a SharedMeetConfig.
+    ///
+    /// - Creates the meet with the shared name, date, and location.
+    /// - For each race in the config, upserts athletes and creates the race
+    ///   associated with the new meet.
+    /// - Returns the created Meet for navigation.
+    func importMeet(from config: SharedMeetConfig) throws -> Meet {
+        // Create the meet
+        let meet = Meet(
+            name: config.meetName,
+            date: config.meetDate,
+            location: config.meetLocation
+        )
+        try save(meet)
+
+        // Import each race into this meet
+        for raceConfig in config.races {
+            // Upsert athletes
+            for sharedAthlete in raceConfig.athletes {
+                if (try? fetchAthleteEntity(id: sharedAthlete.id)) == nil {
+                    let athlete = Athlete(
+                        id: sharedAthlete.id,
+                        name: sharedAthlete.name,
+                        teamName: nil,
+                        colorHex: sharedAthlete.colorHex,
+                        notes: nil,
+                        gender: sharedAthlete.gender ?? .male
+                    )
+                    try save(athlete)
+                }
+            }
+
+            let race = Race(
+                meetId: meet.id,
+                name: raceConfig.raceName,
+                eventType: raceConfig.eventType,
+                distanceMeters: raceConfig.distanceMeters,
+                trackLengthMeters: raceConfig.trackLengthMeters,
+                splitsPerLap: raceConfig.splitsPerLap,
+                isUnlimitedSplits: raceConfig.isUnlimitedSplits,
+                athleteIds: raceConfig.athletes.map(\.id),
+                status: .notStarted
+            )
+            try save(race)
+        }
+
+        return meet
+    }
+
     // MARK: – Splits
 
     func fetchSplits(for raceId: UUID) throws -> [Split] {

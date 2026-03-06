@@ -16,6 +16,23 @@ enum PayloadEncoder {
         try? JSONDecoder().decode(SharedRaceConfig.self, from: data)
     }
 
+    // MARK: – SharedMeetConfig JSON
+
+    /// Encode a SharedMeetConfig to JSON data for file sharing.
+    static func encodeJSON(_ config: SharedMeetConfig) -> Data? {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = .sortedKeys
+        return try? encoder.encode(config)
+    }
+
+    /// Decode a SharedMeetConfig from JSON data.
+    static func decodeMeetConfig(from data: Data) -> SharedMeetConfig? {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try? decoder.decode(SharedMeetConfig.self, from: data)
+    }
+
     // MARK: – CoachSplitPayload JSON
 
     /// Encode a CoachSplitPayload to JSON data for file sharing (AirDrop, iMessage, etc.).
@@ -71,15 +88,21 @@ enum PayloadEncoder {
 
     // MARK: – QR Type Detection
 
-    /// Represents the two payload types that can be encoded in a QR code.
+    /// Represents the payload types that can be encoded in a QR code.
     enum QRContent {
         case raceConfig(SharedRaceConfig)
+        case meetConfig(SharedMeetConfig)
         case splitPayload(CoachSplitPayload)
     }
 
-    /// Attempt to decode a scanned QR string as either a SharedRaceConfig or a
-    /// CoachSplitPayload. Returns whichever succeeds, or nil if neither matches.
+    /// Attempt to decode a scanned QR string as a SharedMeetConfig, SharedRaceConfig,
+    /// or CoachSplitPayload. Returns whichever succeeds, or nil if none match.
+    /// SharedMeetConfig is tried first because it contains a `races` array that
+    /// distinguishes it from SharedRaceConfig.
     static func decodeQR(_ string: String) -> QRContent? {
+        if let meetConfig = decodeFromQR(string, as: SharedMeetConfig.self) {
+            return .meetConfig(meetConfig)
+        }
         if let config = decodeFromQR(string, as: SharedRaceConfig.self) {
             return .raceConfig(config)
         }

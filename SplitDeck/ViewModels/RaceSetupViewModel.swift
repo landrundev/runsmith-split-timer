@@ -296,6 +296,61 @@ final class RaceSetupViewModel: ObservableObject {
         }
     }
 
+    // MARK: – Multi-Coach Sharing
+
+    /// Assembles the current race setup state into a SharedRaceConfig
+    /// that assistant coaches can import on their devices.
+    func buildSharedConfig() -> SharedRaceConfig {
+        let orderedIds: [UUID]
+        if eventType.isRelay {
+            orderedIds = relayAthleteOrder
+        } else {
+            orderedIds = availableAthletes
+                .filter { selectedAthleteIds.contains($0.id) }
+                .map(\.id)
+        }
+
+        let selectedAthletes = orderedIds.compactMap { id in
+            availableAthletes.first { $0.id == id }
+        }
+
+        let trackLength: Int
+        if eventType.isRelay {
+            trackLength = eventType.legDistanceMeters ?? 400
+        } else {
+            trackLength = 400
+        }
+
+        // Look up meet name if this race belongs to a meet
+        let resolvedMeetName: String?
+        if let meetId {
+            resolvedMeetName = (try? store.fetchMeets())?.first(where: { $0.id == meetId })?.name
+        } else {
+            resolvedMeetName = nil
+        }
+
+        return SharedRaceConfig(
+            version: 1,
+            configId: UUID(),
+            hostCoachName: CoachIdentity.name ?? "Host",
+            meetName: resolvedMeetName,
+            raceName: raceName.isEmpty ? eventType.displayName : raceName,
+            eventType: eventType,
+            distanceMeters: unlimitedSplits ? 0 : distanceMeters,
+            trackLengthMeters: trackLength,
+            splitsPerLap: (eventType.isRelay || unlimitedSplits) ? 1 : splitsPerLap,
+            isUnlimitedSplits: unlimitedSplits,
+            athletes: selectedAthletes.map { athlete in
+                SharedAthlete(
+                    id: athlete.id,
+                    name: athlete.name,
+                    gender: athlete.gender,
+                    colorHex: athlete.colorHex
+                )
+            }
+        )
+    }
+
     // MARK: – Start Race
 
     func startRace() -> Race? {

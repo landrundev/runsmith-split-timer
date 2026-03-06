@@ -6,6 +6,7 @@ struct MeetDetailView: View {
     let cache: RaceStateCache
 
     @State private var showAddRace = false
+    @State private var showShareMeet = false
     @State private var raceToDelete: Race? = nil
     @State private var genderFilter: Gender? = nil
 
@@ -63,8 +64,18 @@ struct MeetDetailView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("+ Add Race") { showAddRace = true }
+                HStack(spacing: 16) {
+                    Button {
+                        showShareMeet = true
+                    } label: {
+                        Image(systemName: "person.2.wave.2")
+                    }
+                    Button("+ Add Race") { showAddRace = true }
+                }
             }
+        }
+        .sheet(isPresented: $showShareMeet) {
+            ShareMeetConfigView(config: vm.buildSharedMeetConfig())
         }
         .sheet(isPresented: $showAddRace, onDismiss: { vm.load() }) {
             RaceSetupView(

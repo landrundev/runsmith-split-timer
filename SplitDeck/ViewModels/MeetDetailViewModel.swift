@@ -41,6 +41,49 @@ final class MeetDetailViewModel: ObservableObject {
         }
     }
 
+    // MARK: – Multi-Coach Sharing
+
+    /// Assembles the meet and all its races into a SharedMeetConfig
+    /// that assistant coaches can import on their devices.
+    func buildSharedMeetConfig() -> SharedMeetConfig {
+        let raceConfigs = races.map { race -> SharedRaceConfig in
+            let raceAthletes = race.athleteIds.compactMap { id in
+                athletes.first { $0.id == id }
+            }
+
+            return SharedRaceConfig(
+                version: 1,
+                configId: UUID(),
+                hostCoachName: CoachIdentity.name ?? "Host",
+                meetName: meet.name,
+                raceName: race.name,
+                eventType: race.eventType,
+                distanceMeters: race.distanceMeters,
+                trackLengthMeters: race.trackLengthMeters,
+                splitsPerLap: race.splitsPerLap,
+                isUnlimitedSplits: race.isUnlimitedSplits,
+                athletes: raceAthletes.map { athlete in
+                    SharedAthlete(
+                        id: athlete.id,
+                        name: athlete.name,
+                        gender: athlete.gender,
+                        colorHex: athlete.colorHex
+                    )
+                }
+            )
+        }
+
+        return SharedMeetConfig(
+            version: 1,
+            configId: UUID(),
+            hostCoachName: CoachIdentity.name ?? "Host",
+            meetName: meet.name,
+            meetDate: meet.date,
+            meetLocation: meet.location,
+            races: raceConfigs
+        )
+    }
+
     func archive(race: Race) {
         do {
             try store.archive(raceId: race.id)

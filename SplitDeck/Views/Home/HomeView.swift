@@ -7,6 +7,7 @@ struct HomeView: View {
 
     @State private var showAddMeet = false
     @State private var showQuickRaceSetup = false
+    @State private var showImportRace = false
     @State private var newMeetName = ""
     @State private var newMeetDate = Date()
     @State private var newMeetLocation = ""
@@ -74,6 +75,9 @@ struct HomeView: View {
             }
             .sheet(item: $meetToEdit) { meet in
                 editMeetSheet(meet: meet)
+            }
+            .sheet(isPresented: $showImportRace, onDismiss: { vm.load() }) {
+                ImportRaceView(store: store, cache: cache)
             }
             .sheet(isPresented: $showQuickRaceSetup, onDismiss: { vm.load() }) {
                 RaceSetupView(
@@ -295,6 +299,17 @@ struct HomeView: View {
         VStack(spacing: 0) {
             Divider()
             HStack(spacing: 12) {
+                // Import Race button
+                Button {
+                    showImportRace = true
+                } label: {
+                    Label("Import", systemImage: "qrcode.viewfinder")
+                        .font(.headline)
+                        .frame(height: 52)
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.runsmithPink)
+
                 NavigationLink {
                     RelayBuilderView(
                         vm: RelayBuilderViewModel(store: store)

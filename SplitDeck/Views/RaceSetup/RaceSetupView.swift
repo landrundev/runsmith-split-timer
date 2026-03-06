@@ -32,11 +32,24 @@ struct RaceSetupView: View {
     // Relay builder navigation
     @State private var navigateToRelayBuilder = false
 
+    // Multi-Coach sharing
+    @State private var showShareConfig = false
+    @State private var multiCoachExpanded = false
+
     var body: some View {
         NavigationStack {
             Form {
                 eventSection
                 athleteSection
+
+                DisclosureGroup("Multi-Coach", isExpanded: $multiCoachExpanded) {
+                    Button {
+                        showShareConfig = true
+                    } label: {
+                        Label("Share with Coaches", systemImage: "person.2.wave.2")
+                    }
+                    .disabled(!vm.isValid)
+                }
             }
             .navigationTitle(vm.existingRaceId != nil ? "Edit Race" : "Race Setup")
             .navigationBarTitleDisplayMode(.inline)
@@ -48,6 +61,9 @@ struct RaceSetupView: View {
             }
             .safeAreaInset(edge: .bottom) {
                 bottomButtons
+            }
+            .sheet(isPresented: $showShareConfig) {
+                ShareRaceConfigView(config: vm.buildSharedConfig())
             }
             .sheet(isPresented: $showAddAthlete) {
                 addAthleteSheet

@@ -39,6 +39,7 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+        NSCameraUsageDescription: "Runsmith needs camera access to scan QR codes for multi-coach race sharing."
         NSPhotoLibraryAddUsageDescription: "Save race result cards to your photo library."
         UIRequiresFullScreen: NO
     settings:
