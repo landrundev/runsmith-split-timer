@@ -45,6 +45,7 @@
 		C49BD1AB78AEBDABB47AE608 /* RelayBuilderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9616DB739E616548E3CC4AE6 /* RelayBuilderViewModel.swift */; };
 		C4FD1725A503720660C328B4 /* CSVExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A334198E8BAC203BFC9E84 /* CSVExporter.swift */; };
 		C6234EA969FBFC1D9135365D /* RelayRecommender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E729CE74F1588333BE72148 /* RelayRecommender.swift */; };
+		CF3797158F6E225479D5DC05 /* SplitMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5410BAA8809763650674736 /* SplitMerger.swift */; };
 		D21D290F2A637FFBF106494D /* RelayBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110FB51AD12891B38900F30E /* RelayBuilderView.swift */; };
 		D5BA6F46579852204621A952 /* Meet.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF0BEBE348AD4BFEBF2C0CA7 /* Meet.swift */; };
 		D5FA8DBD6A47FF054FFC5070 /* LiveTimingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E79BA0870757AAE4764F6F8B /* LiveTimingView.swift */; };
@@ -99,6 +100,7 @@
 		CEF97A96A4A096239BF7DF70 /* SharedRaceConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedRaceConfig.swift; sourceTree = "<group>"; };
 		DF0BEBE348AD4BFEBF2C0CA7 /* Meet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meet.swift; sourceTree = "<group>"; };
 		E108A36EE73BC01960F84847 /* LiveTimingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTimingViewModel.swift; sourceTree = "<group>"; };
+		E5410BAA8809763650674736 /* SplitMerger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitMerger.swift; sourceTree = "<group>"; };
 		E79BA0870757AAE4764F6F8B /* LiveTimingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTimingView.swift; sourceTree = "<group>"; };
 		EAE3B7B55B5AF96ACE36FBA1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EB0556F276BEC797727502A7 /* CoachIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachIdentity.swift; sourceTree = "<group>"; };
@@ -306,6 +308,7 @@
 				3F69683CF963EBDB3E8FFE22 /* RaceDomain.swift */,
 				0E729CE74F1588333BE72148 /* RelayRecommender.swift */,
 				B67926C4487DEF5BDDE86DEF /* RosterImporter.swift */,
+				E5410BAA8809763650674736 /* SplitMerger.swift */,
 				5FE33AB7DD72D84EA9C9CF75 /* TimingEngine.swift */,
 			);
 			path = Domain;
@@ -434,6 +437,7 @@
 				940224D3C4FDC3D31CD48F77 /* SplitDeck.xcdatamodeld in Sources */,
 				D8DBD5629AF5F0C6688EAA3A /* SplitDeckApp.swift in Sources */,
 				DE4A713C514100D11E216FEB /* SplitDeckStore.swift in Sources */,
+				CF3797158F6E225479D5DC05 /* SplitMerger.swift in Sources */,
 				8AA329EB6209E9834CE1209B /* Theme.swift in Sources */,
 				F6B2B00A5348B3453BFEBDA0 /* TimingEngine.swift in Sources */,
 				C2C0132469CAE63A71E2B23B /* UnassignedMark.swift in Sources */,
