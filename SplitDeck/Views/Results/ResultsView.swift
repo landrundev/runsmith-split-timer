@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ResultsView: View {
     @ObservedObject var vm: ResultsViewModel
+    @EnvironmentObject var store: SplitDeckStore
     var onDone: (() -> Void)? = nil
     @State private var previewImage: UIImage? = nil
     @State private var showExport = false
@@ -77,9 +78,12 @@ struct ResultsView: View {
             ExportSplitsView(payload: vm.buildCoachSplitPayload())
         }
         .sheet(isPresented: $showMerge) {
-            Text("Coming soon")
-                .font(.title2)
-                .foregroundStyle(.secondary)
+            MergeView(vm: MergeViewModel(
+                race: vm.race,
+                athletes: vm.orderedAthletes,
+                hostSplits: vm.splits,
+                store: store
+            ))
         }
         .sheet(item: Binding(
             get: { previewImage.map { SharePreviewItem(image: $0) } },
