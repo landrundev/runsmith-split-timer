@@ -8,6 +8,7 @@ struct HomeView: View {
     @State private var showAddMeet = false
     @State private var showQuickRaceSetup = false
     @State private var showImportRace = false
+    @State private var showDrawer = false
     @State private var newMeetName = ""
     @State private var newMeetDate = Date()
     @State private var newMeetLocation = ""
@@ -33,7 +34,8 @@ struct HomeView: View {
         NavigationStack {
             ZStack(alignment: .bottom) {
                 meetList
-                quickRaceButton
+                bottomBar
+                drawerOverlay
             }
             .navigationTitle("Runsmith")
             .navigationBarTitleDisplayMode(.inline)
@@ -56,17 +58,10 @@ struct HomeView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        NavigationLink {
-                            ArchiveView(vm: ArchiveViewModel(store: store))
-                        } label: {
-                            Image(systemName: "archivebox")
-                        }
-                        Button {
-                            showAddMeet = true
-                        } label: {
-                            Image(systemName: "plus")
-                        }
+                    Button {
+                        showAddMeet = true
+                    } label: {
+                        Image(systemName: "plus")
                     }
                 }
             }
@@ -295,49 +290,175 @@ struct HomeView: View {
 
     // MARK: – Bottom Action Bar
 
-    private var quickRaceButton: some View {
+    private var bottomBar: some View {
         VStack(spacing: 0) {
             Divider()
-            HStack(spacing: 12) {
-                // Import Race button
+            HStack(spacing: 10) {
+                // Grid icon — opens drawer
                 Button {
-                    showImportRace = true
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                        showDrawer = true
+                    }
                 } label: {
-                    Label("Import", systemImage: "qrcode.viewfinder")
-                        .font(.headline)
-                        .frame(height: 52)
+                    Image(systemName: "square.grid.2x2")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(Theme.runsmithPink)
+                        .frame(width: 52, height: 52)
+                        .background(Theme.runsmithPink.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
-                .buttonStyle(.bordered)
-                .tint(Theme.runsmithPink)
 
-                NavigationLink {
-                    RelayBuilderView(
-                        vm: RelayBuilderViewModel(store: store)
-                    )
-                } label: {
-                    Label("Relay Builder", systemImage: "figure.run")
-                        .font(.headline)
-                        .frame(height: 52)
-                }
-                .buttonStyle(.bordered)
-                .tint(Theme.runsmithPink)
-
+                // Quick Race — primary action
                 Button {
                     showQuickRaceSetup = true
                 } label: {
                     Label("Quick Race", systemImage: "stopwatch")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 52)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Theme.runsmithPink)
+                .buttonStyle(GlassPrimaryButtonStyle())
             }
-            .padding(.horizontal)
-            .padding(.top, 8)
+            .padding(.horizontal, 16)
+            .padding(.top, 10)
             .padding(.bottom, 8)
         }
         .background(.bar)
+    }
+
+    // MARK: – Drawer Overlay
+
+    private var drawerOverlay: some View {
+        ZStack(alignment: .bottom) {
+            // Dimmed backdrop
+            if showDrawer {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                            showDrawer = false
+                        }
+                    }
+                    .transition(.opacity)
+            }
+
+            // Drawer sheet
+            if showDrawer {
+                VStack(spacing: 0) {
+                    // Drag handle
+                    Capsule()
+                        .fill(Color(.tertiaryLabel))
+                        .frame(width: 36, height: 5)
+                        .padding(.top, 10)
+                        .padding(.bottom, 14)
+
+                    // Section header
+                    HStack {
+                        Text("MORE ACTIONS")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.5)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 10)
+
+                    // Menu items — least used at top, most used at bottom
+                    VStack(spacing: 0) {
+                        // Archive (least used — top)
+                        NavigationLink {
+                            ArchiveView(vm: ArchiveViewModel(store: store))
+                        } label: {
+                            drawerRow(
+                                icon: "archivebox",
+                                title: "Archive",
+                                subtitle: "View archived meets and races"
+                            )
+                        }
+                        .simultaneousGesture(TapGesture().onEnded {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                showDrawer = false
+                            }
+                        })
+
+                        Divider().padding(.leading, 66)
+
+                        // Import Race (middle)
+                        Button {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                showDrawer = false
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                                showImportRace = true
+                            }
+                        } label: {
+                            drawerRow(
+                                icon: "square.and.arrow.down",
+                                title: "Import Race",
+                                subtitle: "Scan QR, import file, or paste"
+                            )
+                        }
+
+                        Divider().padding(.leading, 66)
+
+                        // Relay Builder
+                        NavigationLink {
+                            RelayBuilderView(
+                                vm: RelayBuilderViewModel(store: store)
+                            )
+                        } label: {
+                            drawerRow(
+                                icon: "arrow.triangle.branch",
+                                title: "Relay Builder",
+                                subtitle: "Build and save relay teams"
+                            )
+                        }
+                        .simultaneousGesture(TapGesture().onEnded {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                showDrawer = false
+                            }
+                        })
+                    }
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 30)
+                }
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color(.systemGroupedBackground))
+                        .ignoresSafeArea(edges: .bottom)
+                )
+                .transition(.move(edge: .bottom))
+            }
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: showDrawer)
+    }
+
+    private func drawerRow(icon: String, title: String, subtitle: String) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(Theme.runsmithPink)
+                .frame(width: 36, height: 36)
+                .background(Theme.runsmithPink.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(.primary)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color(.tertiaryLabel))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .contentShape(Rectangle())
     }
 
     // MARK: – Edit Meet Sheet
