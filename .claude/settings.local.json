@@ -27,7 +27,16 @@
       "Bash(gh repo create runsmith-split-timer --private --source=. --remote=origin --push)",
       "Bash(python3:*)",
       "Bash(xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'generic/platform=iOS' -quiet build)",
-      "Bash(zip -r ~/Desktop/RunsmithSplitTimer.zip . -x \".git/*\" -x \"*.xcodeproj/*\" -x \".claude/*\" -x \".DS_Store\" -x \"*/.DS_Store\")"
+      "Bash(zip -r ~/Desktop/RunsmithSplitTimer.zip . -x \".git/*\" -x \"*.xcodeproj/*\" -x \".claude/*\" -x \".DS_Store\" -x \"*/.DS_Store\")",
+      "Bash(xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' -quiet build)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'platform=iOS Simulator,name=iPhone 16' -quiet build)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet build)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'platform=iOS Simulator,name=iPhone 16 Pro' -quiet build)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project RunsmithSplitTimer.xcodeproj -scheme RunsmithSplitTimer -destination 'platform=iOS Simulator,id=17F2F32E-02BC-4206-9C38-8DC46FA0AE5D' -quiet build)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -list)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project RunsmithSplitTimer.xcodeproj -target RunsmithSplitTimer -sdk iphonesimulator -quiet build)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project RunsmithSplitTimer.xcodeproj -target RunsmithSplitTimer -sdk iphonesimulator build)",
+      "Bash(xcodebuild -project RunsmithSplitTimer.xcodeproj -target RunsmithSplitTimer -sdk iphonesimulator build)"
     ]
   }
 }
