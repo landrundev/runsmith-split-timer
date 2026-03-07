@@ -56,20 +56,28 @@ struct AthleteCardView: View {
     }
 
     private var splitChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(Array(splitTimes.enumerated()), id: \.offset) { _, split in
-                    VStack(spacing: 1) {
-                        Text(split.lap)
-                            .font(.caption.weight(.semibold).monospacedDigit())
-                        Text(split.label)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(Array(splitTimes.enumerated()), id: \.offset) { i, split in
+                        VStack(spacing: 1) {
+                            Text(split.lap)
+                                .font(.caption.weight(.semibold).monospacedDigit())
+                            Text(split.label)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color(.tertiarySystemFill))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .id(i)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color(.tertiarySystemFill))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
+            }
+            .onChange(of: splitTimes.count) { _ in
+                withAnimation {
+                    proxy.scrollTo(splitTimes.count - 1, anchor: .trailing)
                 }
             }
         }

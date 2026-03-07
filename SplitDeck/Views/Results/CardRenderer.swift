@@ -4,6 +4,21 @@ import UIKit
 enum CardRenderer {
 
     private static let cardWidth: CGFloat = 390
+    /// Races with up to this many splits stay on one row.
+    private static let singleRowMaxCols: Int = 5
+    /// When wrapping into multiple rows, each row gets at most this many columns.
+    private static let wrapMaxColsPerRow: Int = 5
+
+    /// Returns (numberOfRows, columnsPerRow) with balanced distribution.
+    /// Races ≤ 5 splits stay on one row. Longer races wrap into balanced rows of ≤ 5.
+    /// e.g. 4 → (1, 4), 8 → (2, 4) = 4+4, 13 → (3, 5) = 5+5+3, 25 → (5, 5) = 5+5+5+5+5
+    private static func splitLayout(colCount: Int) -> (rows: Int, colsPerRow: Int) {
+        guard colCount > singleRowMaxCols else { return (1, colCount) }
+        let rows = (colCount + wrapMaxColsPerRow - 1) / wrapMaxColsPerRow
+        let colsPerRow = (colCount + rows - 1) / rows  // ceil(colCount / rows)
+        return (rows, colsPerRow)
+    }
+
     private static let pinkColor = UIColor(red: 232/255, green: 24/255, blue: 93/255, alpha: 1) // #E8185D
     private static let goldColor = UIColor(red: 212/255, green: 175/255, blue: 55/255, alpha: 1)
     private static let silverColor = UIColor(red: 158/255, green: 158/255, blue: 158/255, alpha: 1)
@@ -32,10 +47,14 @@ enum CardRenderer {
             let rows = data.relayLegs.count + 1 + (data.totalRelayTime != nil ? 1 : 0)
             contentHeight = CGFloat(max(rows, 1)) * nameRowHeight + 12
         } else {
+            let colCount = data.columnLabels.count
+            let layout = splitLayout(colCount: colCount)
             var h: CGFloat = 12
             for _ in data.athletes {
                 h += nameRowHeight
-                if hasSplits { h += splitsRowHeight }
+                if hasSplits {
+                    h += CGFloat(layout.rows) * splitsRowHeight
+                }
             }
             contentHeight = h
         }
@@ -253,10 +272,11 @@ enum CardRenderer {
 
             currentY += nameRowHeight
 
-            // — Splits row —
+            // — Splits rows (single row up to 5, balanced wrap for 6+) —
             if hasSplits && !athlete.splitTimes.isEmpty {
                 let colCount = data.columnLabels.count
-                let colWidth = (cardWidth - leftPad * 2) / CGFloat(colCount)
+                let layout = splitLayout(colCount: colCount)
+                let availableWidth = cardWidth - leftPad * 2
 
                 let labelAttrs: [NSAttributedString.Key: Any] = [
                     .font: UIFont.systemFont(ofSize: 10, weight: .regular),
@@ -267,28 +287,48 @@ enum CardRenderer {
                     .foregroundColor: UIColor.label
                 ]
 
-                for (col, label) in data.columnLabels.enumerated() {
-                    let colX = leftPad + CGFloat(col) * colWidth
-                    let colCenter = colX + colWidth / 2
+                var colIndex = 0
+                for _ in 0..<layout.rows {
+                    let colsInRow = min(layout.colsPerRow, colCount - colIndex)
 
-                    // Label
-                    let labelSize = (label as NSString).size(withAttributes: labelAttrs)
-                    (label as NSString).draw(
-                        at: CGPoint(x: colCenter - labelSize.width / 2, y: currentY),
-                        withAttributes: labelAttrs
-                    )
-
-                    // Value
-                    if col < athlete.splitTimes.count {
-                        let val = athlete.splitTimes[col]
-                        let valSize = (val as NSString).size(withAttributes: valueAttrs)
-                        (val as NSString).draw(
-                            at: CGPoint(x: colCenter - valSize.width / 2, y: currentY + 14),
-                            withAttributes: valueAttrs
-                        )
+                    // Single-row races fill the width; wrapped rows use fixed widths & center
+                    let colWidth: CGFloat
+                    let rowStartX: CGFloat
+                    if layout.rows == 1 {
+                        colWidth = availableWidth / CGFloat(colsInRow)
+                        rowStartX = leftPad
+                    } else {
+                        colWidth = availableWidth / CGFloat(layout.colsPerRow)
+                        let rowWidth = CGFloat(colsInRow) * colWidth
+                        rowStartX = leftPad + (availableWidth - rowWidth) / 2
                     }
+
+                    for localCol in 0..<colsInRow {
+                        let c = colIndex + localCol
+                        let colX = rowStartX + CGFloat(localCol) * colWidth
+                        let colCenter = colX + colWidth / 2
+
+                        // Label
+                        let label = data.columnLabels[c]
+                        let labelSize = (label as NSString).size(withAttributes: labelAttrs)
+                        (label as NSString).draw(
+                            at: CGPoint(x: colCenter - labelSize.width / 2, y: currentY),
+                            withAttributes: labelAttrs
+                        )
+
+                        // Value
+                        if c < athlete.splitTimes.count {
+                            let val = athlete.splitTimes[c]
+                            let valSize = (val as NSString).size(withAttributes: valueAttrs)
+                            (val as NSString).draw(
+                                at: CGPoint(x: colCenter - valSize.width / 2, y: currentY + 14),
+                                withAttributes: valueAttrs
+                            )
+                        }
+                    }
+                    colIndex += colsInRow
+                    currentY += splitsRowHeight
                 }
-                currentY += splitsRowHeight
             }
 
             // Divider

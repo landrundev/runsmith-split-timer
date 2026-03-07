@@ -168,7 +168,7 @@ struct ResultsView: View {
     }
 
     private func athleteBlock(entry: (athlete: Athlete, place: Int?)) -> some View {
-        HStack(spacing: 0) {
+        HStack(alignment: .top, spacing: 0) {
             Rectangle()
                 .fill(Theme.genderColor(entry.athlete.gender))
                 .frame(width: 4)
@@ -177,6 +177,7 @@ struct ResultsView: View {
 
             VStack(alignment: .leading, spacing: 8) {
 
+                // Name + total time row (always full width, no scroll)
                 HStack(spacing: 6) {
                     Text(entry.place.map { "\($0)" } ?? "—")
                         .font(.footnote.weight(.bold))
@@ -206,24 +207,46 @@ struct ResultsView: View {
                     }
                 }
 
-            if !vm.columnLabels.isEmpty {
-                HStack(spacing: 4) {
-                    ForEach(Array(vm.columnLabels.enumerated()), id: \.offset) { i, label in
-                        VStack(spacing: 2) {
-                            Text(label)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            let val = vm.cellValue(athlete: entry.athlete, splitOrdinal: i + 1)
-                            Text(val.displayString)
-                                .font(.caption.monospacedDigit())
+                // Split columns — scrollable for races with many splits
+                if !vm.columnLabels.isEmpty {
+                    let labels = vm.columnLabels
+                    let needsScroll = labels.count > 5
+
+                    if needsScroll {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            splitColumnsGrid(athlete: entry.athlete, labels: labels)
                         }
-                        .frame(maxWidth: .infinity)
+                    } else {
+                        splitColumnsGrid(athlete: entry.athlete, labels: labels)
                     }
                 }
             }
-            }
         }
         .padding(.vertical, 12)
+    }
+
+    /// Renders the label + value columns for one athlete's splits.
+    /// Uses fixed-width columns so values never overlap.
+    private func splitColumnsGrid(athlete: Athlete, labels: [String]) -> some View {
+        let columnWidth: CGFloat = labels.count <= 5 ? .infinity : 68
+
+        return HStack(spacing: 4) {
+            ForEach(Array(labels.enumerated()), id: \.offset) { i, label in
+                VStack(spacing: 2) {
+                    Text(label)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    let val = vm.cellValue(athlete: athlete, splitOrdinal: i + 1)
+                    Text(val.displayString)
+                        .font(.caption.monospacedDigit())
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: columnWidth)
+                .frame(minWidth: columnWidth == .infinity ? 0 : columnWidth)
+            }
+        }
     }
 
     // MARK: – Relay Results Table
