@@ -77,6 +77,14 @@ final class RaceSetupViewModel: ObservableObject {
         self.store = store
     }
 
+    var genderPrefix: String {
+        switch genderFilter {
+        case .male: return "Boys"
+        case .female: return "Girls"
+        case nil: return "Mixed"
+        }
+    }
+
     func load() {
         do {
             availableAthletes = try store.fetchAthletes()
@@ -90,6 +98,8 @@ final class RaceSetupViewModel: ObservableObject {
            let races = try? store.fetchRaces(for: meetId),
            let race = races.first(where: { $0.id == existingRaceId }) {
             loadExistingRace(race)
+        } else if raceName.isEmpty {
+            raceName = "\(genderPrefix) \(eventType.displayName)"
         }
     }
 
