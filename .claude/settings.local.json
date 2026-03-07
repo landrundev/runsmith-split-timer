@@ -36,7 +36,8 @@
       "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -list)",
       "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project RunsmithSplitTimer.xcodeproj -target RunsmithSplitTimer -sdk iphonesimulator -quiet build)",
       "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project RunsmithSplitTimer.xcodeproj -target RunsmithSplitTimer -sdk iphonesimulator build)",
-      "Bash(xcodebuild -project RunsmithSplitTimer.xcodeproj -target RunsmithSplitTimer -sdk iphonesimulator build)"
+      "Bash(xcodebuild -project RunsmithSplitTimer.xcodeproj -target RunsmithSplitTimer -sdk iphonesimulator build)",
+      "Bash(swift build)"
     ]
   }
 }
