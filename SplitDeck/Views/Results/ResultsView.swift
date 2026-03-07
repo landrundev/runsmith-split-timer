@@ -252,7 +252,8 @@ struct ResultsView: View {
     // MARK: – Relay Results Table
 
     private var relayResultsTable: some View {
-        let showLapTimes = vm.displayMode == .lapTimes
+        let hasIntermediates = vm.race.splitsPerLap > 1
+
         return ScrollView(.vertical) {
             VStack(spacing: 0) {
                 // Column headers
@@ -261,8 +262,13 @@ struct ResultsView: View {
                         .frame(width: 36, alignment: .leading)
                     Text("Athlete")
                     Spacer()
-                    Text(showLapTimes ? "Leg Time" : "Cumulative")
-                        .frame(width: 90, alignment: .trailing)
+                    if vm.displayMode == .lapTimes {
+                        Text("Leg Time")
+                            .frame(width: 90, alignment: .trailing)
+                    } else {
+                        Text("Cumulative")
+                            .frame(width: 90, alignment: .trailing)
+                    }
                 }
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
@@ -271,35 +277,73 @@ struct ResultsView: View {
 
                 Divider()
 
-                ForEach(vm.relayLegData, id: \.leg) { entry in
-                    HStack(spacing: 8) {
-                        Text("\(entry.leg)")
-                            .font(.footnote.weight(.bold))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 36, alignment: .leading)
+                ForEach(Array(vm.relayLegData.enumerated()), id: \.element.leg) { i, entry in
+                    VStack(spacing: 0) {
+                        // Main leg row
+                        HStack(spacing: 8) {
+                            Text("\(entry.leg)")
+                                .font(.footnote.weight(.bold))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 36, alignment: .leading)
 
-                        Circle()
-                            .fill(Color(hex: entry.athlete.colorHex))
-                            .frame(width: 10, height: 10)
+                            Circle()
+                                .fill(Color(hex: entry.athlete.colorHex))
+                                .frame(width: 10, height: 10)
 
-                        Text(entry.athlete.firstName)
-                            .font(.subheadline)
-                            .lineLimit(1)
+                            Text(entry.athlete.firstName)
+                                .font(.subheadline)
+                                .lineLimit(1)
 
-                        Spacer()
+                            Spacer()
 
-                        if showLapTimes {
-                            Text(entry.legMs.map { $0.formattedSplitTime } ?? "—")
-                                .font(.subheadline.weight(.semibold).monospacedDigit())
-                                .frame(width: 90, alignment: .trailing)
-                        } else {
-                            Text(entry.cumulativeMs.map { $0.formattedSplitTime } ?? "—")
-                                .font(.subheadline.weight(.semibold).monospacedDigit())
-                                .frame(width: 90, alignment: .trailing)
+                            if vm.displayMode == .lapTimes {
+                                Text(entry.legMs.map { $0.formattedSplitTime } ?? "\u{2014}")
+                                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                                    .frame(width: 90, alignment: .trailing)
+                            } else {
+                                Text(entry.cumulativeMs.map { $0.formattedSplitTime } ?? "\u{2014}")
+                                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                                    .frame(width: 90, alignment: .trailing)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+
+                        // Intermediate split sub-row (when enabled)
+                        if hasIntermediates {
+                            let details = RaceDomain.relayLegIntermediateSplits(
+                                legIndex: i,
+                                athletes: vm.orderedAthletes,
+                                splits: vm.splits,
+                                race: vm.race
+                            )
+                            if !details.isEmpty {
+                                HStack(spacing: 12) {
+                                    Spacer()
+                                        .frame(width: 36)
+                                    ForEach(Array(details.enumerated()), id: \.offset) { _, detail in
+                                        VStack(spacing: 1) {
+                                            Text(detail.label)
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(.tertiary)
+                                            if vm.displayMode == .lapTimes {
+                                                Text(detail.deltaMs.formattedSplitTime)
+                                                    .font(.caption.monospacedDigit())
+                                                    .foregroundStyle(.secondary)
+                                            } else {
+                                                Text(detail.cumulativeMs.formattedSplitTime)
+                                                    .font(.caption.monospacedDigit())
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.bottom, 8)
+                            }
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
 
                     Divider()
                 }

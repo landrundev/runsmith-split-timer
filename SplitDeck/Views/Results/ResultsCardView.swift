@@ -29,6 +29,7 @@ struct CardData {
         let colorHex: String
         let legTime: String
         let cumulativeTime: String
+        let intermediateSplits: [(label: String, time: String)]
     }
 }
 
@@ -212,33 +213,55 @@ struct ResultsCardView: View {
     }
 
     private func relayRow(leg: CardData.CardRelayLeg) -> some View {
-        HStack(spacing: 10) {
-            Text("\(leg.leg)")
-                .font(.footnote.weight(.bold))
-                .foregroundColor(.secondary)
-                .frame(width: 36, alignment: .leading)
+        VStack(spacing: 0) {
+            HStack(spacing: 10) {
+                Text("\(leg.leg)")
+                    .font(.footnote.weight(.bold))
+                    .foregroundColor(.secondary)
+                    .frame(width: 36, alignment: .leading)
 
-            Circle()
-                .fill(Color(hex: leg.colorHex))
-                .frame(width: 10, height: 10)
+                Circle()
+                    .fill(Color(hex: leg.colorHex))
+                    .frame(width: 10, height: 10)
 
-            Text(leg.athleteName)
-                .font(.subheadline.weight(.semibold))
-                .lineLimit(1)
+                Text(leg.athleteName)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
 
-            Spacer()
+                Spacer()
 
-            Text(leg.legTime)
-                .font(.subheadline.weight(.semibold).monospacedDigit())
-                .frame(width: 74, alignment: .trailing)
+                Text(leg.legTime)
+                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                    .frame(width: 74, alignment: .trailing)
 
-            Text(leg.cumulativeTime)
-                .font(.caption.monospacedDigit())
-                .foregroundColor(.secondary)
-                .frame(width: 72, alignment: .trailing)
+                Text(leg.cumulativeTime)
+                    .font(.caption.monospacedDigit())
+                    .foregroundColor(.secondary)
+                    .frame(width: 72, alignment: .trailing)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 11)
+
+            // Intermediate splits
+            if !leg.intermediateSplits.isEmpty {
+                HStack(spacing: 12) {
+                    Spacer().frame(width: 36)
+                    ForEach(Array(leg.intermediateSplits.enumerated()), id: \.offset) { _, split in
+                        VStack(spacing: 0) {
+                            Text(split.label)
+                                .font(.system(size: 9))
+                                .foregroundColor(Color(.tertiaryLabel))
+                            Text(split.time)
+                                .font(.caption2.monospacedDigit())
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 6)
+            }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 11)
     }
 
     // MARK: – Footer

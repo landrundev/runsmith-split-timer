@@ -32,6 +32,7 @@ final class RaceSetupViewModel: ObservableObject {
             case .relay:
                 eventType = .relay4x400
                 unlimitedSplits = false
+                splitsPerLap = 1
                 // restore relay selection from preserved order
                 selectedAthleteIds = Set(relayAthleteOrder)
             }
@@ -159,6 +160,19 @@ final class RaceSetupViewModel: ObservableObject {
             return !selectedAthleteIds.isEmpty
         }
         return distanceMeters > 0 && !selectedAthleteIds.isEmpty
+    }
+
+    /// True when the selected relay type supports intermediate splits.
+    /// Only 4×400m (relay4x1600) and 4×800m (relay4x3200) — their legs are
+    /// long enough to warrant a midpoint split. 4×100m and 4×200m are too short.
+    var supportsIntermediateSplits: Bool {
+        eventType == .relay4x1600 || eventType == .relay4x3200
+    }
+
+    /// The intermediate split distance label, e.g. "200m" for 4×400m.
+    var intermediateSplitLabel: String? {
+        guard supportsIntermediateSplits, let leg = eventType.legDistanceMeters else { return nil }
+        return "\(leg / 2)m"
     }
 
     var distanceMeters: Int {
@@ -309,7 +323,7 @@ final class RaceSetupViewModel: ObservableObject {
             eventType: eventType,
             distanceMeters: unlimitedSplits ? 0 : fields.dist,
             trackLengthMeters: fields.track,
-            splitsPerLap: (eventType.isRelay || unlimitedSplits) ? 1 : splitsPerLap,
+            splitsPerLap: unlimitedSplits ? 1 : splitsPerLap,
             isUnlimitedSplits: unlimitedSplits,
             athleteIds: fields.orderedIds,
             startedAt: nil,
@@ -379,7 +393,7 @@ final class RaceSetupViewModel: ObservableObject {
             eventType: eventType,
             distanceMeters: unlimitedSplits ? 0 : distanceMeters,
             trackLengthMeters: trackLength,
-            splitsPerLap: (eventType.isRelay || unlimitedSplits) ? 1 : splitsPerLap,
+            splitsPerLap: unlimitedSplits ? 1 : splitsPerLap,
             isUnlimitedSplits: unlimitedSplits,
             athletes: selectedAthletes.map { athlete in
                 SharedAthlete(
@@ -405,7 +419,7 @@ final class RaceSetupViewModel: ObservableObject {
             eventType: eventType,
             distanceMeters: unlimitedSplits ? 0 : fields.dist,
             trackLengthMeters: fields.track,
-            splitsPerLap: (eventType.isRelay || unlimitedSplits) ? 1 : splitsPerLap,
+            splitsPerLap: unlimitedSplits ? 1 : splitsPerLap,
             isUnlimitedSplits: unlimitedSplits,
             athleteIds: fields.orderedIds,
             startedAt: Date(),

@@ -44,8 +44,10 @@ enum CardRenderer {
 
         let contentHeight: CGFloat
         if data.isRelay {
-            let rows = data.relayLegs.count + 1 + (data.totalRelayTime != nil ? 1 : 0)
-            contentHeight = CGFloat(max(rows, 1)) * nameRowHeight + 12
+            let hasIntermediates = data.relayLegs.contains { !$0.intermediateSplits.isEmpty }
+            let baseRows = data.relayLegs.count + 1 + (data.totalRelayTime != nil ? 1 : 0)
+            let intermediateRows = hasIntermediates ? data.relayLegs.count : 0
+            contentHeight = CGFloat(max(baseRows + intermediateRows, 1)) * nameRowHeight + 12
         } else {
             let colCount = data.columnLabels.count
             let layout = splitLayout(colCount: colCount)
@@ -420,6 +422,40 @@ enum CardRenderer {
             )
 
             currentY += rowHeight
+
+            // Draw intermediate splits (if any)
+            if !leg.intermediateSplits.isEmpty {
+                let splitAttrs: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium),
+                    .foregroundColor: UIColor.secondaryLabel
+                ]
+                let labelAttrs2: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 9, weight: .regular),
+                    .foregroundColor: UIColor.tertiaryLabel
+                ]
+
+                let splitCount = leg.intermediateSplits.count
+                let availWidth = cardWidth - leftPad * 2 - 56
+                let colWidth = availWidth / CGFloat(splitCount)
+
+                for (j, split) in leg.intermediateSplits.enumerated() {
+                    let colCenter = leftPad + 56 + CGFloat(j) * colWidth + colWidth / 2
+
+                    let lSize = (split.label as NSString).size(withAttributes: labelAttrs2)
+                    (split.label as NSString).draw(
+                        at: CGPoint(x: colCenter - lSize.width / 2, y: currentY - 2),
+                        withAttributes: labelAttrs2
+                    )
+
+                    let tSize = (split.time as NSString).size(withAttributes: splitAttrs)
+                    (split.time as NSString).draw(
+                        at: CGPoint(x: colCenter - tSize.width / 2, y: currentY + 10),
+                        withAttributes: splitAttrs
+                    )
+                }
+                currentY += rowHeight
+            }
+
             if i < data.relayLegs.count - 1 {
                 UIColor.separator.setFill()
                 ctx.fill(CGRect(x: leftPad + 56, y: currentY - 0.5, width: cardWidth - leftPad - 56 - leftPad, height: 0.5))

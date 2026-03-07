@@ -151,18 +151,59 @@ enum RaceDomain {
     }
 
     // MARK: Relay leg breakdown — athletes must be in leg order (index 0 = leg 1)
+    // Returns the leg completion (last split) cumulative and leg delta.
     static func relayLegData(
         athletes: [Athlete],
         splits: [Split],
         race: Race
     ) -> [(leg: Int, athlete: Athlete, legMs: Int?, cumulativeMs: Int?)] {
         athletes.enumerated().map { i, athlete in
-            let cumulative = splits.first { $0.athleteId == athlete.id }?.elapsedMs
-            let previousCumulative: Int? = i > 0
-                ? splits.first { $0.athleteId == athletes[i - 1].id }?.elapsedMs
-                : nil
+            // Use the LAST split for this athlete (leg completion), not first
+            let athleteSplits = splits.filter { $0.athleteId == athlete.id }
+                .sorted { $0.elapsedMs < $1.elapsedMs }
+            let cumulative = athleteSplits.last?.elapsedMs
+
+            let previousCumulative: Int? = i > 0 ? {
+                let prevAthlete = athletes[i - 1]
+                return splits.filter { $0.athleteId == prevAthlete.id }
+                    .sorted { $0.elapsedMs < $1.elapsedMs }
+                    .last?.elapsedMs
+            }() : nil
+
             let legMs: Int? = cumulative.map { $0 - (previousCumulative ?? 0) }
             return (leg: i + 1, athlete: athlete, legMs: legMs, cumulativeMs: cumulative)
+        }
+    }
+
+    // MARK: Relay leg intermediate splits — returns all splits for one athlete's leg
+    // Used by results views when splitsPerLap > 1
+    static func relayLegIntermediateSplits(
+        legIndex: Int,
+        athletes: [Athlete],
+        splits: [Split],
+        race: Race
+    ) -> [(label: String, deltaMs: Int, cumulativeMs: Int)] {
+        guard legIndex < athletes.count else { return [] }
+        let athlete = athletes[legIndex]
+        let athleteSplits = splits.filter { $0.athleteId == athlete.id }
+            .sorted { $0.elapsedMs < $1.elapsedMs }
+        guard !athleteSplits.isEmpty else { return [] }
+
+        let prevCumulative: Int
+        if legIndex > 0 {
+            let prevAthlete = athletes[legIndex - 1]
+            prevCumulative = splits.filter { $0.athleteId == prevAthlete.id }
+                .sorted { $0.elapsedMs < $1.elapsedMs }
+                .last?.elapsedMs ?? 0
+        } else {
+            prevCumulative = 0
+        }
+
+        let intermediateDist = race.trackLengthMeters / max(race.splitsPerLap, 1)
+        return athleteSplits.enumerated().map { i, split in
+            let label = "\(intermediateDist * (i + 1))m"
+            let delta = split.elapsedMs - prevCumulative
+            return (label: label, deltaMs: delta, cumulativeMs: split.elapsedMs)
         }
     }
 }

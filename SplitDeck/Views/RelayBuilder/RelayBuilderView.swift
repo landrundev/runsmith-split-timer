@@ -61,6 +61,24 @@ struct RelayBuilderView: View {
             }
             .pickerStyle(.segmented)
 
+            if vm.supportsIntermediateSplits {
+                Toggle(isOn: Binding(
+                    get: { vm.splitsPerLap == 2 },
+                    set: { vm.splitsPerLap = $0 ? 2 : 1 }
+                )) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Record Intermediate Splits")
+                            .font(.subheadline)
+                        if let label = vm.intermediateSplitLabel {
+                            Text("Record a \(label) split within each leg")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .tint(Theme.runsmithPink)
+            }
+
             Picker("Division", selection: $vm.selectedGender) {
                 ForEach(Gender.allCases, id: \.self) { g in
                     Text(g.displayName).tag(g)

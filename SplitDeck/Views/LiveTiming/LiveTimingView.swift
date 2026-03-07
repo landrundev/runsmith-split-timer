@@ -16,6 +16,12 @@ struct LiveTimingView: View {
                     icon: "hand.tap",
                     message: "Tap MARK SPLIT when a runner crosses the line. Then tap the athlete\u{2019}s card to assign it. Unassigned marks are held until you assign them."
                 )
+            } else if vm.race.splitsPerLap > 1 {
+                TipCardView(
+                    tipId: "relayIntermediateSplits",
+                    icon: "stopwatch",
+                    message: "Intermediate splits are ON. You\u{2019}ll record \(vm.race.splitsPerLap) taps per athlete \u{2014} one every \(vm.race.intermediateDistanceMeters.map { "\($0)m" } ?? "split"). Each tap records a cumulative time; leg splits are calculated automatically."
+                )
             } else {
                 TipCardView(
                     tipId: "relayTiming",
@@ -215,7 +221,7 @@ struct LiveTimingView: View {
         let isCurrent = legIndex == vm.currentRelayLeg && !vm.isRelayComplete
         let isDone    = legIndex < vm.currentRelayLeg
         let isWaiting = !isCurrent && !isDone
-        let legSplit  = vm.splits.first { $0.athleteId == athlete.id }
+        let hasIntermediates = vm.race.splitsPerLap > 1
 
         return HStack(spacing: 12) {
             // Leg badge
@@ -238,20 +244,65 @@ struct LiveTimingView: View {
                 Text(athlete.firstName)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(isCurrent ? .primary : (isDone ? .secondary : .tertiary))
+
                 if isCurrent {
-                    Text("Tap to record split")
-                        .font(.caption)
-                        .foregroundStyle(Theme.runsmithPink)
-                } else if isDone, let split = legSplit {
-                    HStack(spacing: 4) {
-                        if let delta = vm.relayLegDelta(legIndex: legIndex) {
-                            Text(delta.formattedSplitTime)
-                                .font(.caption.weight(.semibold).monospacedDigit())
-                                .foregroundStyle(.secondary)
+                    if hasIntermediates {
+                        // Show already-recorded intermediate splits for this leg
+                        let partialDetails = vm.relayLegSplitDetails(legIndex: legIndex)
+                        if !partialDetails.isEmpty {
+                            HStack(spacing: 8) {
+                                ForEach(Array(partialDetails.enumerated()), id: \.offset) { _, detail in
+                                    VStack(spacing: 0) {
+                                        Text(detail.label)
+                                            .font(.system(size: 9))
+                                            .foregroundStyle(.tertiary)
+                                        HStack(spacing: 2) {
+                                            Text(detail.raceCumulMs.formattedSplitTime)
+                                                .font(.caption2.weight(.semibold).monospacedDigit())
+                                                .foregroundStyle(Theme.runsmithPink)
+                                            Text("(\(detail.lapMs.formattedSplitTime))")
+                                                .font(.system(size: 9).monospacedDigit())
+                                                .foregroundStyle(Theme.runsmithPink.opacity(0.6))
+                                        }
+                                    }
+                                }
+                            }
                         }
-                        Text("(\(split.elapsedMs.formattedSplitTime))")
-                            .font(.caption2.monospacedDigit())
-                            .foregroundStyle(.tertiary)
+                        if let distLabel = vm.currentSplitDistanceLabel {
+                            Text("Tap to record \(distLabel) split")
+                                .font(.caption)
+                                .foregroundStyle(Theme.runsmithPink)
+                        }
+                    } else {
+                        Text("Tap to record split")
+                            .font(.caption)
+                            .foregroundStyle(Theme.runsmithPink)
+                    }
+                } else if isDone {
+                    if hasIntermediates {
+                        // Show all split details for completed legs
+                        let details = vm.relayLegSplitDetails(legIndex: legIndex)
+                        HStack(spacing: 8) {
+                            ForEach(Array(details.enumerated()), id: \.offset) { _, detail in
+                                VStack(spacing: 0) {
+                                    Text(detail.label)
+                                        .font(.system(size: 9))
+                                        .foregroundStyle(.tertiary)
+                                    HStack(spacing: 2) {
+                                        Text(detail.raceCumulMs.formattedSplitTime)
+                                            .font(.caption2.monospacedDigit())
+                                            .foregroundStyle(.secondary)
+                                        Text("(\(detail.lapMs.formattedSplitTime))")
+                                            .font(.system(size: 9).monospacedDigit())
+                                            .foregroundStyle(.tertiary)
+                                    }
+                                }
+                            }
+                        }
+                    } else if let delta = vm.relayLegDelta(legIndex: legIndex) {
+                        Text(delta.formattedSplitTime)
+                            .font(.caption.weight(.semibold).monospacedDigit())
+                            .foregroundStyle(.secondary)
                     }
                 } else {
                     Text("Waiting")
@@ -263,11 +314,23 @@ struct LiveTimingView: View {
             Spacer()
 
             if isDone {
+                if let cumulMs = vm.splits.filter({ $0.athleteId == athlete.id })
+                    .max(by: { $0.elapsedMs < $1.elapsedMs })?.elapsedMs {
+                    Text(cumulMs.formattedSplitTime)
+                        .font(.caption.weight(.bold).monospacedDigit())
+                }
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
             } else if isCurrent {
-                Image(systemName: "figure.run")
-                    .foregroundStyle(Theme.runsmithPink)
+                if vm.isCurrentLegPartial {
+                    // Show progress indicator for partial leg
+                    Text("\(vm.currentLegSplitNumber - 1)/\(vm.race.splitsPerLap)")
+                        .font(.caption2.weight(.bold).monospacedDigit())
+                        .foregroundStyle(Theme.runsmithPink)
+                } else {
+                    Image(systemName: "figure.run")
+                        .foregroundStyle(Theme.runsmithPink)
+                }
             } else if isWaiting {
                 Image(systemName: "line.3.horizontal")
                     .foregroundStyle(.tertiary)
@@ -394,10 +457,16 @@ struct LiveTimingView: View {
                 Button {
                     vm.recordRelayLeg()
                 } label: {
-                    Text("RECORD LEG \(vm.currentRelayLeg + 1)")
-                        .font(.title3.weight(.bold))
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: Theme.markButtonHeight)
+                    Group {
+                        if vm.race.splitsPerLap > 1, let distLabel = vm.currentSplitDistanceLabel {
+                            Text("RECORD \(distLabel)")
+                        } else {
+                            Text("RECORD LEG \(vm.currentRelayLeg + 1)")
+                        }
+                    }
+                    .font(.title3.weight(.bold))
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: Theme.markButtonHeight)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Theme.runsmithPink)

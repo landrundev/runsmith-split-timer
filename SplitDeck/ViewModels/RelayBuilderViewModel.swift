@@ -12,8 +12,15 @@ final class RelayBuilderViewModel: ObservableObject {
     // MARK: – Inputs
 
     @Published var selectedRelayType: EventType = .relay4x400 {
-        didSet { refreshCandidates() }
+        didSet {
+            // Reset intermediate splits if new type doesn't support it
+            if selectedRelayType != .relay4x1600 && selectedRelayType != .relay4x3200 {
+                splitsPerLap = 1
+            }
+            refreshCandidates()
+        }
     }
+    @Published var splitsPerLap: Int = 1
     @Published var selectedGender: Gender = .male {
         didSet { refreshCandidates() }
     }
@@ -174,6 +181,7 @@ final class RelayBuilderViewModel: ObservableObject {
             eventType: selectedRelayType,
             distanceMeters: legDist,
             trackLengthMeters: legDist,
+            splitsPerLap: splitsPerLap,
             athleteIds: chosenAthleteIds,
             startedAt: Date(),
             status: .inProgress
@@ -209,5 +217,14 @@ final class RelayBuilderViewModel: ObservableObject {
     var legDistanceDisplay: String {
         guard let d = selectedRelayType.legDistanceMeters else { return "" }
         return "\(d)m"
+    }
+
+    var supportsIntermediateSplits: Bool {
+        selectedRelayType == .relay4x1600 || selectedRelayType == .relay4x3200
+    }
+
+    var intermediateSplitLabel: String? {
+        guard supportsIntermediateSplits, let leg = selectedRelayType.legDistanceMeters else { return nil }
+        return "\(leg / 2)m"
     }
 }

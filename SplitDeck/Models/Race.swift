@@ -109,6 +109,14 @@ struct Race: Identifiable, Codable, Hashable {
         return laps * splitsPerLap
     }
 
+    /// For relays with splitsPerLap > 1, returns the intermediate split distance.
+    /// e.g. 4×400m relay with splitsPerLap=2 → 200m intermediate.
+    /// Returns nil for non-relay or splitsPerLap==1.
+    var intermediateDistanceMeters: Int? {
+        guard eventType.isRelay, splitsPerLap > 1 else { return nil }
+        return trackLengthMeters / splitsPerLap
+    }
+
     init(
         id: UUID = UUID(),
         meetId: UUID? = nil,

@@ -17,7 +17,7 @@ enum TipManager {
 
     /// Resets all tips (useful for testing only — not exposed in UI).
     static func resetAll() {
-        let ids = ["quickRace", "markSplit", "swipeActions", "coachMerge", "relayTiming"]
+        let ids = ["quickRace", "markSplit", "swipeActions", "coachMerge", "relayTiming", "relayIntermediateSplits"]
         for id in ids {
             UserDefaults.standard.removeObject(forKey: prefix + id)
         }

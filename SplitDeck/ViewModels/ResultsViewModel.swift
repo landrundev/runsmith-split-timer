@@ -97,13 +97,25 @@ final class ResultsViewModel: ObservableObject {
                 splitTimes: splitStrings
             )
         }
-        let relayRows = relayLegData.map { entry in
-            CardData.CardRelayLeg(
+        let relayRows = relayLegData.enumerated().map { i, entry in
+            let intermediates: [(label: String, time: String)]
+            if race.splitsPerLap > 1 {
+                intermediates = RaceDomain.relayLegIntermediateSplits(
+                    legIndex: i,
+                    athletes: orderedAthletes,
+                    splits: splits,
+                    race: race
+                ).map { (label: $0.label, time: $0.deltaMs.formattedSplitTime) }
+            } else {
+                intermediates = []
+            }
+            return CardData.CardRelayLeg(
                 leg: entry.leg,
                 athleteName: entry.athlete.firstName,
                 colorHex: entry.athlete.colorHex,
                 legTime: entry.legMs.map { $0.formattedSplitTime } ?? "—",
-                cumulativeTime: entry.cumulativeMs.map { $0.formattedSplitTime } ?? "—"
+                cumulativeTime: entry.cumulativeMs.map { $0.formattedSplitTime } ?? "—",
+                intermediateSplits: intermediates
             )
         }
         return CardData(

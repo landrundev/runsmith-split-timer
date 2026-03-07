@@ -207,6 +207,9 @@ final class LiveTimingViewModel: ObservableObject {
             }
             let leg = currentRelayLeg + 1
             let name = currentRelayAthlete?.name ?? ""
+            if race.splitsPerLap > 1, let distLabel = currentSplitDistanceLabel {
+                return "\(race.eventType.displayName) — Leg \(leg): \(name) (\(distLabel))"
+            }
             return "\(race.eventType.displayName) — Leg \(leg) of 4: \(name)"
         }
         if race.isUnlimitedSplits {
@@ -241,9 +244,15 @@ final class LiveTimingViewModel: ObservableObject {
     }
 
     /// Number of legs completed so far (0–4).
+    /// An athlete's leg is complete when they have recorded ALL expected splits
+    /// (splitsPerLap splits). For splitsPerLap=1, this is 1 tap. For splitsPerLap=2,
+    /// this is 2 taps (intermediate + leg completion).
     var currentRelayLeg: Int {
         guard isRelay else { return 0 }
-        return race.athleteIds.filter { id in splits.contains { $0.athleteId == id } }.count
+        let expectedSplits = race.splitsPerLap
+        return race.athleteIds.filter { id in
+            splits.filter { $0.athleteId == id }.count >= expectedSplits
+        }.count
     }
 
     /// The athlete currently on the track (the next unrecorded leg).
@@ -254,18 +263,83 @@ final class LiveTimingViewModel: ObservableObject {
         return athletes.first { $0.id == race.athleteIds[leg] }
     }
 
-    /// Leg time (delta) for a completed relay leg.
+    /// For relays with intermediate splits: which split within the current leg
+    /// the coach needs to record next (1-based). Returns 1 for "record 200m",
+    /// 2 for "record 400m" in a 4×400m relay with intermediates.
+    var currentLegSplitNumber: Int {
+        guard isRelay, let athlete = currentRelayAthlete else { return 1 }
+        let recorded = splits.filter { $0.athleteId == athlete.id }.count
+        return recorded + 1
+    }
+
+    /// True if the current relay athlete has more splits to record before
+    /// their leg is complete.
+    var isCurrentLegPartial: Bool {
+        guard isRelay else { return false }
+        return currentLegSplitNumber <= race.splitsPerLap && currentLegSplitNumber > 1
+    }
+
+    /// Label for the current split distance the coach needs to record.
+    /// e.g. "200m" for the first tap, "400m" for the second tap in a 4×400m relay.
+    var currentSplitDistanceLabel: String? {
+        guard isRelay, race.splitsPerLap > 1,
+              let intermediateDist = race.intermediateDistanceMeters else { return nil }
+        return "\(intermediateDist * currentLegSplitNumber)m"
+    }
+
+    /// Returns the leg delta time (time for that specific leg) for a completed leg.
+    /// Uses the athlete's LAST split (leg completion) minus the previous athlete's last split.
     func relayLegDelta(legIndex: Int) -> Int? {
         guard isRelay, legIndex < race.athleteIds.count else { return nil }
         let athleteId = race.athleteIds[legIndex]
-        guard let cumulative = splits.first(where: { $0.athleteId == athleteId })?.elapsedMs else { return nil }
+        let athleteSplits = splits.filter { $0.athleteId == athleteId }
+            .sorted { $0.elapsedMs < $1.elapsedMs }
+        guard let lastSplit = athleteSplits.last else { return nil }
+
         let prevCumulative: Int
         if legIndex > 0 {
-            prevCumulative = splits.first(where: { $0.athleteId == race.athleteIds[legIndex - 1] })?.elapsedMs ?? 0
+            let prevAthleteId = race.athleteIds[legIndex - 1]
+            prevCumulative = splits.filter { $0.athleteId == prevAthleteId }
+                .sorted { $0.elapsedMs < $1.elapsedMs }
+                .last?.elapsedMs ?? 0
         } else {
             prevCumulative = 0
         }
-        return cumulative - prevCumulative
+        return lastSplit.elapsedMs - prevCumulative
+    }
+
+    /// Returns all split times for a relay leg, including intermediates.
+    /// - `legCumulMs`: time from leg start to this split
+    /// - `lapMs`: split-to-split delta (time for just this segment)
+    /// - `raceCumulMs`: total elapsed from race start
+    func relayLegSplitDetails(legIndex: Int) -> [(label: String, legCumulMs: Int, lapMs: Int, raceCumulMs: Int)] {
+        guard isRelay, legIndex < race.athleteIds.count else { return [] }
+        let athleteId = race.athleteIds[legIndex]
+        let athleteSplits = splits.filter { $0.athleteId == athleteId }
+            .sorted { $0.elapsedMs < $1.elapsedMs }
+        guard !athleteSplits.isEmpty else { return [] }
+
+        // Previous leg's last cumulative (or 0 for leg 1)
+        let prevCumulative: Int
+        if legIndex > 0 {
+            let prevAthleteId = race.athleteIds[legIndex - 1]
+            prevCumulative = splits.filter { $0.athleteId == prevAthleteId }
+                .sorted { $0.elapsedMs < $1.elapsedMs }
+                .last?.elapsedMs ?? 0
+        } else {
+            prevCumulative = 0
+        }
+
+        let intermediateDist = race.trackLengthMeters / max(race.splitsPerLap, 1)
+        var results: [(label: String, legCumulMs: Int, lapMs: Int, raceCumulMs: Int)] = []
+        for (i, split) in athleteSplits.enumerated() {
+            let label = "\(intermediateDist * (i + 1))m"
+            let legCumul = split.elapsedMs - prevCumulative
+            let prevElapsed = i > 0 ? athleteSplits[i - 1].elapsedMs : prevCumulative
+            let lap = split.elapsedMs - prevElapsed
+            results.append((label: label, legCumulMs: legCumul, lapMs: lap, raceCumulMs: split.elapsedMs))
+        }
+        return results
     }
 
     /// True when all 4 legs have been recorded.
