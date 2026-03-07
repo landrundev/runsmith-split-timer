@@ -83,7 +83,7 @@ struct HomeView: View {
                 editMeetSheet(meet: meet)
             }
             .sheet(isPresented: $showImportRace, onDismiss: { vm.load() }) {
-                ImportRaceView(store: store, cache: cache)
+                ImportRaceView(store: store)
             }
             .sheet(isPresented: $showQuickRaceSetup, onDismiss: { vm.load() }) {
                 RaceSetupView(

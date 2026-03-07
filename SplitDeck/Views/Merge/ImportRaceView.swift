@@ -6,7 +6,6 @@ import UniformTypeIdentifiers
 /// creates athletes + races in Core Data and offers navigation options.
 struct ImportRaceView: View {
     let store: SplitDeckStore
-    let cache: RaceStateCache
 
     @Environment(\.dismiss) private var dismiss
 
@@ -20,7 +19,6 @@ struct ImportRaceView: View {
     @State private var errorMessage: String? = nil
     @State private var isScanning: Bool = false
     @State private var showFileImporter: Bool = false
-    @State private var navigateToTiming: Bool = false
     @State private var showMethodPicker: Bool = true
 
     // MARK: — Body
@@ -48,15 +46,6 @@ struct ImportRaceView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
-                }
-            }
-            .navigationDestination(isPresented: $navigateToTiming) {
-                if let race = importedRace {
-                    let athletes = (try? store.fetchAthletes()) ?? []
-                    let liveVM = LiveTimingViewModel(
-                        race: race, athletes: athletes, store: store, cache: cache
-                    )
-                    LiveTimingView(vm: liveVM, cache: cache)
                 }
             }
             .fileImporter(
@@ -169,19 +158,10 @@ struct ImportRaceView: View {
                     .foregroundStyle(.secondary)
             }
 
-            VStack(spacing: 12) {
-                Button {
-                    navigateToTiming = true
-                } label: {
-                    Text("Start Timing")
-                }
-                .buttonStyle(GlassPrimaryButtonStyle())
-
-                Button("Done") {
-                    dismiss()
-                }
-                .buttonStyle(.bordered)
+            Button("Done") {
+                dismiss()
             }
+            .buttonStyle(GlassPrimaryButtonStyle())
             .padding(.horizontal, 32)
 
             Spacer()

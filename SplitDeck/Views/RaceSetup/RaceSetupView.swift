@@ -42,6 +42,7 @@ struct RaceSetupView: View {
                 athleteSection
 
                 Button {
+                    vm.ensureConfigId()
                     showShareConfig = true
                 } label: {
                     Label("Share with Coaches", systemImage: "person.2.wave.2")

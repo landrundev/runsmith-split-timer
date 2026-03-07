@@ -317,8 +317,18 @@ final class RaceSetupViewModel: ObservableObject {
 
     // MARK: – Multi-Coach Sharing
 
+    /// Ensures `sharedConfigId` is set. Call before presenting the share sheet
+    /// so that `buildSharedConfig()` doesn't mutate @Published state during
+    /// SwiftUI view evaluation.
+    func ensureConfigId() {
+        if sharedConfigId == nil {
+            sharedConfigId = UUID()
+        }
+    }
+
     /// Assembles the current race setup state into a SharedRaceConfig
     /// that assistant coaches can import on their devices.
+    /// Must call `ensureConfigId()` first.
     func buildSharedConfig() -> SharedRaceConfig {
         let orderedIds: [UUID]
         if eventType.isRelay {
@@ -349,7 +359,6 @@ final class RaceSetupViewModel: ObservableObject {
         }
 
         let configId = sharedConfigId ?? UUID()
-        sharedConfigId = configId
 
         return SharedRaceConfig(
             version: 1,
