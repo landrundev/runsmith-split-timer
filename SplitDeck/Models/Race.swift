@@ -26,10 +26,10 @@ enum EventType: Int16, Codable, CaseIterable {
         case .m5000:     return "5000m"
         case .m10000:    return "10000m"
         case .custom:    return "Custom"
-        case .relay4x400:  return "4\u{00D7}400m"
-        case .relay4x800:  return "4\u{00D7}800m"
-        case .relay4x1600: return "4\u{00D7}1600m"
-        case .relay4x3200: return "4\u{00D7}3200m"
+        case .relay4x400:  return "4\u{00D7}100m"
+        case .relay4x800:  return "4\u{00D7}200m"
+        case .relay4x1600: return "4\u{00D7}400m"
+        case .relay4x3200: return "4\u{00D7}800m"
         }
     }
 
@@ -43,10 +43,10 @@ enum EventType: Int16, Codable, CaseIterable {
     /// Distance per relay leg. nil for individual events.
     var legDistanceMeters: Int? {
         switch self {
-        case .relay4x400:  return 400
-        case .relay4x800:  return 800
-        case .relay4x1600: return 1600
-        case .relay4x3200: return 3200
+        case .relay4x400:  return 100
+        case .relay4x800:  return 200
+        case .relay4x1600: return 400
+        case .relay4x3200: return 800
         default:           return nil
         }
     }

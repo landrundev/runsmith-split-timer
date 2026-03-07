@@ -26,21 +26,21 @@ struct ResultsView: View {
             )
             Divider()
 
+            Picker("Display", selection: $vm.displayMode) {
+                ForEach(DisplayMode.allCases, id: \.self) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.top, 8)
+            .padding(.bottom, 4)
+
+            Divider()
+
             if vm.race.eventType.isRelay {
                 relayResultsTable
             } else {
-                Picker("Display", selection: $vm.displayMode) {
-                    ForEach(DisplayMode.allCases, id: \.self) { mode in
-                        Text(mode.rawValue).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.top, 8)
-                .padding(.bottom, 4)
-
-                Divider()
-
                 resultsTable
             }
         }
@@ -252,7 +252,8 @@ struct ResultsView: View {
     // MARK: – Relay Results Table
 
     private var relayResultsTable: some View {
-        ScrollView(.vertical) {
+        let showLapTimes = vm.displayMode == .lapTimes
+        return ScrollView(.vertical) {
             VStack(spacing: 0) {
                 // Column headers
                 HStack {
@@ -260,10 +261,8 @@ struct ResultsView: View {
                         .frame(width: 36, alignment: .leading)
                     Text("Athlete")
                     Spacer()
-                    Text("Leg Time")
-                        .frame(width: 74, alignment: .trailing)
-                    Text("Cumulative")
-                        .frame(width: 82, alignment: .trailing)
+                    Text(showLapTimes ? "Leg Time" : "Cumulative")
+                        .frame(width: 90, alignment: .trailing)
                 }
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
@@ -289,14 +288,15 @@ struct ResultsView: View {
 
                         Spacer()
 
-                        Text(entry.legMs.map { $0.formattedSplitTime } ?? "—")
-                            .font(.subheadline.weight(.semibold).monospacedDigit())
-                            .frame(width: 74, alignment: .trailing)
-
-                        Text(entry.cumulativeMs.map { $0.formattedSplitTime } ?? "—")
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                            .frame(width: 82, alignment: .trailing)
+                        if showLapTimes {
+                            Text(entry.legMs.map { $0.formattedSplitTime } ?? "—")
+                                .font(.subheadline.weight(.semibold).monospacedDigit())
+                                .frame(width: 90, alignment: .trailing)
+                        } else {
+                            Text(entry.cumulativeMs.map { $0.formattedSplitTime } ?? "—")
+                                .font(.subheadline.weight(.semibold).monospacedDigit())
+                                .frame(width: 90, alignment: .trailing)
+                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
@@ -312,9 +312,7 @@ struct ResultsView: View {
                         Spacer()
                         Text(total.formattedSplitTime)
                             .font(.subheadline.weight(.bold).monospacedDigit())
-                            .frame(width: 74, alignment: .trailing)
-                        Text("")
-                            .frame(width: 82)
+                            .frame(width: 90, alignment: .trailing)
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)

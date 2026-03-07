@@ -254,6 +254,20 @@ final class LiveTimingViewModel: ObservableObject {
         return athletes.first { $0.id == race.athleteIds[leg] }
     }
 
+    /// Leg time (delta) for a completed relay leg.
+    func relayLegDelta(legIndex: Int) -> Int? {
+        guard isRelay, legIndex < race.athleteIds.count else { return nil }
+        let athleteId = race.athleteIds[legIndex]
+        guard let cumulative = splits.first(where: { $0.athleteId == athleteId })?.elapsedMs else { return nil }
+        let prevCumulative: Int
+        if legIndex > 0 {
+            prevCumulative = splits.first(where: { $0.athleteId == race.athleteIds[legIndex - 1] })?.elapsedMs ?? 0
+        } else {
+            prevCumulative = 0
+        }
+        return cumulative - prevCumulative
+    }
+
     /// True when all 4 legs have been recorded.
     var isRelayComplete: Bool {
         guard isRelay else { return false }

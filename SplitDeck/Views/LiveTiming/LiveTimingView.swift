@@ -243,9 +243,16 @@ struct LiveTimingView: View {
                         .font(.caption)
                         .foregroundStyle(Theme.runsmithPink)
                 } else if isDone, let split = legSplit {
-                    Text(split.elapsedMs.formattedSplitTime)
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        if let delta = vm.relayLegDelta(legIndex: legIndex) {
+                            Text(delta.formattedSplitTime)
+                                .font(.caption.weight(.semibold).monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
+                        Text("(\(split.elapsedMs.formattedSplitTime))")
+                            .font(.caption2.monospacedDigit())
+                            .foregroundStyle(.tertiary)
+                    }
                 } else {
                     Text("Waiting")
                         .font(.caption)
