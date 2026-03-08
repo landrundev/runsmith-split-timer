@@ -47,6 +47,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.runsmith.splitdeck
         INFOPLIST_FILE: SplitDeck/App/Info.plist
         MARKETING_VERSION: "1.7"
-        CURRENT_PROJECT_VERSION: "26"
+        CURRENT_PROJECT_VERSION: "27"
         DEVELOPMENT_TEAM: "8N9TUSKDW3"
         CODE_SIGN_STYLE: Automatic
