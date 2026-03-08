@@ -105,7 +105,7 @@ final class ResultsViewModel: ObservableObject {
                     athletes: orderedAthletes,
                     splits: splits,
                     race: race
-                ).map { (label: $0.label, time: $0.deltaMs.formattedSplitTime) }
+                ).map { (label: $0.label, time: $0.lapMs.formattedSplitTime) }
             } else {
                 intermediates = []
             }

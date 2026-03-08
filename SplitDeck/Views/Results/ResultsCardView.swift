@@ -242,9 +242,9 @@ struct ResultsCardView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 11)
 
-            // Intermediate splits
+            // Intermediate split times
             if !leg.intermediateSplits.isEmpty {
-                HStack(spacing: 12) {
+                HStack(spacing: 16) {
                     Spacer().frame(width: 36)
                     ForEach(Array(leg.intermediateSplits.enumerated()), id: \.offset) { _, split in
                         VStack(spacing: 0) {

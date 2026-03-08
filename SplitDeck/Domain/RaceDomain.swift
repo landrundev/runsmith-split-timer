@@ -182,7 +182,7 @@ enum RaceDomain {
         athletes: [Athlete],
         splits: [Split],
         race: Race
-    ) -> [(label: String, deltaMs: Int, cumulativeMs: Int)] {
+    ) -> [(label: String, deltaMs: Int, lapMs: Int, cumulativeMs: Int)] {
         guard legIndex < athletes.count else { return [] }
         let athlete = athletes[legIndex]
         let athleteSplits = splits.filter { $0.athleteId == athlete.id }
@@ -203,7 +203,9 @@ enum RaceDomain {
         return athleteSplits.enumerated().map { i, split in
             let label = "\(intermediateDist * (i + 1))m"
             let delta = split.elapsedMs - prevCumulative
-            return (label: label, deltaMs: delta, cumulativeMs: split.elapsedMs)
+            let prevElapsed = i > 0 ? athleteSplits[i - 1].elapsedMs : prevCumulative
+            let lap = split.elapsedMs - prevElapsed
+            return (label: label, deltaMs: delta, lapMs: lap, cumulativeMs: split.elapsedMs)
         }
     }
 }

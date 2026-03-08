@@ -247,7 +247,7 @@ struct LiveTimingView: View {
 
                 if isCurrent {
                     if hasIntermediates {
-                        // Show already-recorded intermediate splits for this leg
+                        // Show already-recorded intermediate splits (lap time as primary)
                         let partialDetails = vm.relayLegSplitDetails(legIndex: legIndex)
                         if !partialDetails.isEmpty {
                             HStack(spacing: 8) {
@@ -256,14 +256,9 @@ struct LiveTimingView: View {
                                         Text(detail.label)
                                             .font(.system(size: 9))
                                             .foregroundStyle(.tertiary)
-                                        HStack(spacing: 2) {
-                                            Text(detail.raceCumulMs.formattedSplitTime)
-                                                .font(.caption2.weight(.semibold).monospacedDigit())
-                                                .foregroundStyle(Theme.runsmithPink)
-                                            Text("(\(detail.lapMs.formattedSplitTime))")
-                                                .font(.system(size: 9).monospacedDigit())
-                                                .foregroundStyle(Theme.runsmithPink.opacity(0.6))
-                                        }
+                                        Text(detail.lapMs.formattedSplitTime)
+                                            .font(.caption2.weight(.semibold).monospacedDigit())
+                                            .foregroundStyle(Theme.runsmithPink)
                                     }
                                 }
                             }
@@ -280,23 +275,23 @@ struct LiveTimingView: View {
                     }
                 } else if isDone {
                     if hasIntermediates {
-                        // Show all split details for completed legs
+                        // Show intermediate splits (lap time) + total leg time in parens
                         let details = vm.relayLegSplitDetails(legIndex: legIndex)
-                        HStack(spacing: 8) {
+                        HStack(alignment: .bottom, spacing: 12) {
                             ForEach(Array(details.enumerated()), id: \.offset) { _, detail in
                                 VStack(spacing: 0) {
                                     Text(detail.label)
                                         .font(.system(size: 9))
                                         .foregroundStyle(.tertiary)
-                                    HStack(spacing: 2) {
-                                        Text(detail.raceCumulMs.formattedSplitTime)
-                                            .font(.caption2.monospacedDigit())
-                                            .foregroundStyle(.secondary)
-                                        Text("(\(detail.lapMs.formattedSplitTime))")
-                                            .font(.system(size: 9).monospacedDigit())
-                                            .foregroundStyle(.tertiary)
-                                    }
+                                    Text(detail.lapMs.formattedSplitTime)
+                                        .font(.caption2.monospacedDigit())
+                                        .foregroundStyle(.secondary)
                                 }
+                            }
+                            if let totalLeg = details.last?.legCumulMs {
+                                Text("(\(totalLeg.formattedSplitTime))")
+                                    .font(.caption2.monospacedDigit())
+                                    .foregroundStyle(.tertiary)
                             }
                         }
                     } else if let delta = vm.relayLegDelta(legIndex: legIndex) {

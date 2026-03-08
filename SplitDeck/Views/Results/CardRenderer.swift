@@ -423,7 +423,7 @@ enum CardRenderer {
 
             currentY += rowHeight
 
-            // Draw intermediate splits (if any)
+            // Draw intermediate split times
             if !leg.intermediateSplits.isEmpty {
                 let splitAttrs: [NSAttributedString.Key: Any] = [
                     .font: UIFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium),
@@ -434,25 +434,21 @@ enum CardRenderer {
                     .foregroundColor: UIColor.tertiaryLabel
                 ]
 
-                let splitCount = leg.intermediateSplits.count
-                let availWidth = cardWidth - leftPad * 2 - 56
-                let colWidth = availWidth / CGFloat(splitCount)
-
+                let chipSpacing: CGFloat = 56
                 for (j, split) in leg.intermediateSplits.enumerated() {
-                    let colCenter = leftPad + 56 + CGFloat(j) * colWidth + colWidth / 2
+                    let chipX = leftPad + 56 + CGFloat(j) * chipSpacing
 
-                    let lSize = (split.label as NSString).size(withAttributes: labelAttrs2)
                     (split.label as NSString).draw(
-                        at: CGPoint(x: colCenter - lSize.width / 2, y: currentY - 2),
+                        at: CGPoint(x: chipX, y: currentY - 2),
                         withAttributes: labelAttrs2
                     )
 
-                    let tSize = (split.time as NSString).size(withAttributes: splitAttrs)
                     (split.time as NSString).draw(
-                        at: CGPoint(x: colCenter - tSize.width / 2, y: currentY + 10),
+                        at: CGPoint(x: chipX, y: currentY + 10),
                         withAttributes: splitAttrs
                     )
                 }
+
                 currentY += rowHeight
             }
 

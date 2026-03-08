@@ -262,13 +262,8 @@ struct ResultsView: View {
                         .frame(width: 36, alignment: .leading)
                     Text("Athlete")
                     Spacer()
-                    if vm.displayMode == .lapTimes {
-                        Text("Leg Time")
-                            .frame(width: 90, alignment: .trailing)
-                    } else {
-                        Text("Cumulative")
-                            .frame(width: 90, alignment: .trailing)
-                    }
+                    Text(vm.displayMode == .cumulative ? "Cumulative" : "Leg Time")
+                        .frame(width: 90, alignment: .trailing)
                 }
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
@@ -296,12 +291,12 @@ struct ResultsView: View {
 
                             Spacer()
 
-                            if vm.displayMode == .lapTimes {
-                                Text(entry.legMs.map { $0.formattedSplitTime } ?? "\u{2014}")
+                            if vm.displayMode == .cumulative {
+                                Text(entry.cumulativeMs.map { $0.formattedSplitTime } ?? "\u{2014}")
                                     .font(.subheadline.weight(.semibold).monospacedDigit())
                                     .frame(width: 90, alignment: .trailing)
                             } else {
-                                Text(entry.cumulativeMs.map { $0.formattedSplitTime } ?? "\u{2014}")
+                                Text(entry.legMs.map { $0.formattedSplitTime } ?? "\u{2014}")
                                     .font(.subheadline.weight(.semibold).monospacedDigit())
                                     .frame(width: 90, alignment: .trailing)
                             }
@@ -318,7 +313,7 @@ struct ResultsView: View {
                                 race: vm.race
                             )
                             if !details.isEmpty {
-                                HStack(spacing: 12) {
+                                HStack(alignment: .bottom, spacing: 12) {
                                     Spacer()
                                         .frame(width: 36)
                                     ForEach(Array(details.enumerated()), id: \.offset) { _, detail in
@@ -326,16 +321,15 @@ struct ResultsView: View {
                                             Text(detail.label)
                                                 .font(.system(size: 10))
                                                 .foregroundStyle(.tertiary)
-                                            if vm.displayMode == .lapTimes {
-                                                Text(detail.deltaMs.formattedSplitTime)
-                                                    .font(.caption.monospacedDigit())
-                                                    .foregroundStyle(.secondary)
-                                            } else {
-                                                Text(detail.cumulativeMs.formattedSplitTime)
-                                                    .font(.caption.monospacedDigit())
-                                                    .foregroundStyle(.secondary)
-                                            }
+                                            Text(detail.lapMs.formattedSplitTime)
+                                                .font(.caption.monospacedDigit())
+                                                .foregroundStyle(.secondary)
                                         }
+                                    }
+                                    if vm.displayMode == .cumulative {
+                                        Text("(\(entry.legMs.map { $0.formattedSplitTime } ?? "\u{2014}"))")
+                                            .font(.caption.monospacedDigit())
+                                            .foregroundStyle(.tertiary)
                                     }
                                     Spacer()
                                 }
