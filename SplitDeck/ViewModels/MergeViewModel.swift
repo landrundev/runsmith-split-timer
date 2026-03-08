@@ -31,6 +31,12 @@ final class MergeViewModel: ObservableObject {
     /// Set to `true` when an imported payload's configId doesn't match this race.
     @Published var showWrongRaceError = false
 
+    /// Set to `true` when the host race has no configId so identity can't be verified.
+    @Published var showMismatchWarning = false
+
+    /// Holds the pending payload that triggered a warning (wrong race or unverified).
+    @Published var pendingPayload: CoachSplitPayload?
+
     // MARK: – Inputs (immutable after init)
 
     /// The race whose splits are being merged.
@@ -59,15 +65,33 @@ final class MergeViewModel: ObservableObject {
 
     /// Imports a `CoachSplitPayload` from an assistant coach.
     ///
-    /// Validates configId match (if the race has one) to prevent merging splits
-    /// from a different race. Deduplicates by `coachName` + `exportedAt` so
-    /// scanning the same QR twice does not add a duplicate entry.
+    /// Validates configId match to prevent merging splits from a different race.
+    /// If the host race has no configId, shows a warning so the user can confirm.
     func importPayload(_ payload: CoachSplitPayload) {
-        if let raceConfigId = race.configId, payload.configId != raceConfigId {
-            showWrongRaceError = true
-            return
+        if let raceConfigId = race.configId {
+            // Host race has a configId — strict match required
+            if payload.configId != raceConfigId {
+                pendingPayload = payload
+                showWrongRaceError = true
+                return
+            }
+            acceptPayload(payload)
+        } else {
+            // Host race has no configId — can't verify, warn user
+            pendingPayload = payload
+            showMismatchWarning = true
         }
+    }
 
+    /// Called when user confirms import despite unverified configId.
+    func confirmPendingImport() {
+        guard let payload = pendingPayload else { return }
+        acceptPayload(payload)
+        pendingPayload = nil
+    }
+
+    /// Deduplicates and appends the payload, then recomputes preview.
+    private func acceptPayload(_ payload: CoachSplitPayload) {
         let isDuplicate = importedPayloads.contains {
             $0.coachName == payload.coachName && $0.exportedAt == payload.exportedAt
         }

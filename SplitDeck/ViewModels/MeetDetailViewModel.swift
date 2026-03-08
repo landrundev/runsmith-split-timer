@@ -10,12 +10,21 @@ final class MeetDetailViewModel: ObservableObject {
     /// Only populated for completed individual races.
     @Published private(set) var bestTimes: [UUID: Int] = [:]
 
-    let meet: Meet
+    @Published var meet: Meet
     private let store: SplitDeckStore
 
     init(meet: Meet, store: SplitDeckStore) {
         self.meet = meet
         self.store = store
+    }
+
+    func updateMeet(name: String, date: Date, location: String?) {
+        meet = Meet(id: meet.id, name: name, date: date, location: location, isArchived: meet.isArchived)
+        do {
+            try store.save(meet)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func load() {

@@ -57,7 +57,7 @@ struct MeetRaceCardRow: View {
             if let time = bestTime {
                 VStack(alignment: .trailing, spacing: 1) {
                     Text(time)
-                        .font(.caption.weight(.bold).monospacedDigit())
+                        .font(.subheadline.weight(.bold).monospacedDigit())
                         .foregroundStyle(Theme.runsmithPink)
                     Text("Best")
                         .font(.system(size: 9))
@@ -74,14 +74,16 @@ struct MeetRaceCardRow: View {
                 .foregroundStyle(.green)
             }
 
-            // Status pill
-            Text(race.status.displayName)
-                .font(.caption2.weight(.semibold))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Theme.statusColor(race.status).opacity(0.12))
-                .foregroundStyle(Theme.statusColor(race.status))
-                .clipShape(Capsule())
+            // Status pill — hidden when WA badge already indicates completion
+            if !race.isMerged {
+                Text(race.status.displayName)
+                    .font(.caption2.weight(.semibold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Theme.statusColor(race.status).opacity(0.12))
+                    .foregroundStyle(Theme.statusColor(race.status))
+                    .clipShape(Capsule())
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)

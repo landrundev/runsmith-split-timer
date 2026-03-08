@@ -28,7 +28,10 @@ struct ExportSplitsView: View {
             configId: payload.configId,
             coachName: coachName.isEmpty ? "Coach" : coachName,
             exportedAt: payload.exportedAt,
-            athleteSplits: payload.athleteSplits
+            athleteSplits: payload.athleteSplits,
+            raceName: payload.raceName,
+            eventType: payload.eventType,
+            meetName: payload.meetName
         )
     }
 
@@ -43,6 +46,7 @@ struct ExportSplitsView: View {
     var body: some View {
         NavigationStack {
             List {
+                raceContextSection
                 coachNameSection
                 qrSection
                 actionSection
@@ -85,6 +89,33 @@ struct ExportSplitsView: View {
     }
 
     // MARK: – Sections
+
+    private var raceContextSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 6) {
+                if let name = payload.raceName {
+                    HStack(spacing: 6) {
+                        Image(systemName: "stopwatch")
+                            .foregroundStyle(Theme.runsmithPink)
+                        Text(name)
+                            .font(.subheadline.weight(.semibold))
+                    }
+                }
+                HStack(spacing: 12) {
+                    if let event = payload.eventType {
+                        Label(event, systemImage: "figure.run")
+                    }
+                    if let meet = payload.meetName {
+                        Label(meet, systemImage: "flag")
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Race")
+        }
+    }
 
     private var coachNameSection: some View {
         Section {

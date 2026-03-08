@@ -62,9 +62,20 @@ struct MergeView: View {
                 Text("Splits have been updated with the merged values.")
             }
             .alert("Wrong Race", isPresented: $vm.showWrongRaceError) {
-                Button("OK", role: .cancel) { }
+                Button("OK", role: .cancel) { vm.pendingPayload = nil }
             } message: {
-                Text("This split data belongs to a different race and cannot be merged here.")
+                let payloadRace = vm.pendingPayload?.raceName ?? "Unknown"
+                let payloadEvent = vm.pendingPayload?.eventType ?? ""
+                let hostRace = vm.race.name
+                Text("This data is from \"\(payloadRace)\" (\(payloadEvent)) but you are merging \"\(hostRace)\". It cannot be merged here.")
+            }
+            .alert("Unverified Race", isPresented: $vm.showMismatchWarning) {
+                Button("Import Anyway") { vm.confirmPendingImport() }
+                Button("Cancel", role: .cancel) { vm.pendingPayload = nil }
+            } message: {
+                let payloadRace = vm.pendingPayload?.raceName ?? "Unknown Race"
+                let payloadEvent = vm.pendingPayload?.eventType ?? ""
+                Text("This race wasn't shared via config, so the splits can't be automatically verified. The imported data is from \"\(payloadRace)\" (\(payloadEvent)). Import anyway?")
             }
             .onChange(of: vm.mergeStrategy) { _ in
                 vm.computePreview()
@@ -93,6 +104,11 @@ struct MergeView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(payload.coachName)
                             .font(.body)
+                        if let raceName = payload.raceName {
+                            Text("\(raceName)\(payload.eventType.map { " · \($0)" } ?? "")")
+                                .font(.caption)
+                                .foregroundStyle(Theme.runsmithPink)
+                        }
                         Text("\(payload.athleteSplits.count) athlete\(payload.athleteSplits.count == 1 ? "" : "s") \u{00B7} \(formattedDate(payload.exportedAt))")
                             .font(.caption)
                             .foregroundStyle(.secondary)

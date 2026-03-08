@@ -8,6 +8,11 @@ struct CoachSplitPayload: Codable {
     let coachName: String      // Display name of the exporting coach, e.g. "Coach Williams"
     let exportedAt: Date       // Timestamp of export
     let athleteSplits: [AthleteTimingData]
+
+    // Race context (v2 — optional for backward compat with v1 payloads)
+    let raceName: String?
+    let eventType: String?     // e.g. "800m", "4×400m"
+    let meetName: String?
 }
 
 /// Split data for a single athlete, keyed by the shared UUID.

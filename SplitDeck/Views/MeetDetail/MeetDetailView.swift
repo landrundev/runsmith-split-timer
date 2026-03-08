@@ -8,10 +8,14 @@ struct MeetDetailView: View {
     @State private var showAddRace = false
     @State private var showShareMeet = false
     @State private var showImportRace = false
+    @State private var showEditMeet = false
     @State private var raceToDelete: Race? = nil
     @State private var genderFilter: Gender? = nil
     @State private var pendingRaceToSetup: Race? = nil
     @State private var selectedRace: Race? = nil
+    @State private var editName = ""
+    @State private var editDate = Date()
+    @State private var editLocation = ""
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -49,6 +53,14 @@ struct MeetDetailView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button {
+                            editName = vm.meet.name
+                            editDate = vm.meet.date
+                            editLocation = vm.meet.location ?? ""
+                            showEditMeet = true
+                        } label: {
+                            Label("Edit Meet", systemImage: "pencil")
+                        }
+                        Button {
                             showAddRace = true
                         } label: {
                             Label("Add Race", systemImage: "plus")
@@ -85,6 +97,9 @@ struct MeetDetailView: View {
                 store: store,
                 cache: cache
             )
+        }
+        .sheet(isPresented: $showEditMeet) {
+            editMeetSheet
         }
         .sheet(item: $pendingRaceToSetup, onDismiss: { vm.load() }) { race in
             RaceSetupView(
@@ -144,16 +159,34 @@ struct MeetDetailView: View {
     }
 
     private var emptyRaceState: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "figure.run")
-                .font(.system(size: 48))
-                .foregroundStyle(Theme.textMuted)
-            Text("No Races")
-                .font(.headline)
-                .foregroundStyle(Theme.textPrimary)
-            Text("Tap + Add Race to create one.")
-                .font(.subheadline)
-                .foregroundStyle(Theme.textSecondary)
+        VStack(spacing: 16) {
+            VStack(spacing: 12) {
+                Image(systemName: "figure.run")
+                    .font(.system(size: 48))
+                    .foregroundStyle(Theme.textMuted)
+                Text("No Races")
+                    .font(.headline)
+                    .foregroundStyle(Theme.textPrimary)
+                Text("Add a race to get started.")
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+
+            Button {
+                showAddRace = true
+            } label: {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Add Race")
+                        .font(.subheadline.weight(.medium))
+                }
+                .foregroundStyle(Theme.accentPrimary)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 10)
+                .background(Theme.accentPrimary.opacity(0.08))
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
@@ -169,6 +202,11 @@ struct MeetDetailView: View {
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
 
         raceCardRows
+
+        addRaceButton
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
     }
 
     @ViewBuilder
@@ -253,6 +291,69 @@ struct MeetDetailView: View {
             Text(label)
                 .font(.caption)
                 .foregroundStyle(Theme.textSecondary)
+        }
+    }
+
+    // MARK: – Add Race Button
+
+    private var addRaceButton: some View {
+        Button {
+            showAddRace = true
+        } label: {
+            HStack {
+                Image(systemName: "plus.circle.fill")
+                    .foregroundStyle(Theme.accentPrimary)
+                Text("Add Race")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Theme.accentPrimary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Theme.accentPrimary.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                    .strokeBorder(Theme.accentPrimary.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: – Edit Meet Sheet
+
+    private var editMeetSheet: some View {
+        NavigationStack {
+            Form {
+                Section("Meet Name") {
+                    TextField("Name", text: $editName)
+                }
+                Section("Date") {
+                    DatePicker("Date", selection: $editDate, displayedComponents: .date)
+                        .datePickerStyle(.graphical)
+                }
+                Section("Location") {
+                    TextField("Location (optional)", text: $editLocation)
+                }
+            }
+            .navigationTitle("Edit Meet")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showEditMeet = false }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        let loc = editLocation.trimmingCharacters(in: .whitespaces)
+                        vm.updateMeet(
+                            name: editName.trimmingCharacters(in: .whitespaces),
+                            date: editDate,
+                            location: loc.isEmpty ? nil : loc
+                        )
+                        showEditMeet = false
+                    }
+                    .disabled(editName.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
         }
     }
 

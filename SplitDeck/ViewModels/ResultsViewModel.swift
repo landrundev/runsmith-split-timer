@@ -176,7 +176,10 @@ final class ResultsViewModel: ObservableObject {
             configId: race.configId ?? UUID(),
             coachName: CoachIdentity.name ?? "Coach",
             exportedAt: Date(),
-            athleteSplits: athleteTimingData
+            athleteSplits: athleteTimingData,
+            raceName: race.name,
+            eventType: race.eventType.displayName,
+            meetName: meet?.name
         )
     }
 }
