@@ -134,6 +134,7 @@ struct RaceSetupView: View {
                 if vm.eventType == .custom {
                     HStack {
                         Text("Distance (m)")
+                            .foregroundStyle(Theme.textSecondary)
                         Spacer()
                         TextField("e.g. 1500", text: $vm.customDistance)
                             .keyboardType(.numberPad)
@@ -152,10 +153,10 @@ struct RaceSetupView: View {
 
                 if let legDist = vm.eventType.legDistanceMeters {
                     HStack {
-                        Text("Format").foregroundStyle(.secondary)
+                        Text("Format").foregroundStyle(Theme.textSecondary)
                         Spacer()
                         Text("4 runners \u{00D7} \(legDist)m")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.textSecondary)
                     }
                 }
 
@@ -169,7 +170,7 @@ struct RaceSetupView: View {
                             if let label = vm.intermediateSplitLabel {
                                 Text("Record a \(label) split within each leg")
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Theme.textSecondary)
                             }
                         }
                     }
@@ -214,9 +215,9 @@ struct RaceSetupView: View {
             // 6. Track Length + Splits per Lap
             if vm.raceType == .individual {
                 HStack {
-                    Text("Track Length").foregroundStyle(.secondary)
+                    Text("Track Length").foregroundStyle(Theme.textSecondary)
                     Spacer()
-                    Text("400m (outdoor)").foregroundStyle(.secondary)
+                    Text("400m (outdoor)").foregroundStyle(Theme.textSecondary)
                 }
                 Stepper("Splits per Lap: \(vm.splitsPerLap)", value: $vm.splitsPerLap, in: 1...4)
             }
@@ -226,7 +227,7 @@ struct RaceSetupView: View {
                     if !eventSectionExpanded {
                         Spacer()
                         Text(vm.raceName.isEmpty ? vm.eventType.displayName : vm.raceName)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.textSecondary)
                             .lineLimit(1)
                     }
                 }
@@ -272,7 +273,7 @@ struct RaceSetupView: View {
                             } label: {
                                 Label("Edit", systemImage: "pencil")
                             }
-                            .tint(.blue)
+                            .tint(Theme.genderMale)
                         }
                     }
                 } header: {
@@ -313,7 +314,7 @@ struct RaceSetupView: View {
                         } label: {
                             Label("Edit", systemImage: "pencil")
                         }
-                        .tint(.blue)
+                        .tint(Theme.genderMale)
                     }
                     .opacity(vm.isAthleteCapReached ? 0.4 : 1.0)
                 }
@@ -334,7 +335,7 @@ struct RaceSetupView: View {
     // MARK: – Shared Athlete Row
 
     /// Row with gender bar, color dot, name, info button, and selection indicator.
-    /// Tapping anywhere on the row (except the ⓘ button) toggles selection.
+    /// Tapping anywhere on the row (except the info button) toggles selection.
     private func athleteRow(athlete: Athlete, selected: Bool, onToggle: @escaping () -> Void) -> some View {
         HStack(spacing: 0) {
             // Gender color bar
@@ -352,9 +353,13 @@ struct RaceSetupView: View {
 
             // Name + team
             VStack(alignment: .leading, spacing: 1) {
-                Text(athlete.name).font(.body)
+                Text(athlete.name)
+                    .font(.body)
+                    .foregroundStyle(Theme.textPrimary)
                 if let team = athlete.teamName {
-                    Text(team).font(.caption).foregroundStyle(.secondary)
+                    Text(team)
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
                 }
             }
 
@@ -365,7 +370,7 @@ struct RaceSetupView: View {
                 profileAthlete = athlete
             } label: {
                 Image(systemName: "info.circle")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(Theme.accentPrimary)
                     .font(.body)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 4)
@@ -375,7 +380,7 @@ struct RaceSetupView: View {
 
             // Selection checkmark
             Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(selected ? Theme.runsmithPink : Color(.quaternaryLabel))
+                .foregroundStyle(selected ? Theme.runsmithPink : Theme.textMuted)
                 .font(.title3)
         }
         .contentShape(Rectangle())
@@ -405,12 +410,13 @@ struct RaceSetupView: View {
                             .frame(width: 12, height: 12)
                         Text(athlete.name)
                             .font(.body)
+                            .foregroundStyle(Theme.textPrimary)
                         Spacer()
                         Button {
                             vm.toggleAthlete(athlete.id)
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.quaternary)
+                                .foregroundStyle(Theme.textMuted)
                                 .font(.title3)
                         }
                         .buttonStyle(.plain)
@@ -426,11 +432,11 @@ struct RaceSetupView: View {
                             .font(.footnote.weight(.bold).monospacedDigit())
                             .foregroundStyle(.white)
                             .frame(width: 24, height: 24)
-                            .background(Color(.quaternaryLabel))
+                            .background(Theme.textMuted)
                             .clipShape(Circle())
                         Text("Tap an athlete below")
                             .font(.subheadline)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(Theme.textTertiary)
                     }
                 }
             } header: {
@@ -440,7 +446,7 @@ struct RaceSetupView: View {
                     let count = vm.relayAthletesOrdered.count
                     Text("\(count)/4 assigned")
                         .font(.caption)
-                        .foregroundStyle(count == 4 ? Theme.runsmithPink : .secondary)
+                        .foregroundStyle(count == 4 ? Theme.runsmithPink : Theme.textSecondary)
                 }
             } footer: {
                 if !vm.relayAthletesOrdered.isEmpty {
@@ -483,10 +489,10 @@ struct RaceSetupView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "person.3")
                         .font(.title2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                     Text("No saved \(vm.genderPrefix.lowercased()) teams for \(vm.eventType.displayName)")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                     Text("Build New Team")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Theme.runsmithPink)
@@ -503,11 +509,11 @@ struct RaceSetupView: View {
                         HStack {
                             Text(team.name)
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(Theme.textPrimary)
                             Spacer()
                             Text(team.gender.displayName)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.textSecondary)
                         }
                         savedTeamMembersRow(team.athleteIds)
                     }
@@ -538,12 +544,12 @@ struct RaceSetupView: View {
                     if i < athleteIds.count - 1 {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 7, weight: .bold))
-                            .foregroundStyle(.quaternary)
+                            .foregroundStyle(Theme.textMuted)
                     }
                 }
             }
         }
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Theme.textSecondary)
     }
 
     // MARK: – Relay: Athletes Content
@@ -552,13 +558,13 @@ struct RaceSetupView: View {
     private var athletesContent: some View {
         let unselected = vm.filteredAthletes.filter { !vm.selectedAthleteIds.contains($0.id) }
         if unselected.isEmpty && vm.availableAthletes.isEmpty {
-            Text("No athletes yet — add one below")
+            Text("No athletes yet \u{2014} add one below")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textSecondary)
         } else if unselected.isEmpty {
             Text("All athletes assigned")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textSecondary)
         } else {
             ForEach(unselected) { athlete in
                 HStack(spacing: 0) {
@@ -572,9 +578,13 @@ struct RaceSetupView: View {
                         .frame(width: 12, height: 12)
                         .padding(.trailing, 8)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(athlete.name).font(.body)
+                        Text(athlete.name)
+                            .font(.body)
+                            .foregroundStyle(Theme.textPrimary)
                         if let team = athlete.teamName {
-                            Text(team).font(.caption).foregroundStyle(.secondary)
+                            Text(team)
+                                .font(.caption)
+                                .foregroundStyle(Theme.textSecondary)
                         }
                     }
                     Spacer()
@@ -598,7 +608,7 @@ struct RaceSetupView: View {
                     } label: {
                         Label("Edit", systemImage: "pencil")
                     }
-                    .tint(.blue)
+                    .tint(Theme.genderMale)
                 }
             }
         }
@@ -710,7 +720,7 @@ struct RaceSetupView: View {
                         ? (gender.map { Theme.genderTint($0) } ?? Theme.runsmithPink)
                         : Color(.tertiarySystemFill)
                 )
-                .foregroundStyle(vm.genderFilter == gender ? .white : .primary)
+                .foregroundStyle(vm.genderFilter == gender ? .white : Theme.textPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
@@ -735,14 +745,14 @@ struct RaceSetupView: View {
 
     private func genderPicker(selection: Binding<Gender?>) -> some View {
         HStack(spacing: 12) {
-            Text("Gender").foregroundStyle(.secondary)
+            Text("Gender").foregroundStyle(Theme.textSecondary)
             Spacer()
             ForEach(Gender.allCases, id: \.self) { g in
                 Button(g.rawValue) {
                     selection.wrappedValue = g
                 }
                 .buttonStyle(.bordered)
-                .tint(selection.wrappedValue == g ? Theme.genderTint(g) : .secondary)
+                .tint(selection.wrappedValue == g ? Theme.genderTint(g) : Theme.textTertiary)
             }
         }
     }

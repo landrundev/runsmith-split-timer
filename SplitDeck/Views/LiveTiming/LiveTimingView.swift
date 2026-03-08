@@ -103,17 +103,17 @@ struct LiveTimingView: View {
         VStack(spacing: 6) {
             Text(vm.engine.elapsedMs.formattedSplitTime)
                 .font(.system(size: 52, weight: .semibold, design: .monospaced))
-                .foregroundStyle(.primary)
+                .foregroundStyle(Theme.textPrimary)
 
             Text(vm.lapSubtitle)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textSecondary)
 
             if !vm.isRelay { unassignedBadge }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(.bar)
+        .background(Theme.barBackground)
     }
 
     // MARK: – Unassigned Badge
@@ -130,7 +130,7 @@ struct LiveTimingView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 4)
             .background(hasMarks ? Theme.badgeYellow : Color(.systemFill))
-            .foregroundStyle(hasMarks ? Color.black : Color.secondary)
+            .foregroundStyle(hasMarks ? Color.black : Theme.textSecondary)
             .clipShape(Capsule())
             .scaleEffect(badgePulse ? 1.15 : 1.0)
             .onChange(of: unassignedCount) { newCount in
@@ -230,7 +230,7 @@ struct LiveTimingView: View {
                 .multilineTextAlignment(.center)
                 .padding(8)
                 .background(isCurrent ? Theme.runsmithPink : (isDone ? Color(.systemGreen) : Color(.systemFill)))
-                .foregroundStyle(isCurrent || isDone ? .white : .secondary)
+                .foregroundStyle(isCurrent || isDone ? .white : Theme.textSecondary)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .frame(width: 44)
 
@@ -243,7 +243,7 @@ struct LiveTimingView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(athlete.firstName)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(isCurrent ? .primary : (isDone ? .secondary : .tertiary))
+                    .foregroundStyle(isCurrent ? Theme.textPrimary : (isDone ? Theme.textSecondary : Theme.textTertiary))
 
                 if isCurrent {
                     if hasIntermediates {
@@ -255,7 +255,7 @@ struct LiveTimingView: View {
                                     VStack(spacing: 0) {
                                         Text(detail.label)
                                             .font(.system(size: 9))
-                                            .foregroundStyle(.tertiary)
+                                            .foregroundStyle(Theme.textTertiary)
                                         Text(detail.lapMs.formattedSplitTime)
                                             .font(.caption2.weight(.semibold).monospacedDigit())
                                             .foregroundStyle(Theme.runsmithPink)
@@ -282,27 +282,27 @@ struct LiveTimingView: View {
                                 VStack(spacing: 0) {
                                     Text(detail.label)
                                         .font(.system(size: 9))
-                                        .foregroundStyle(.tertiary)
+                                        .foregroundStyle(Theme.textTertiary)
                                     Text(detail.lapMs.formattedSplitTime)
                                         .font(.caption2.monospacedDigit())
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(Theme.textSecondary)
                                 }
                             }
                             if let totalLeg = details.last?.legCumulMs {
                                 Text("(\(totalLeg.formattedSplitTime))")
                                     .font(.caption2.monospacedDigit())
-                                    .foregroundStyle(.tertiary)
+                                    .foregroundStyle(Theme.textTertiary)
                             }
                         }
                     } else if let delta = vm.relayLegDelta(legIndex: legIndex) {
                         Text(delta.formattedSplitTime)
                             .font(.caption.weight(.semibold).monospacedDigit())
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.textSecondary)
                     }
                 } else {
                     Text("Waiting")
                         .font(.caption)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(Theme.textTertiary)
                 }
             }
 
@@ -313,6 +313,7 @@ struct LiveTimingView: View {
                     .max(by: { $0.elapsedMs < $1.elapsedMs })?.elapsedMs {
                     Text(cumulMs.formattedSplitTime)
                         .font(.caption.weight(.bold).monospacedDigit())
+                        .foregroundStyle(Theme.textPrimary)
                 }
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
@@ -328,20 +329,20 @@ struct LiveTimingView: View {
                 }
             } else if isWaiting {
                 Image(systemName: "line.3.horizontal")
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(Theme.textTertiary)
                     .font(.subheadline)
             }
         }
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(isCurrent ? Theme.runsmithPink.opacity(0.06) : Color(.secondarySystemGroupedBackground))
+            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                .fill(isCurrent ? Theme.accentBackground : Theme.cardBackground)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
                 .strokeBorder(isCurrent ? Theme.runsmithPink.opacity(0.4) : Color.clear, lineWidth: 1.5)
         )
-        .contentShape(RoundedRectangle(cornerRadius: 12))
+        .contentShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
         .onTapGesture {
             if isCurrent {
                 vm.recordRelayLeg()
@@ -375,7 +376,7 @@ struct LiveTimingView: View {
                 .padding(.horizontal, 16)
             }
             .buttonStyle(.bordered)
-            .tint(.secondary)
+            .tint(Theme.textSecondary)
             .disabled(vm.engine.undoStack.isEmpty)
 
             if vm.allAthletesComplete {
@@ -417,7 +418,7 @@ struct LiveTimingView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(.bar)
+        .background(Theme.barBackground)
     }
 
     private var relayBottomBar: some View {
@@ -434,7 +435,7 @@ struct LiveTimingView: View {
                 .padding(.horizontal, 16)
             }
             .buttonStyle(.bordered)
-            .tint(.secondary)
+            .tint(Theme.textSecondary)
             .disabled(vm.engine.undoStack.isEmpty)
 
             if vm.isRelayComplete {
@@ -470,6 +471,6 @@ struct LiveTimingView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(.bar)
+        .background(Theme.barBackground)
     }
 }
