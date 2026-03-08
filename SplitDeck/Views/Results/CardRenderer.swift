@@ -70,6 +70,7 @@ enum CardRenderer {
         )
 
         return renderer.image { ctx in
+            UITraitCollection(userInterfaceStyle: .light).performAsCurrent {
             let cgCtx = ctx.cgContext
 
             // White background
@@ -91,6 +92,7 @@ enum CardRenderer {
 
             // Draw footer
             drawFooter(ctx: cgCtx, y: totalHeight - footerHeight, width: cardWidth, height: footerHeight)
+            } // end performAsCurrent
         }
     }
 
