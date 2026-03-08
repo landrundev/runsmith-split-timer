@@ -7,6 +7,7 @@ struct MainTabView: View {
 
     @State private var selectedTab: Tab = .home
     @State private var showQuickRaceSetup = false
+    @State private var showImportRace = false
 
     /// Single shared ViewModel — both Home and Meets tabs observe the same data.
     @State private var homeVM: HomeViewModel?
@@ -55,6 +56,9 @@ struct MainTabView: View {
                 store: store,
                 cache: cache
             )
+        }
+        .sheet(isPresented: $showImportRace, onDismiss: { homeVM?.load() }) {
+            ImportRaceView(store: store)
         }
         .onAppear {
             if homeVM == nil {
@@ -107,9 +111,21 @@ struct MainTabView: View {
         .buttonStyle(.plain)
     }
 
+    // MARK: – FAB (tap = new race, long-press = menu)
+
     private var fabButton: some View {
-        Button {
-            showQuickRaceSetup = true
+        Menu {
+            Button {
+                showQuickRaceSetup = true
+            } label: {
+                Label("New Quick Race", systemImage: "stopwatch.fill")
+            }
+
+            Button {
+                showImportRace = true
+            } label: {
+                Label("Import Race / Meet", systemImage: "square.and.arrow.down")
+            }
         } label: {
             ZStack {
                 Circle()
@@ -117,11 +133,13 @@ struct MainTabView: View {
                     .frame(width: 52, height: 52)
                     .shadow(color: Theme.runsmithPink.opacity(0.4), radius: 8, y: 2)
 
-                Image(systemName: "plus")
+                Image(systemName: "stopwatch.fill")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(.white)
             }
             .offset(y: -8)
+        } primaryAction: {
+            showQuickRaceSetup = true
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
