@@ -7,6 +7,7 @@ struct MeetDetailView: View {
 
     @State private var showAddRace = false
     @State private var showShareMeet = false
+    @State private var showImportRace = false
     @State private var raceToDelete: Race? = nil
     @State private var genderFilter: Gender? = nil
     @State private var pendingRaceToSetup: Race? = nil
@@ -91,18 +92,34 @@ struct MeetDetailView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                HStack(spacing: 16) {
+                Menu {
+                    Button {
+                        showAddRace = true
+                    } label: {
+                        Label("Add Race", systemImage: "plus")
+                    }
+
+                    Button {
+                        showImportRace = true
+                    } label: {
+                        Label("Import Race", systemImage: "square.and.arrow.down")
+                    }
+
                     Button {
                         showShareMeet = true
                     } label: {
-                        Image(systemName: "person.2.wave.2")
+                        Label("Share Meet Config", systemImage: "person.2.wave.2")
                     }
-                    Button("+ Add Race") { showAddRace = true }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
                 }
             }
         }
         .sheet(isPresented: $showShareMeet) {
             ShareMeetConfigView(config: vm.buildSharedMeetConfig())
+        }
+        .sheet(isPresented: $showImportRace, onDismiss: { vm.load() }) {
+            ImportRaceView(store: store)
         }
         .sheet(isPresented: $showAddRace, onDismiss: { vm.load() }) {
             RaceSetupView(
@@ -226,12 +243,20 @@ struct MeetDetailView: View {
     private func raceCardButton(_ race: Race) -> some View {
         if race.status == .notStarted {
             Button { pendingRaceToSetup = race } label: {
-                MeetRaceCardRow(race: race, athletes: vm.athletes)
+                MeetRaceCardRow(
+                    race: race,
+                    athletes: vm.athletes,
+                    bestTime: vm.bestTimeDisplay(for: race)
+                )
             }
             .buttonStyle(.plain)
         } else {
             NavigationLink(destination: raceDestination(race)) {
-                MeetRaceCardRow(race: race, athletes: vm.athletes)
+                MeetRaceCardRow(
+                    race: race,
+                    athletes: vm.athletes,
+                    bestTime: vm.bestTimeDisplay(for: race)
+                )
             }
             .buttonStyle(.plain)
         }

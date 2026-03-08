@@ -6,6 +6,7 @@ struct MeetsTabView: View {
     @EnvironmentObject var cache: RaceStateCache
 
     @State private var showAddMeet = false
+    @State private var showImportRace = false
     @State private var navigationPath = NavigationPath()
     @State private var newlyCreatedMeet: Meet? = nil
 
@@ -83,12 +84,25 @@ struct MeetsTabView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showAddMeet = true
+                    Menu {
+                        Button {
+                            showAddMeet = true
+                        } label: {
+                            Label("New Meet", systemImage: "plus")
+                        }
+
+                        Button {
+                            showImportRace = true
+                        } label: {
+                            Label("Import Race", systemImage: "square.and.arrow.down")
+                        }
                     } label: {
                         Image(systemName: "plus")
                     }
                 }
+            }
+            .sheet(isPresented: $showImportRace, onDismiss: { vm.load() }) {
+                ImportRaceView(store: store)
             }
             .sheet(isPresented: $showAddMeet, onDismiss: {
                 if let meet = newlyCreatedMeet {

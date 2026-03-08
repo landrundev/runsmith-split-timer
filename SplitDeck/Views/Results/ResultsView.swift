@@ -235,7 +235,7 @@ struct ResultsView: View {
         var rows: [[Int]] = []
         var idx = 0
         for r in 0..<rowCount {
-            let cols = basePerRow + (r >= rowCount - remainder ? 1 : 0)
+            let cols = basePerRow + (r < remainder ? 1 : 0)
             rows.append(Array(idx..<(idx + cols)))
             idx += cols
         }

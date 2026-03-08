@@ -3,6 +3,7 @@ import SwiftUI
 struct MeetRaceCardRow: View {
     let race: Race
     let athletes: [Athlete]
+    var bestTime: String? = nil  // e.g. "4:48.93"
 
     private var genderFill: AnyShapeStyle {
         let genders = race.athleteIds.compactMap { id in
@@ -51,6 +52,18 @@ struct MeetRaceCardRow: View {
             }
 
             Spacer()
+
+            // Best time (completed races only)
+            if let time = bestTime {
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text(time)
+                        .font(.caption.weight(.bold).monospacedDigit())
+                        .foregroundStyle(Theme.runsmithPink)
+                    Text("Best")
+                        .font(.system(size: 9))
+                        .foregroundStyle(Theme.textTertiary)
+                }
+            }
 
             if race.isMerged {
                 HStack(spacing: 2) {

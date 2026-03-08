@@ -6,6 +6,10 @@ final class MeetDetailViewModel: ObservableObject {
     @Published private(set) var athletes: [Athlete] = []
     @Published var errorMessage: String?
 
+    /// Best (fastest) finish time per race, keyed by race ID.
+    /// Only populated for completed individual races.
+    @Published private(set) var bestTimes: [UUID: Int] = [:]
+
     let meet: Meet
     private let store: SplitDeckStore
 
@@ -18,9 +22,41 @@ final class MeetDetailViewModel: ObservableObject {
         do {
             races = try store.fetchRaces(for: meet.id)
             athletes = try store.fetchAthletes()
+            loadBestTimes()
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    // MARK: \u{2013} Best Times
+
+    /// For each completed, non-relay race, find the fastest athlete's finish time.
+    private func loadBestTimes() {
+        var lookup: [UUID: Int] = [:]
+        for race in races where race.status == .completed && !race.eventType.isRelay {
+            do {
+                let splits = try store.fetchSplits(for: race.id)
+                let raceAthletes = race.athleteIds.compactMap { id in
+                    athletes.first { $0.id == id }
+                }
+                // Collect all valid final times, pick the minimum
+                let times = raceAthletes.compactMap { athlete in
+                    RaceDomain.finalTime(athlete: athlete, splits: splits, race: race)
+                }
+                if let best = times.min() {
+                    lookup[race.id] = best
+                }
+            } catch {
+                // Skip this race on error
+            }
+        }
+        bestTimes = lookup
+    }
+
+    /// Formatted best time string for display, or nil.
+    func bestTimeDisplay(for race: Race) -> String? {
+        guard let ms = bestTimes[race.id] else { return nil }
+        return ms.formattedSplitTime
     }
 
     func save(race: Race) {

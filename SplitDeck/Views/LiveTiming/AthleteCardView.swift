@@ -112,8 +112,8 @@ struct AthleteCardView: View {
         var rows: [[Int]] = []
         var idx = 0
         for r in 0..<rowCount {
-            // Distribute remainder to later rows so top rows are shorter or equal
-            let cols = basePerRow + (r >= rowCount - remainder ? 1 : 0)
+            // Distribute remainder to earlier rows so top row fills first
+            let cols = basePerRow + (r < remainder ? 1 : 0)
             rows.append(Array(idx..<(idx + cols)))
             idx += cols
         }

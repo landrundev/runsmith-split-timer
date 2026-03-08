@@ -24,12 +24,6 @@ struct SettingsView: View {
             // MARK: – Tools
             Section {
                 NavigationLink {
-                    ImportRaceView(store: store)
-                } label: {
-                    Label("Import Race", systemImage: "square.and.arrow.down")
-                }
-
-                NavigationLink {
                     RelayBuilderView(
                         vm: RelayBuilderViewModel(store: store)
                     )
