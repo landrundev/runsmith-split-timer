@@ -52,10 +52,9 @@ struct MeetsTabView: View {
         .sorted { $0.date > $1.date }
     }
 
-    /// Archived meets.
+    /// Archived meets \u{2013} fetched separately since fetchMeets() excludes them.
     private var archivedMeets: [Meet] {
-        vm.meets.filter { $0.isArchived }
-            .sorted { $0.date > $1.date }
+        vm.archivedMeets.sorted { $0.date > $1.date }
     }
 
     var body: some View {
@@ -198,11 +197,18 @@ struct MeetsTabView: View {
                         } label: {
                             Label("Edit", systemImage: "pencil")
                         }
-                        Button {
-                            vm.archive(meet: meet)
-                        } label: {
-                            Label(meet.isArchived ? "Unarchive" : "Archive",
-                                  systemImage: meet.isArchived ? "tray.and.arrow.up" : "archivebox")
+                        if meet.isArchived {
+                            Button {
+                                vm.unarchive(meet: meet)
+                            } label: {
+                                Label("Unarchive", systemImage: "tray.and.arrow.up")
+                            }
+                        } else {
+                            Button {
+                                vm.archive(meet: meet)
+                            } label: {
+                                Label("Archive", systemImage: "archivebox")
+                            }
                         }
                     }
                 }

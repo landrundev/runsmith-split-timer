@@ -5,7 +5,7 @@ struct HomeView: View {
     @EnvironmentObject var store: SplitDeckStore
     @EnvironmentObject var cache: RaceStateCache
     @Binding var appearance: AppearanceSetting
-    @Binding var selectedTab: Int  // tab bar index, so we can switch to Meets
+    @Binding var selectedTab: MainTabView.Tab
 
     // Delete confirmation
     @State private var quickRaceToDelete: Race? = nil
@@ -136,7 +136,7 @@ struct HomeView: View {
             .padding(.horizontal, 16)
         } else {
             Button {
-                selectedTab = 1
+                selectedTab = .meets
             } label: {
                 NoMeetCard()
             }

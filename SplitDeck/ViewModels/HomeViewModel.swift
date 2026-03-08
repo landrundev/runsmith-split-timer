@@ -6,6 +6,7 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var athletes: [Athlete] = []
     @Published private(set) var quickRaces: [Race] = []
     @Published private(set) var meetRaces: [UUID: [Race]] = [:]
+    @Published private(set) var archivedMeets: [Meet] = []
     @Published var errorMessage: String?
 
     private let store: SplitDeckStore
@@ -27,6 +28,7 @@ final class HomeViewModel: ObservableObject {
                 lookup[meet.id] = try store.fetchRaces(for: meet.id)
             }
             meetRaces = lookup
+            archivedMeets = (try? store.fetchArchivedMeets()) ?? []
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -124,6 +126,11 @@ final class HomeViewModel: ObservableObject {
 
     func archive(race: Race) {
         do { try store.archive(raceId: race.id); load() }
+        catch { errorMessage = error.localizedDescription }
+    }
+
+    func unarchive(meet: Meet) {
+        do { try store.unarchive(meetId: meet.id); load() }
         catch { errorMessage = error.localizedDescription }
     }
 }

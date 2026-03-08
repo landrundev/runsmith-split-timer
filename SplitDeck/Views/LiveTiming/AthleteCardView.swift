@@ -96,26 +96,18 @@ struct AthleteCardView: View {
 
     // MARK: \u{2013} Wrapping Split Chips (multi-row)
 
-    /// Splits the chips into balanced rows of \u{2264} chipsPerRow.
-    /// e.g. 8 chips \u{2192} 4 + 4, 6 \u{2192} 3 + 3, 5 \u{2192} 3 + 2, 3 \u{2192} 3
+    /// Chunks chips into rows of chipsPerRow, filling top rows first.
+    /// e.g. 8 \u{2192} 4 + 4, 5 \u{2192} 4 + 1, 6 \u{2192} 4 + 2
     private var chipRows: [[Int]] {
         let count = splitTimes.count
         guard count > 0 else { return [] }
-
-        let maxPerRow = Self.chipsPerRow
-        if count <= maxPerRow { return [Array(0..<count)] }
-
-        let rowCount = (count + maxPerRow - 1) / maxPerRow
-        let basePerRow = count / rowCount
-        let remainder = count % rowCount
-
+        let max = Self.chipsPerRow
         var rows: [[Int]] = []
         var idx = 0
-        for r in 0..<rowCount {
-            // Distribute remainder to earlier rows so top row fills first
-            let cols = basePerRow + (r < remainder ? 1 : 0)
-            rows.append(Array(idx..<(idx + cols)))
-            idx += cols
+        while idx < count {
+            let end = Swift.min(idx + max, count)
+            rows.append(Array(idx..<end))
+            idx = end
         }
         return rows
     }

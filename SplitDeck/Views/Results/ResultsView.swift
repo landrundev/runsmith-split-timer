@@ -221,23 +221,16 @@ struct ResultsView: View {
     /// Max columns per row before wrapping.
     private static let columnsPerRow = 4
 
-    /// Splits column indices into balanced rows of ≤ columnsPerRow.
+    /// Chunks column indices into rows of columnsPerRow, filling top rows first.
     private func splitColumnRows(count: Int) -> [[Int]] {
         guard count > 0 else { return [] }
-
-        let maxPerRow = Self.columnsPerRow
-        if count <= maxPerRow { return [Array(0..<count)] }
-
-        let rowCount = (count + maxPerRow - 1) / maxPerRow
-        let basePerRow = count / rowCount
-        let remainder = count % rowCount
-
+        let max = Self.columnsPerRow
         var rows: [[Int]] = []
         var idx = 0
-        for r in 0..<rowCount {
-            let cols = basePerRow + (r < remainder ? 1 : 0)
-            rows.append(Array(idx..<(idx + cols)))
-            idx += cols
+        while idx < count {
+            let end = Swift.min(idx + max, count)
+            rows.append(Array(idx..<end))
+            idx = end
         }
         return rows
     }

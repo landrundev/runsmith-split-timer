@@ -20,12 +20,13 @@ struct ArchiveView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "archivebox")
                         .font(.system(size: 48))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                     Text("Archive is Empty")
                         .font(.headline)
+                        .foregroundStyle(Theme.textPrimary)
                     Text("Archived meets, races, and athletes will appear here.")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
@@ -124,7 +125,7 @@ struct ArchiveView: View {
                 }
             }
             .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Theme.textSecondary)
         }
         .padding(.vertical, 4)
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
@@ -152,7 +153,7 @@ struct ArchiveView: View {
                 Text(race.name).font(.headline)
                 Text(race.startedAt.map { Self.dateFormatter.string(from: $0) } ?? "")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
             }
         }
         .padding(.vertical, 4)
@@ -189,7 +190,7 @@ struct ArchiveView: View {
                 if let team = athlete.teamName {
                     Text(team)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                 }
             }
         }

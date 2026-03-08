@@ -8,6 +8,9 @@ struct MainTabView: View {
     @State private var selectedTab: Tab = .home
     @State private var showQuickRaceSetup = false
 
+    /// Single shared ViewModel — both Home and Meets tabs observe the same data.
+    @State private var homeVM: HomeViewModel?
+
     enum Tab: Int {
         case home, meets, add, roster, analytics
     }
@@ -16,29 +19,29 @@ struct MainTabView: View {
         ZStack(alignment: .bottom) {
             // Tab content
             Group {
-                switch selectedTab {
-                case .home:
-                    HomeView(
-                        vm: HomeViewModel(store: store),
-                        appearance: $appearance,
-                        selectedTab: Binding(
-                            get: { selectedTab.rawValue },
-                            set: { selectedTab = Tab(rawValue: $0) ?? .home }
+                if let vm = homeVM {
+                    switch selectedTab {
+                    case .home:
+                        HomeView(
+                            vm: vm,
+                            appearance: $appearance,
+                            selectedTab: $selectedTab
                         )
-                    )
-                case .meets:
-                    MeetsTabView(vm: HomeViewModel(store: store))
-                case .add:
-                    // Placeholder — the (+) button triggers a sheet, not a tab
+                    case .meets:
+                        MeetsTabView(vm: vm)
+                    case .add:
+                        Color.clear
+                    case .roster:
+                        NavigationStack {
+                            AthleteRosterView(store: store)
+                        }
+                    case .analytics:
+                        NavigationStack {
+                            AnalyticsView(store: store)
+                        }
+                    }
+                } else {
                     Color.clear
-                case .roster:
-                    NavigationStack {
-                        AthleteRosterView(store: store)
-                    }
-                case .analytics:
-                    NavigationStack {
-                        AnalyticsView(store: store)
-                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -52,6 +55,11 @@ struct MainTabView: View {
                 store: store,
                 cache: cache
             )
+        }
+        .onAppear {
+            if homeVM == nil {
+                homeVM = HomeViewModel(store: store)
+            }
         }
     }
 

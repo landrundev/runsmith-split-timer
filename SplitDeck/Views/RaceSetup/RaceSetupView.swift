@@ -634,7 +634,7 @@ struct RaceSetupView: View {
                     Text("Save")
                 }
             }
-            .buttonStyle(GlassPrimaryButtonStyle())
+            .buttonStyle(GlassSecondaryButtonStyle())
             .disabled(!vm.isValid)
             .frame(maxWidth: vm.existingRaceId != nil ? 120 : .infinity)
 
