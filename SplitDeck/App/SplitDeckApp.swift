@@ -9,10 +9,9 @@ struct SplitDeckApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            MainTabView(appearance: $appearance)
                 .environmentObject(store)
                 .environmentObject(cache)
-                .environment(\.appearanceSetting, appearance)
                 .preferredColorScheme(appearance.colorScheme)
                 .onChange(of: appearance) { newValue in
                     AppearanceSetting.current = newValue

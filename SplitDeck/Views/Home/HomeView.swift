@@ -4,6 +4,7 @@ struct HomeView: View {
     @ObservedObject var vm: HomeViewModel
     @EnvironmentObject var store: SplitDeckStore
     @EnvironmentObject var cache: RaceStateCache
+    @Binding var appearance: AppearanceSetting
 
     @State private var showAddMeet = false
     @State private var newMeetName = ""
@@ -46,6 +47,13 @@ struct HomeView: View {
                 .navigationTitle("Runsmith")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        NavigationLink {
+                            SettingsView(appearance: $appearance)
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                    }
                     ToolbarItem(placement: .principal) {
                         Image("RunsmithLogo")
                             .resizable()

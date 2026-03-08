@@ -3,6 +3,7 @@ import SwiftUI
 struct MainTabView: View {
     @EnvironmentObject var store: SplitDeckStore
     @EnvironmentObject var cache: RaceStateCache
+    @Binding var appearance: AppearanceSetting
 
     @State private var selectedTab: Tab = .home
     @State private var showQuickRaceSetup = false
@@ -17,9 +18,9 @@ struct MainTabView: View {
             Group {
                 switch selectedTab {
                 case .home:
-                    HomeView(vm: HomeViewModel(store: store))
+                    HomeView(vm: HomeViewModel(store: store), appearance: $appearance)
                 case .meets:
-                    HomeView(vm: HomeViewModel(store: store))
+                    HomeView(vm: HomeViewModel(store: store), appearance: $appearance)
                 case .add:
                     // Placeholder — the (+) button triggers a sheet, not a tab
                     Color.clear
