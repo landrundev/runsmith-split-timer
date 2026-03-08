@@ -38,6 +38,12 @@ final class AnalyticsViewModel: ObservableObject {
         var lastRaceDate: Date? = nil
     }
 
+    enum TimeSourceFilter: String, CaseIterable {
+        case all = "All"
+        case race = "Race"
+        case split = "Split"
+    }
+
     struct PREntry: Identifiable {
         let id = UUID()
         let athlete: Athlete
@@ -45,6 +51,7 @@ final class AnalyticsViewModel: ObservableObject {
         let prMs: Int
         let prDate: Date?
         let raceCount: Int
+        let isSplit: Bool
     }
 
     struct LeaderboardEntry: Identifiable {
@@ -53,6 +60,7 @@ final class AnalyticsViewModel: ObservableObject {
         let athlete: Athlete
         let bestMs: Int
         let raceCount: Int
+        let isSplit: Bool
     }
 
     struct AthleteInsight: Identifiable {
@@ -145,6 +153,7 @@ final class AnalyticsViewModel: ObservableObject {
         var entries: [PREntry] = []
 
         for athlete in athletes {
+            // Race PRs (final times)
             var eventBests: [EventType: (ms: Int, date: Date?, count: Int)] = [:]
 
             for race in races where race.athleteIds.contains(athlete.id) && !race.eventType.isRelay {
@@ -170,7 +179,90 @@ final class AnalyticsViewModel: ObservableObject {
                     eventType: event,
                     prMs: best.ms,
                     prDate: best.date,
-                    raceCount: best.count
+                    raceCount: best.count,
+                    isSplit: false
+                ))
+            }
+
+            // Split PRs (lap-to-lap deltas from multi-split races)
+            var splitBests: [EventType: (ms: Int, date: Date?, count: Int)] = [:]
+
+            for race in races where race.athleteIds.contains(athlete.id) {
+                guard race.expectedSplitsPerAthlete > 1 else { continue }
+
+                let splitDist = race.trackLengthMeters / max(race.splitsPerLap, 1)
+                guard let splitEvent = EventType.eventType(forSplitDistance: splitDist) else { continue }
+
+                let splits = splitsByRace[race.id] ?? []
+
+                if race.eventType.isRelay {
+                    // Relay: get this athlete's leg splits
+                    let athleteSplits = splits.filter { $0.athleteId == athlete.id }
+                        .sorted { $0.elapsedMs < $1.elapsedMs }
+                    guard !athleteSplits.isEmpty else { continue }
+
+                    // Find previous leg's cumulative
+                    let legIndex = race.athleteIds.firstIndex(of: athlete.id) ?? 0
+                    let prevCumulative: Int
+                    if legIndex > 0 {
+                        let prevId = race.athleteIds[legIndex - 1]
+                        prevCumulative = splits.filter { $0.athleteId == prevId }
+                            .map(\.elapsedMs).max() ?? 0
+                    } else {
+                        prevCumulative = 0
+                    }
+
+                    // Compute lap deltas within the leg
+                    for (i, split) in athleteSplits.enumerated() {
+                        let prev = i > 0 ? athleteSplits[i - 1].elapsedMs : prevCumulative
+                        let lapMs = split.elapsedMs - prev
+                        let existing = splitBests[splitEvent]
+                        let count = (existing?.count ?? 0) + 1
+                        if existing == nil || lapMs < existing!.ms {
+                            splitBests[splitEvent] = (lapMs, race.startedAt, count)
+                        } else {
+                            splitBests[splitEvent] = (existing!.ms, existing!.date, count)
+                        }
+                    }
+                } else {
+                    // Individual: compute lap-to-lap deltas
+                    let athleteSplits = splits.filter { $0.athleteId == athlete.id }
+                        .sorted { $0.elapsedMs < $1.elapsedMs }
+                    guard athleteSplits.count > 1 else { continue }
+
+                    var deltas: [Int] = []
+                    for (i, split) in athleteSplits.enumerated() {
+                        deltas.append(i == 0 ? split.elapsedMs : split.elapsedMs - athleteSplits[i - 1].elapsedMs)
+                    }
+
+                    // Drop last delta if race distance doesn't divide evenly by split distance
+                    // (e.g. 1500m → last lap is 300m, not a real 400m split)
+                    if !race.isUnlimitedSplits && race.distanceMeters > 0
+                        && race.distanceMeters % splitDist != 0
+                        && athleteSplits.count == race.expectedSplitsPerAthlete {
+                        deltas.removeLast()
+                    }
+
+                    for lapMs in deltas {
+                        let existing = splitBests[splitEvent]
+                        let count = (existing?.count ?? 0) + 1
+                        if existing == nil || lapMs < existing!.ms {
+                            splitBests[splitEvent] = (lapMs, race.startedAt, count)
+                        } else {
+                            splitBests[splitEvent] = (existing!.ms, existing!.date, count)
+                        }
+                    }
+                }
+            }
+
+            for (event, best) in splitBests {
+                entries.append(PREntry(
+                    athlete: athlete,
+                    eventType: event,
+                    prMs: best.ms,
+                    prDate: best.date,
+                    raceCount: best.count,
+                    isSplit: true
                 ))
             }
         }
@@ -195,25 +287,83 @@ final class AnalyticsViewModel: ObservableObject {
             filteredAthletes = athletes
         }
 
-        var bests: [(athlete: Athlete, ms: Int, count: Int)] = []
+        var bests: [(athlete: Athlete, ms: Int, count: Int, isSplit: Bool)] = []
 
         for athlete in filteredAthletes {
+            // Race times (exact event match)
             let eventRaces = races.filter {
                 $0.eventType == selectedEvent && $0.athleteIds.contains(athlete.id) && !$0.eventType.isRelay
             }
-            guard !eventRaces.isEmpty else { continue }
 
-            var bestMs = Int.max
+            var bestRaceMs = Int.max
             for race in eventRaces {
                 let splits = splitsByRace[race.id] ?? []
                 let athleteSplits = splits.filter { $0.athleteId == athlete.id }
                 if let final_ = athleteSplits.map(\.elapsedMs).max() {
-                    bestMs = min(bestMs, final_)
+                    bestRaceMs = min(bestRaceMs, final_)
                 }
             }
 
-            if bestMs < Int.max {
-                bests.append((athlete, bestMs, eventRaces.count))
+            if bestRaceMs < Int.max {
+                bests.append((athlete, bestRaceMs, eventRaces.count, false))
+            }
+
+            // Split times (from longer races where split distance matches selectedEvent)
+            var bestSplitMs = Int.max
+            var splitCount = 0
+
+            for race in races where race.athleteIds.contains(athlete.id) && race.expectedSplitsPerAthlete > 1 {
+                let splitDist = race.trackLengthMeters / max(race.splitsPerLap, 1)
+                guard EventType.eventType(forSplitDistance: splitDist) == selectedEvent else { continue }
+
+                let splits = splitsByRace[race.id] ?? []
+
+                if race.eventType.isRelay {
+                    let athleteSplits = splits.filter { $0.athleteId == athlete.id }
+                        .sorted { $0.elapsedMs < $1.elapsedMs }
+                    guard !athleteSplits.isEmpty else { continue }
+
+                    let legIndex = race.athleteIds.firstIndex(of: athlete.id) ?? 0
+                    let prevCumulative: Int
+                    if legIndex > 0 {
+                        let prevId = race.athleteIds[legIndex - 1]
+                        prevCumulative = splits.filter { $0.athleteId == prevId }
+                            .map(\.elapsedMs).max() ?? 0
+                    } else {
+                        prevCumulative = 0
+                    }
+
+                    splitCount += 1
+                    for (i, split) in athleteSplits.enumerated() {
+                        let prev = i > 0 ? athleteSplits[i - 1].elapsedMs : prevCumulative
+                        bestSplitMs = min(bestSplitMs, split.elapsedMs - prev)
+                    }
+                } else {
+                    let athleteSplits = splits.filter { $0.athleteId == athlete.id }
+                        .sorted { $0.elapsedMs < $1.elapsedMs }
+                    guard athleteSplits.count > 1 else { continue }
+
+                    var deltas: [Int] = []
+                    for (i, split) in athleteSplits.enumerated() {
+                        deltas.append(i == 0 ? split.elapsedMs : split.elapsedMs - athleteSplits[i - 1].elapsedMs)
+                    }
+
+                    // Drop last delta if race distance doesn't divide evenly by split distance
+                    if !race.isUnlimitedSplits && race.distanceMeters > 0
+                        && race.distanceMeters % splitDist != 0
+                        && athleteSplits.count == race.expectedSplitsPerAthlete {
+                        deltas.removeLast()
+                    }
+
+                    splitCount += 1
+                    for lapMs in deltas {
+                        bestSplitMs = min(bestSplitMs, lapMs)
+                    }
+                }
+            }
+
+            if bestSplitMs < Int.max {
+                bests.append((athlete, bestSplitMs, splitCount, true))
             }
         }
 
@@ -224,7 +374,8 @@ final class AnalyticsViewModel: ObservableObject {
                 rank: i + 1,
                 athlete: entry.athlete,
                 bestMs: entry.ms,
-                raceCount: entry.count
+                raceCount: entry.count,
+                isSplit: entry.isSplit
             )
         }
     }
@@ -438,7 +589,7 @@ final class AnalyticsViewModel: ObservableObject {
 
     /// Distance-based sort index: 400 → 800 → 1500 → Mile → 1600 → 3200 → 5K → 10K → Custom last.
     private static let distanceSortOrder: [EventType] = [
-        .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
+        .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
     ]
 
     static func eventSortOrder(_ event: EventType) -> Int {

@@ -6,6 +6,8 @@ struct AnalyticsView: View {
     @State private var expandedPREvents: Set<EventType> = []
     @State private var prGenderFilter: Gender? = nil
     @State private var prEventFilter: EventType? = nil
+    @State private var prTimeSource: AnalyticsViewModel.TimeSourceFilter = .all
+    @State private var lbTimeSource: AnalyticsViewModel.TimeSourceFilter = .all
     @State private var athleteGenderFilter: Gender? = nil
     @State private var athleteSearchText: String = ""
     @State private var profileAthlete: Athlete? = nil
@@ -14,7 +16,7 @@ struct AnalyticsView: View {
 
     /// Distance-based sort order: shortest → longest, Custom last.
     private static let eventSortOrder: [EventType] = [
-        .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
+        .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
     ]
 
     private func eventSortIndex(_ event: EventType) -> Int {
@@ -186,12 +188,19 @@ struct AnalyticsView: View {
                     .padding(.horizontal, 16)
                 }
 
-                // Gender filter
+                // Gender filter + source toggle
                 HStack(spacing: 6) {
                     filterPill("All", gender: nil, selection: $prGenderFilter)
                     filterPill("M", gender: .male, selection: $prGenderFilter)
                     filterPill("F", gender: .female, selection: $prGenderFilter)
                     Spacer()
+                    Picker("Source", selection: $prTimeSource) {
+                        ForEach(AnalyticsViewModel.TimeSourceFilter.allCases, id: \.self) { src in
+                            Text(src.rawValue).tag(src)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 160)
                 }
                 .padding(.horizontal, 16)
             }
@@ -203,9 +212,16 @@ struct AnalyticsView: View {
                 emptyState(icon: "trophy", message: "No completed races yet")
             } else {
                 LazyVStack(spacing: 16) {
+                    let sourceFiltered: [AnalyticsViewModel.PREntry] = {
+                        switch prTimeSource {
+                        case .all: return vm.prBoard
+                        case .race: return vm.prBoard.filter { !$0.isSplit }
+                        case .split: return vm.prBoard.filter { $0.isSplit }
+                        }
+                    }()
                     let genderFiltered = prGenderFilter == nil
-                        ? vm.prBoard
-                        : vm.prBoard.filter { $0.athlete.gender == prGenderFilter }
+                        ? sourceFiltered
+                        : sourceFiltered.filter { $0.athlete.gender == prGenderFilter }
                     let filtered = prEventFilter == nil
                         ? genderFiltered
                         : genderFiltered.filter { $0.eventType == prEventFilter }
@@ -301,8 +317,15 @@ struct AnalyticsView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text(entry.prMs.formattedSplitTime)
-                    .font(.system(.body, design: .monospaced).weight(.semibold))
+                HStack(spacing: 4) {
+                    Text(entry.prMs.formattedSplitTime)
+                        .font(.system(.body, design: .monospaced).weight(.semibold))
+                    if entry.isSplit {
+                        Text("(split)")
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(.orange)
+                    }
+                }
 
                 Text("\(entry.raceCount) race\(entry.raceCount == 1 ? "" : "s")")
                     .font(.caption)
@@ -342,12 +365,19 @@ struct AnalyticsView: View {
                     .padding(.horizontal, 16)
                 }
 
-                // Gender filter
+                // Gender filter + source toggle
                 HStack(spacing: 6) {
                     genderPill("All", gender: nil)
                     genderPill("M", gender: .male)
                     genderPill("F", gender: .female)
                     Spacer()
+                    Picker("Source", selection: $lbTimeSource) {
+                        ForEach(AnalyticsViewModel.TimeSourceFilter.allCases, id: \.self) { src in
+                            Text(src.rawValue).tag(src)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 160)
                 }
                 .padding(.horizontal, 16)
             }
@@ -356,20 +386,40 @@ struct AnalyticsView: View {
 
             // Leaderboard list
             ScrollView {
-                if vm.eventLeaderboard.isEmpty {
+                let filteredLeaderboard: [AnalyticsViewModel.LeaderboardEntry] = {
+                    switch lbTimeSource {
+                    case .all:
+                        // Dedup: per athlete, keep best time
+                        var bestByAthlete: [UUID: AnalyticsViewModel.LeaderboardEntry] = [:]
+                        for entry in vm.eventLeaderboard {
+                            if let existing = bestByAthlete[entry.athlete.id] {
+                                if entry.bestMs < existing.bestMs {
+                                    bestByAthlete[entry.athlete.id] = entry
+                                }
+                            } else {
+                                bestByAthlete[entry.athlete.id] = entry
+                            }
+                        }
+                        return bestByAthlete.values.sorted { $0.bestMs < $1.bestMs }
+                    case .race: return vm.eventLeaderboard.filter { !$0.isSplit }
+                    case .split: return vm.eventLeaderboard.filter { $0.isSplit }
+                    }
+                }()
+
+                if filteredLeaderboard.isEmpty {
                     emptyState(icon: "list.number", message: "No results for \(vm.selectedEvent.displayName)")
                 } else {
                     VStack(spacing: 0) {
-                        ForEach(vm.eventLeaderboard.indices, id: \.self) { i in
+                        ForEach(filteredLeaderboard.indices, id: \.self) { i in
                             Button {
-                                profileAthlete = vm.eventLeaderboard[i].athlete
+                                profileAthlete = filteredLeaderboard[i].athlete
                             } label: {
-                                leaderboardRow(vm.eventLeaderboard[i])
+                                leaderboardRow(filteredLeaderboard[i], displayRank: i + 1)
                                     .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
 
-                            if i < vm.eventLeaderboard.count - 1 {
+                            if i < filteredLeaderboard.count - 1 {
                                 Divider().padding(.leading, 54)
                             }
                         }
@@ -438,7 +488,7 @@ struct AnalyticsView: View {
         }
     }
 
-    private func leaderboardRow(_ entry: AnalyticsViewModel.LeaderboardEntry) -> some View {
+    private func leaderboardRow(_ entry: AnalyticsViewModel.LeaderboardEntry, displayRank: Int) -> some View {
         HStack(spacing: 12) {
             Rectangle()
                 .fill(Theme.genderColor(entry.athlete.gender))
@@ -446,9 +496,9 @@ struct AnalyticsView: View {
                 .clipShape(Capsule())
 
             // Rank
-            Text("\(entry.rank)")
+            Text("\(displayRank)")
                 .font(.system(.title3, design: .rounded).weight(.bold))
-                .foregroundStyle(entry.rank <= 3 ? Theme.runsmithPink : .secondary)
+                .foregroundStyle(displayRank <= 3 ? Theme.runsmithPink : .secondary)
                 .frame(width: 32)
 
             Circle()
@@ -461,8 +511,15 @@ struct AnalyticsView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text(entry.bestMs.formattedSplitTime)
-                    .font(.system(.body, design: .monospaced).weight(.semibold))
+                HStack(spacing: 4) {
+                    Text(entry.bestMs.formattedSplitTime)
+                        .font(.system(.body, design: .monospaced).weight(.semibold))
+                    if entry.isSplit {
+                        Text("(split)")
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(.orange)
+                    }
+                }
 
                 Text("\(entry.raceCount)×")
                     .font(.caption)

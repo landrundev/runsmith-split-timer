@@ -32,6 +32,9 @@ struct RaceSetupView: View {
     // Relay builder navigation
     @State private var navigateToRelayBuilder = false
 
+    // Collapsible event section
+    @State private var eventSectionExpanded = true
+
     // Multi-Coach sharing
     @State private var showShareConfig = false
 
@@ -91,6 +94,9 @@ struct RaceSetupView: View {
             }
             .onAppear {
                 vm.load()
+                if vm.existingRaceId != nil {
+                    eventSectionExpanded = false
+                }
             }
         }
     }
@@ -98,7 +104,8 @@ struct RaceSetupView: View {
     // MARK: – Event Section
 
     private var eventSection: some View {
-        Section("Event") {
+        Section {
+            DisclosureGroup(isExpanded: $eventSectionExpanded) {
             // 1. Race type toggle: Individual / Relay
             Picker("Type", selection: $vm.raceType) {
                 ForEach(RaceTypeSelection.allCases, id: \.self) { type in
@@ -213,6 +220,17 @@ struct RaceSetupView: View {
                 }
                 Stepper("Splits per Lap: \(vm.splitsPerLap)", value: $vm.splitsPerLap, in: 1...4)
             }
+            } label: {
+                HStack {
+                    Text("Event").fontWeight(.medium)
+                    if !eventSectionExpanded {
+                        Spacer()
+                        Text(vm.raceName.isEmpty ? vm.eventType.displayName : vm.raceName)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+            }
         }
     }
 
@@ -230,53 +248,85 @@ struct RaceSetupView: View {
     // MARK: Regular Athlete Section
 
     private var regularAthleteSection: some View {
-        Section {
-            if !vm.availableAthletes.isEmpty {
-                TextField("Search athletes", text: $vm.athleteSearchText)
-                    .autocorrectionDisabled()
+        Group {
+            // Roster section — selected athletes
+            if !vm.selectedAthleteIds.isEmpty {
+                Section {
+                    let selected = vm.filteredAthletes.filter { vm.selectedAthleteIds.contains($0.id) }
+                    ForEach(selected) { athlete in
+                        athleteRow(athlete: athlete, selected: true) {
+                            vm.toggleAthlete(athlete.id)
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                vm.delete(athlete: athlete)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            Button {
+                                editName = athlete.name
+                                editTeam = athlete.teamName ?? ""
+                                editColorHex = athlete.colorHex
+                                editGender = athlete.gender
+                                athleteToEdit = athlete
+                            } label: {
+                                Label("Edit", systemImage: "pencil")
+                            }
+                            .tint(.blue)
+                        }
+                    }
+                } header: {
+                    HStack {
+                        Text("Roster")
+                        Spacer()
+                        Text("\(vm.selectedAthleteIds.count)/\(RaceSetupViewModel.maxIndividualAthletes) selected")
+                            .font(.caption)
+                            .foregroundStyle(vm.isAthleteCapReached ? .orange : Theme.runsmithPink)
+                    }
+                }
             }
 
-            ForEach(vm.filteredAthletes) { athlete in
-                let selected = vm.selectedAthleteIds.contains(athlete.id)
-                athleteRow(athlete: athlete, selected: selected) {
-                    vm.toggleAthlete(athlete.id)
+            // Athletes section — available unselected athletes
+            Section {
+                if !vm.availableAthletes.isEmpty {
+                    TextField("Search athletes", text: $vm.athleteSearchText)
+                        .autocorrectionDisabled()
                 }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        vm.delete(athlete: athlete)
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
-                    Button {
-                        editName = athlete.name
-                        editTeam = athlete.teamName ?? ""
-                        editColorHex = athlete.colorHex
-                        editGender = athlete.gender
-                        athleteToEdit = athlete
-                    } label: {
-                        Label("Edit", systemImage: "pencil")
-                    }
-                    .tint(.blue)
-                }
-                .opacity(vm.isAthleteCapReached && !selected ? 0.4 : 1.0)
-            }
-            .onMove { vm.moveAthletes(from: $0, to: $1) }
-            .deleteDisabled(true)
 
-            Button {
-                showAddAthlete = true
-            } label: {
-                Label("New Athlete", systemImage: "person.badge.plus")
-            }
-        } header: {
-            HStack {
+                let unselected = vm.filteredAthletes.filter { !vm.selectedAthleteIds.contains($0.id) }
+                ForEach(unselected) { athlete in
+                    athleteRow(athlete: athlete, selected: false) {
+                        vm.toggleAthlete(athlete.id)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            vm.delete(athlete: athlete)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                        Button {
+                            editName = athlete.name
+                            editTeam = athlete.teamName ?? ""
+                            editColorHex = athlete.colorHex
+                            editGender = athlete.gender
+                            athleteToEdit = athlete
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        .tint(.blue)
+                    }
+                    .opacity(vm.isAthleteCapReached ? 0.4 : 1.0)
+                }
+                .onMove { vm.moveAthletes(from: $0, to: $1) }
+                .deleteDisabled(true)
+
+                Button {
+                    showAddAthlete = true
+                } label: {
+                    Label("New Athlete", systemImage: "person.badge.plus")
+                }
+            } header: {
                 Text("Athletes")
-                Spacer()
-                if !vm.selectedAthleteIds.isEmpty {
-                    Text("\(vm.selectedAthleteIds.count)/\(RaceSetupViewModel.maxIndividualAthletes) selected")
-                        .font(.caption)
-                        .foregroundStyle(vm.isAthleteCapReached ? .orange : Theme.runsmithPink)
-                }
             }
         }
     }
@@ -434,7 +484,7 @@ struct RaceSetupView: View {
                     Image(systemName: "person.3")
                         .font(.title2)
                         .foregroundStyle(.secondary)
-                    Text("No saved teams for \(vm.eventType.displayName)")
+                    Text("No saved \(vm.genderPrefix.lowercased()) teams for \(vm.eventType.displayName)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     Text("Build New Team")
@@ -564,27 +614,21 @@ struct RaceSetupView: View {
 
     private var bottomButtons: some View {
         HStack(spacing: 10) {
-            // Save — compact, understated
+            // Save
             Button {
                 guard vm.saveRace() != nil else { return }
                 dismiss()
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "square.and.arrow.down")
-                        .font(.system(size: 14, weight: .semibold))
                     Text("Save")
-                        .font(.subheadline.weight(.semibold))
                 }
-                .foregroundStyle(Theme.runsmithPink)
-                .padding(.horizontal, 14)
-                .frame(height: 52)
-                .background(Theme.runsmithPink.opacity(0.12))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
             }
+            .buttonStyle(GlassPrimaryButtonStyle())
             .disabled(!vm.isValid)
-            .opacity(vm.isValid ? 1.0 : 0.4)
+            .frame(maxWidth: vm.existingRaceId != nil ? 120 : .infinity)
 
-            // Start Race — primary, full-width
+            // Start Race
             Button {
                 guard let race = vm.startRace() else { return }
                 createdRace = race
@@ -596,7 +640,7 @@ struct RaceSetupView: View {
             } label: {
                 Text(vm.raceType == .relay ? "Start Relay" : "Start Race")
             }
-            .buttonStyle(GlassPrimaryButtonStyle())
+            .buttonStyle(GlassPrimaryButtonStyle(color: .green))
             .disabled(!vm.isValid)
         }
         .glassActionBar()

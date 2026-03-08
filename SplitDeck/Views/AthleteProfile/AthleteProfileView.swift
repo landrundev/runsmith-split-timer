@@ -229,16 +229,21 @@ struct AthleteProfileView: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(vm.raceHistory) { result in
-                    if result.cumulativeTimesMs.isEmpty {
-                        raceResultHeader(result)
-                            .padding(.vertical, 2)
-                    } else {
+                    let hasDetails = result.isRelay ? !result.relayLegs.isEmpty : !result.cumulativeTimesMs.isEmpty
+                    if hasDetails {
                         DisclosureGroup {
-                            splitDetailsView(result)
+                            if result.isRelay {
+                                relayDetailsView(result)
+                            } else {
+                                splitDetailsView(result)
+                            }
                         } label: {
                             raceResultHeader(result)
                         }
                         .padding(.vertical, 2)
+                    } else {
+                        raceResultHeader(result)
+                            .padding(.vertical, 2)
                     }
                 }
                 .onDelete { offsets in
@@ -272,7 +277,10 @@ struct AthleteProfileView: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                if let time = result.finalTimeMs {
+                if result.isRelay, let teamTotal = result.teamTotalMs {
+                    Text(teamTotal.formattedSplitTime)
+                        .font(.subheadline.weight(.bold).monospacedDigit())
+                } else if let time = result.finalTimeMs {
                     Text(time.formattedSplitTime)
                         .font(.subheadline.weight(.bold).monospacedDigit())
                 } else if result.isUnlimited {
@@ -284,24 +292,27 @@ struct AthleteProfileView: View {
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(.red)
                 }
-                if let place = result.place {
-                    Text(placeString(place))
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(placeColor(place))
-                }
             }
         }
     }
 
+    /// "Lap" when each split = 1 full track lap (400m), "Split" otherwise.
+    private func deltaLabel(for result: AthleteRaceResult) -> String {
+        let splitDist = result.trackLengthMeters / max(result.splitsPerLap, 1)
+        return splitDist >= 400 ? "Lap" : "Split"
+    }
+
+    // MARK: Individual split details
+
     private func splitDetailsView(_ result: AthleteRaceResult) -> some View {
-        VStack(spacing: 0) {
-            // Column headers
+        let label = deltaLabel(for: result)
+        return VStack(spacing: 0) {
             HStack {
-                Text("Split")
+                Text(label)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text("Cumulative")
+                Text(label + " Time")
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                Text("Lap")
+                Text("Cumulative")
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .font(.caption2.weight(.semibold))
@@ -310,17 +321,78 @@ struct AthleteProfileView: View {
 
             ForEach(Array(result.cumulativeTimesMs.enumerated()), id: \.offset) { i, cumMs in
                 HStack {
-                    Text(i < result.splitLabels.count ? result.splitLabels[i] : "Split \(i + 1)")
+                    Text(i < result.splitLabels.count ? result.splitLabels[i] : "\(label) \(i + 1)")
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(cumMs.formattedSplitTime)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
                     Text(i < result.lapTimesMs.count ? result.lapTimesMs[i].formattedSplitTime : "\u{2014}")
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    Text(cumMs.formattedSplitTime)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 .font(.caption.monospacedDigit())
                 .padding(.vertical, 2)
 
                 if i < result.cumulativeTimesMs.count - 1 {
+                    Divider()
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    // MARK: Relay team details
+
+    private func relayDetailsView(_ result: AthleteRaceResult) -> some View {
+        VStack(spacing: 0) {
+            // Column headers
+            HStack {
+                Text("Leg")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("Leg Time")
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                Text("Cumulative")
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .padding(.bottom, 4)
+
+            ForEach(result.relayLegs) { leg in
+                // Main leg row
+                HStack {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color(hex: leg.athleteColorHex))
+                            .frame(width: 8, height: 8)
+                        Text(leg.athleteName)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(leg.legTimeMs?.formattedSplitTime ?? "\u{2014}")
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    Text(leg.cumulativeMs?.formattedSplitTime ?? "\u{2014}")
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .font(leg.isCurrentAthlete ? .caption.weight(.bold).monospacedDigit() : .caption.monospacedDigit())
+                .padding(.vertical, 2)
+
+                // Intermediate splits for current athlete
+                if leg.isCurrentAthlete && !leg.intermediateSplits.isEmpty {
+                    ForEach(Array(leg.intermediateSplits.enumerated()), id: \.offset) { _, split in
+                        HStack {
+                            Text(split.label)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.leading, 16)
+                            Text(split.lapMs.formattedSplitTime)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                            Spacer()
+                                .frame(maxWidth: .infinity)
+                        }
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                    }
+                }
+
+                if leg.legNumber < result.relayLegs.count {
                     Divider()
                 }
             }

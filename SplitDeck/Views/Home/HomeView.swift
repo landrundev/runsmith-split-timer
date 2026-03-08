@@ -12,6 +12,8 @@ struct HomeView: View {
     @State private var newMeetName = ""
     @State private var newMeetDate = Date()
     @State private var newMeetLocation = ""
+    @State private var navigationPath = NavigationPath()
+    @State private var newlyCreatedMeet: Meet? = nil
 
     // Delete confirmation
     @State private var meetToDelete: Meet? = nil
@@ -42,7 +44,7 @@ struct HomeView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             ZStack(alignment: .bottom) {
                 meetList
                 bottomBar
@@ -76,7 +78,12 @@ struct HomeView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showAddMeet) {
+            .sheet(isPresented: $showAddMeet, onDismiss: {
+                if let meet = newlyCreatedMeet {
+                    navigationPath.append(meet)
+                    newlyCreatedMeet = nil
+                }
+            }) {
                 addMeetSheet
             }
             .sheet(item: $meetToEdit) { meet in
@@ -132,6 +139,13 @@ struct HomeView: View {
                 Button("Cancel", role: .cancel) { quickRaceToDelete = nil }
             }
             .onAppear { vm.load() }
+            .navigationDestination(for: Meet.self) { meet in
+                MeetDetailView(
+                    vm: MeetDetailViewModel(meet: meet, store: store),
+                    store: store,
+                    cache: cache
+                )
+            }
         }
     }
 
@@ -173,13 +187,7 @@ struct HomeView: View {
                 if !vm.meets.isEmpty {
                     Section("Meets") {
                         ForEach(vm.meets) { meet in
-                            NavigationLink {
-                                MeetDetailView(
-                                    vm: MeetDetailViewModel(meet: meet, store: store),
-                                    store: store,
-                                    cache: cache
-                                )
-                            } label: {
+                            NavigationLink(value: meet) {
                                 MeetRowView(meet: meet, raceCount: vm.meetRaces[meet.id]?.count ?? 0, status: vm.meetStatus(for: meet))
                             }
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -631,6 +639,7 @@ struct HomeView: View {
                             location: newMeetLocation.isEmpty ? nil : newMeetLocation
                         )
                         vm.save(meet: meet)
+                        newlyCreatedMeet = meet
                         newMeetName = ""
                         newMeetDate = Date()
                         newMeetLocation = ""

@@ -1,5 +1,16 @@
 import Foundation
 
+struct RelayLegInfo: Identifiable {
+    let id = UUID()
+    let legNumber: Int
+    let athleteName: String
+    let athleteColorHex: String
+    let legTimeMs: Int?
+    let cumulativeMs: Int?
+    let isCurrentAthlete: Bool
+    let intermediateSplits: [(label: String, lapMs: Int)]
+}
+
 struct AthleteRaceResult: Identifiable {
     let id: UUID           // race ID
     let raceName: String
@@ -9,10 +20,15 @@ struct AthleteRaceResult: Identifiable {
     let place: Int?        // nil if incomplete or unlimited
     let splitCount: Int
     let isUnlimited: Bool
+    let isRelay: Bool
     let meetName: String?        // non-nil when race belongs to a meet
+    let splitsPerLap: Int        // 1 = one split per lap, 2+ = intermediate splits
+    let trackLengthMeters: Int   // physical track or leg distance
     let splitLabels: [String]    // e.g. ["400m", "800m"] or ["Split 1", "Split 2"]
     let cumulativeTimesMs: [Int] // elapsed times per split, sorted by lap index
     let lapTimesMs: [Int]        // per-split deltas
+    let teamTotalMs: Int?        // relay team total time
+    let relayLegs: [RelayLegInfo] // populated for relay races
 }
 
 @MainActor
@@ -84,6 +100,40 @@ final class AthleteProfileViewModel: ObservableObject {
                 }
                 let labels = RaceDomain.cumulativeColumnLabels(for: race, splits: allSplits)
 
+                // Build relay data if applicable
+                let isRelay = race.eventType.isRelay
+                var teamTotalMs: Int? = nil
+                var relayLegs: [RelayLegInfo] = []
+
+                if isRelay {
+                    let legData = RaceDomain.relayLegData(
+                        athletes: raceAthletes, splits: allSplits, race: race
+                    )
+                    teamTotalMs = legData.last?.cumulativeMs
+
+                    for entry in legData {
+                        var intermediates: [(label: String, lapMs: Int)] = []
+                        if race.splitsPerLap > 1 {
+                            let intSplits = RaceDomain.relayLegIntermediateSplits(
+                                legIndex: entry.leg - 1,
+                                athletes: raceAthletes,
+                                splits: allSplits,
+                                race: race
+                            )
+                            intermediates = intSplits.map { (label: $0.label, lapMs: $0.lapMs) }
+                        }
+                        relayLegs.append(RelayLegInfo(
+                            legNumber: entry.leg,
+                            athleteName: entry.athlete.name,
+                            athleteColorHex: entry.athlete.colorHex,
+                            legTimeMs: entry.legMs,
+                            cumulativeMs: entry.cumulativeMs,
+                            isCurrentAthlete: entry.athlete.id == athlete.id,
+                            intermediateSplits: intermediates
+                        ))
+                    }
+                }
+
                 results.append(AthleteRaceResult(
                     id: race.id,
                     raceName: race.name,
@@ -93,10 +143,15 @@ final class AthleteProfileViewModel: ObservableObject {
                     place: place,
                     splitCount: athleteSplits.count,
                     isUnlimited: race.isUnlimitedSplits,
+                    isRelay: isRelay,
                     meetName: race.meetId.flatMap { meetLookup[$0] },
+                    splitsPerLap: race.splitsPerLap,
+                    trackLengthMeters: race.trackLengthMeters,
                     splitLabels: labels,
                     cumulativeTimesMs: cumulativeTimes,
-                    lapTimesMs: lapTimes
+                    lapTimesMs: lapTimes,
+                    teamTotalMs: teamTotalMs,
+                    relayLegs: relayLegs
                 ))
 
                 // Track personal bests (bounded races with a finish time only)

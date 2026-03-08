@@ -328,7 +328,7 @@ struct RelayBuilderView: View {
             } label: {
                 Label("Start Race", systemImage: "stopwatch")
             }
-            .buttonStyle(GlassPrimaryButtonStyle())
+            .buttonStyle(GlassPrimaryButtonStyle(color: .green))
         }
         .glassActionBar()
     }

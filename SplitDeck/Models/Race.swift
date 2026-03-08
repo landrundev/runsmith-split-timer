@@ -14,9 +14,13 @@ enum EventType: Int16, Codable, CaseIterable {
     case m5000  = 10
     case m10000 = 11
     case mile   = 12
+    case m100   = 13
+    case m200   = 14
 
     var displayName: String {
         switch self {
+        case .m100:      return "100m"
+        case .m200:      return "200m"
         case .m400:      return "400m"
         case .m800:      return "800m"
         case .m1500:     return "1500m"
@@ -51,8 +55,21 @@ enum EventType: Int16, Codable, CaseIterable {
         }
     }
 
+    /// Maps a split distance (in meters) to the corresponding individual EventType.
+    static func eventType(forSplitDistance meters: Int) -> EventType? {
+        switch meters {
+        case 100:  return .m100
+        case 200:  return .m200
+        case 400:  return .m400
+        case 800:  return .m800
+        default:   return nil
+        }
+    }
+
     var defaultDistance: Int? {
         switch self {
+        case .m100:   return 100
+        case .m200:   return 200
         case .m400:   return 400
         case .m800:   return 800
         case .m1500:  return 1500

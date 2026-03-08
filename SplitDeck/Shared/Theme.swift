@@ -45,6 +45,7 @@ enum Theme {
 // MARK: – Glassmorphism Button Styles
 
 struct GlassPrimaryButtonStyle: ButtonStyle {
+    var color: Color = Theme.runsmithPink
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
@@ -56,7 +57,7 @@ struct GlassPrimaryButtonStyle: ButtonStyle {
             .background {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(Theme.runsmithPink)
+                        .fill(color)
                     // Inner glass highlight
                     RoundedRectangle(cornerRadius: 16)
                         .fill(
@@ -71,7 +72,7 @@ struct GlassPrimaryButtonStyle: ButtonStyle {
                         .strokeBorder(.white.opacity(0.3), lineWidth: 0.5)
                 }
             }
-            .shadow(color: Theme.runsmithPink.opacity(0.4), radius: 10, y: 4)
+            .shadow(color: color.opacity(0.4), radius: 10, y: 4)
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .opacity(isEnabled ? (configuration.isPressed ? 0.9 : 1.0) : 0.4)
             .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)

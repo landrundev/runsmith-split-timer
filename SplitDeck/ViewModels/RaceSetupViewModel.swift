@@ -19,7 +19,6 @@ final class RaceSetupViewModel: ObservableObject {
     @Published var raceType: RaceTypeSelection = .individual {
         didSet {
             guard raceType != oldValue else { return }
-            raceName = "" // clear name whenever type changes
             switch raceType {
             case .individual:
                 eventType = .m1600
@@ -36,6 +35,7 @@ final class RaceSetupViewModel: ObservableObject {
                 // restore relay selection from preserved order
                 selectedAthleteIds = Set(relayAthleteOrder)
             }
+            raceName = "\(genderPrefix) \(eventType.displayName)"
         }
     }
     @Published var relayAthleteOrder: [UUID] = [] // leg-ordered athlete IDs for relay
@@ -68,7 +68,7 @@ final class RaceSetupViewModel: ObservableObject {
 
     static let maxIndividualAthletes = 50
     static let individualEventTypes: [EventType] = [
-        .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
+        .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
     ]
     static let relayEventTypes: [EventType] = [.relay4x400, .relay4x800, .relay4x1600, .relay4x3200]
 
@@ -181,7 +181,10 @@ final class RaceSetupViewModel: ObservableObject {
     }
 
     var matchingSavedTeams: [SavedRelayTeam] {
-        savedRelayTeams.filter { $0.eventType == eventType }
+        savedRelayTeams.filter { team in
+            team.eventType == eventType &&
+            (genderFilter == nil || team.gender == genderFilter)
+        }
     }
 
     func loadSavedTeam(_ team: SavedRelayTeam) {
@@ -304,7 +307,7 @@ final class RaceSetupViewModel: ObservableObject {
         }
 
         let name = raceName.isEmpty
-            ? (unlimitedSplits ? "Unlimited" : eventType.displayName)
+            ? (unlimitedSplits ? "\(genderPrefix) Unlimited" : "\(genderPrefix) \(eventType.displayName)")
             : raceName
 
         return (orderedIds, dist, track, name)
