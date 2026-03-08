@@ -35,34 +35,33 @@ struct AthleteCardView: View {
     }
 
     // MARK: \u{2013} Completed State
-    // Finish time is the hero. Name + check on left, big time on right.
+    // Finish time is the hero \u{2013} own row, full width for splits below.
 
     private var completedLayout: some View {
-        HStack(spacing: 8) {
-            // Left: name + splits
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                        .imageScale(.medium)
-                    Text(athlete.name)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Theme.textSecondary)
-                        .lineLimit(1)
-                }
+        VStack(alignment: .leading, spacing: 6) {
+            // Row 1: name + finish time
+            HStack(spacing: 6) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                    .imageScale(.medium)
+                Text(athlete.name)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1)
 
-                if !splitTimes.isEmpty {
-                    splitChips
+                Spacer(minLength: 4)
+
+                // Finish time \u{2013} the most important number on the card
+                if let time = finishTime {
+                    Text(time)
+                        .font(.title2.weight(.heavy).monospacedDigit())
+                        .foregroundStyle(Theme.runsmithPink)
                 }
             }
 
-            Spacer(minLength: 8)
-
-            // Right: finish time \u{2013} the most important number
-            if let time = finishTime {
-                Text(time)
-                    .font(.title2.weight(.bold).monospacedDigit())
-                    .foregroundStyle(Theme.accentPrimary)
+            // Row 2: split chips \u{2013} full width, nothing competing
+            if !splitTimes.isEmpty {
+                splitChips
             }
         }
     }

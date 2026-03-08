@@ -49,8 +49,8 @@ struct CompactAthleteCardView: View {
 
                 if let time = finishTime {
                     Text(time)
-                        .font(.subheadline.weight(.bold).monospacedDigit())
-                        .foregroundStyle(Theme.accentPrimary)
+                        .font(.subheadline.weight(.heavy).monospacedDigit())
+                        .foregroundStyle(Theme.runsmithPink)
                 }
             }
             Spacer(minLength: 0)
