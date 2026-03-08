@@ -6,6 +6,7 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var athletes: [Athlete] = []
     @Published private(set) var quickRaces: [Race] = []
     @Published private(set) var meetRaces: [UUID: [Race]] = [:]
+    @Published private(set) var recentResults: [RecentResult] = []
     @Published var errorMessage: String?
 
     private let store: SplitDeckStore
@@ -14,22 +15,103 @@ final class HomeViewModel: ObservableObject {
         self.store = store
     }
 
+    // MARK: \u{2013} Data Model
+
+    struct RecentResult: Identifiable {
+        let id: UUID          // race id
+        let raceName: String
+        let eventType: EventType
+        let gender: Gender?   // nil = mixed
+        let athleteCount: Int
+        let bestFinishMs: Int? // fastest final split across athletes
+        let completedAt: Date  // race endedAt
+        let meetId: UUID?
+        let meetName: String?
+    }
+
+    // MARK: \u{2013} Load
+
     func load() {
         do {
             meets = try store.fetchMeets()
             athletes = try store.fetchAthletes()
             quickRaces = try store.fetchRaces(for: nil)
+
             var lookup: [UUID: [Race]] = [:]
             for meet in meets {
                 lookup[meet.id] = try store.fetchRaces(for: meet.id)
             }
             meetRaces = lookup
+
+            recentResults = try buildRecentResults(limit: 5)
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    /// Derives a meet's overall status from its races.
+    // MARK: \u{2013} Recent Results Builder
+
+    private func buildRecentResults(limit: Int) throws -> [RecentResult] {
+        let completed = try store.fetchAllCompletedRaces()
+        let capped = Array(completed.prefix(limit))
+
+        return capped.compactMap { race in
+            let splits = (try? store.fetchSplits(for: race.id)) ?? []
+
+            // Best finish = lowest max-lapIndex elapsedMs per athlete
+            let bestFinish: Int? = {
+                let grouped = Dictionary(grouping: splits, by: { $0.athleteId })
+                let finishTimes = grouped.compactMap { (_, athleteSplits) -> Int? in
+                    athleteSplits.max(by: { $0.lapIndex < $1.lapIndex })?.elapsedMs
+                }
+                return finishTimes.min()
+            }()
+
+            // Determine dominant gender
+            let genders = race.athleteIds.compactMap { id in
+                athletes.first(where: { $0.id == id })?.gender
+            }
+            let dominantGender: Gender? = {
+                let maleCount = genders.filter { $0 == .male }.count
+                let femaleCount = genders.filter { $0 == .female }.count
+                if maleCount > 0 && femaleCount > 0 { return nil } // mixed
+                if maleCount > 0 { return .male }
+                if femaleCount > 0 { return .female }
+                return nil
+            }()
+
+            // Find parent meet name
+            let meetName: String? = {
+                guard let mid = race.meetId else { return nil }
+                return meets.first(where: { $0.id == mid })?.name
+            }()
+
+            return RecentResult(
+                id: race.id,
+                raceName: race.name,
+                eventType: race.eventType,
+                gender: dominantGender,
+                athleteCount: race.athleteIds.count,
+                bestFinishMs: bestFinish,
+                completedAt: race.endedAt ?? race.startedAt ?? Date(),
+                meetId: race.meetId,
+                meetName: meetName
+            )
+        }
+    }
+
+    // MARK: \u{2013} Hero Card Helpers
+
+    /// The nearest future (or today) non-archived meet.
+    var nextMeet: Meet? {
+        let today = Calendar.current.startOfDay(for: Date())
+        return meets
+            .filter { !$0.isArchived && Calendar.current.startOfDay(for: $0.date) >= today }
+            .sorted { $0.date < $1.date }
+            .first
+    }
+
+    /// Overall meet status derived from its races.
     func meetStatus(for meet: Meet) -> RaceStatus {
         let races = meetRaces[meet.id] ?? []
         guard !races.isEmpty else { return .notStarted }
@@ -38,66 +120,60 @@ final class HomeViewModel: ObservableObject {
         return .notStarted
     }
 
+    /// Number of completed races in this meet.
+    func completedRaceCount(for meet: Meet) -> Int {
+        (meetRaces[meet.id] ?? []).filter { $0.status == .completed }.count
+    }
+
+    /// Total race count for a meet.
+    func totalRaceCount(for meet: Meet) -> Int {
+        meetRaces[meet.id]?.count ?? 0
+    }
+
+    /// The next race in the meet that hasn't started yet.
+    func nextUnstartedRace(for meet: Meet) -> Race? {
+        (meetRaces[meet.id] ?? []).first(where: { $0.status == .notStarted })
+    }
+
+    /// A race currently in progress in this meet.
+    func inProgressRace(for meet: Meet) -> Race? {
+        (meetRaces[meet.id] ?? []).first(where: { $0.status == .inProgress })
+    }
+
+    // MARK: \u{2013} Actions
+
     func save(meet: Meet) {
-        do {
-            try store.save(meet)
-            load()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        do { try store.save(meet); load() }
+        catch { errorMessage = error.localizedDescription }
     }
 
     func delete(meet: Meet) {
-        do {
-            try store.delete(meetId: meet.id)
-            load()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        do { try store.delete(meetId: meet.id); load() }
+        catch { errorMessage = error.localizedDescription }
     }
 
     func delete(race: Race) {
-        do {
-            try store.delete(raceId: race.id)
-            load()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        do { try store.delete(raceId: race.id); load() }
+        catch { errorMessage = error.localizedDescription }
     }
 
     func save(athlete: Athlete) {
-        do {
-            try store.save(athlete)
-            load()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        do { try store.save(athlete); load() }
+        catch { errorMessage = error.localizedDescription }
     }
 
     func delete(athlete: Athlete) {
-        do {
-            try store.delete(athleteId: athlete.id)
-            load()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        do { try store.delete(athleteId: athlete.id); load() }
+        catch { errorMessage = error.localizedDescription }
     }
 
     func archive(meet: Meet) {
-        do {
-            try store.archive(meetId: meet.id)
-            load()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        do { try store.archive(meetId: meet.id); load() }
+        catch { errorMessage = error.localizedDescription }
     }
 
     func archive(race: Race) {
-        do {
-            try store.archive(raceId: race.id)
-            load()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        do { try store.archive(raceId: race.id); load() }
+        catch { errorMessage = error.localizedDescription }
     }
 }

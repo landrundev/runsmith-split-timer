@@ -18,7 +18,14 @@ struct MainTabView: View {
             Group {
                 switch selectedTab {
                 case .home:
-                    HomeView(vm: HomeViewModel(store: store), appearance: $appearance)
+                    HomeView(
+                        vm: HomeViewModel(store: store),
+                        appearance: $appearance,
+                        selectedTab: Binding(
+                            get: { selectedTab.rawValue },
+                            set: { selectedTab = Tab(rawValue: $0) ?? .home }
+                        )
+                    )
                 case .meets:
                     MeetsTabView(vm: HomeViewModel(store: store))
                 case .add:
