@@ -39,47 +39,46 @@ struct RaceHistoryView: View {
     }
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 16) {
-                ForEach(groupedRaces, id: \.key) { section in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(section.key)
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(Theme.textSecondary)
-                            .textCase(.uppercase)
-                            .padding(.horizontal, 16)
-
-                        VStack(spacing: 8) {
-                            ForEach(section.races) { race in
-                                NavigationLink(destination: raceDestination(race)) {
-                                    RaceCardRow(
-                                        race: race,
-                                        athletes: vm.athletes,
-                                        dateFormatter: Self.dateFormatter
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                                .contextMenu {
-                                    Button(role: .destructive) {
-                                        raceToDelete = race
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                    Button {
-                                        vm.archive(race: race)
-                                    } label: {
-                                        Label("Archive", systemImage: "archivebox")
-                                    }
-                                }
+        List {
+            ForEach(groupedRaces, id: \.key) { section in
+                Section {
+                    ForEach(section.races) { race in
+                        NavigationLink(destination: raceDestination(race)) {
+                            RaceCardRow(
+                                race: race,
+                                athletes: vm.athletes,
+                                dateFormatter: Self.dateFormatter
+                            )
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                raceToDelete = race
+                            } label: {
+                                Label("Delete", systemImage: "trash")
                             }
                         }
-                        .padding(.horizontal, 16)
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button {
+                                vm.archive(race: race)
+                            } label: {
+                                Label("Archive", systemImage: "archivebox")
+                            }
+                            .tint(.blue)
+                        }
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                     }
+                } header: {
+                    Text(section.key)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Theme.textSecondary)
+                        .textCase(.uppercase)
                 }
             }
-            .padding(.top, 8)
-            .padding(.bottom, 80)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .background(Theme.screenBackground)
         .navigationTitle("Race History")
         .navigationBarTitleDisplayMode(.inline)

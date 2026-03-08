@@ -30,16 +30,20 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    heroSection
-                    pendingRacesSection
-                    quickRaceHistorySection
-                    emptyState
-                }
-                .padding(.top, 8)
-                .padding(.bottom, 80)
+            List {
+                heroSection
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+
+                pendingRacesSection
+
+                quickRaceHistorySection
+
+                emptyState
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
             .background(Theme.screenBackground)
             .navigationTitle("Runsmith")
             .navigationBarTitleDisplayMode(.inline)
@@ -163,7 +167,7 @@ struct HomeView: View {
     @ViewBuilder
     private var pendingRacesSection: some View {
         if !vm.pendingQuickRaces.isEmpty {
-            sectionView(title: "Pending Races") {
+            Section {
                 ForEach(vm.pendingQuickRaces) { race in
                     Button { pendingRaceToSetup = race } label: {
                         RaceCardRow(
@@ -173,19 +177,30 @@ struct HomeView: View {
                         )
                     }
                     .buttonStyle(.plain)
-                    .contextMenu {
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
                             quickRaceToDelete = race
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
                         Button {
                             vm.archive(race: race)
                         } label: {
                             Label("Archive", systemImage: "archivebox")
                         }
+                        .tint(.blue)
                     }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 }
+            } header: {
+                Text("Pending Races")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.textSecondary)
+                    .textCase(.uppercase)
             }
         }
     }
@@ -196,7 +211,7 @@ struct HomeView: View {
     private var quickRaceHistorySection: some View {
         let allHistory = vm.startedQuickRaces
         if !allHistory.isEmpty {
-            sectionView(title: "Quick Race History") {
+            Section {
                 ForEach(allHistory.prefix(Self.homeHistoryLimit)) { race in
                     NavigationLink(destination: quickRaceDestination(race)) {
                         RaceCardRow(
@@ -206,18 +221,24 @@ struct HomeView: View {
                         )
                     }
                     .buttonStyle(.plain)
-                    .contextMenu {
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
                             quickRaceToDelete = race
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
                         Button {
                             vm.archive(race: race)
                         } label: {
                             Label("Archive", systemImage: "archivebox")
                         }
+                        .tint(.blue)
                     }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 }
 
                 // "See All" link when more than 10
@@ -243,7 +264,15 @@ struct HomeView: View {
                         .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
                     }
                     .buttonStyle(.plain)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 }
+            } header: {
+                Text("Quick Race History")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.textSecondary)
+                    .textCase(.uppercase)
             }
         }
     }
@@ -267,24 +296,8 @@ struct HomeView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 60)
-        }
-    }
-
-    // MARK: \u{2013} Section Builder
-
-    @ViewBuilder
-    private func sectionView<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(Theme.textSecondary)
-                .textCase(.uppercase)
-                .padding(.horizontal, 16)
-
-            VStack(spacing: 8) {
-                content()
-            }
-            .padding(.horizontal, 16)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
         }
     }
 
