@@ -5,6 +5,7 @@ struct CompactAthleteCardView: View {
     let lastLapDelta: String?
     let lapProgress: String
     let isComplete: Bool
+    let finishTime: String?  // e.g. "4:32.18"
     let onTap: () -> Void
 
     var body: some View {
@@ -27,7 +28,12 @@ struct CompactAthleteCardView: View {
                     }
 
                     HStack(spacing: 4) {
-                        if let delta = lastLapDelta {
+                        if isComplete, let time = finishTime {
+                            // Total finish time \u{2013} bold pink
+                            Text(time)
+                                .font(.caption.weight(.bold).monospacedDigit())
+                                .foregroundStyle(Theme.accentPrimary)
+                        } else if let delta = lastLapDelta {
                             Text(delta)
                                 .font(.caption.weight(.semibold).monospacedDigit())
                         } else {

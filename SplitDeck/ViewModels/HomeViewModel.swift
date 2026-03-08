@@ -6,27 +6,12 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var athletes: [Athlete] = []
     @Published private(set) var quickRaces: [Race] = []
     @Published private(set) var meetRaces: [UUID: [Race]] = [:]
-    @Published private(set) var recentResults: [RecentResult] = []
     @Published var errorMessage: String?
 
     private let store: SplitDeckStore
 
     init(store: SplitDeckStore) {
         self.store = store
-    }
-
-    // MARK: \u{2013} Data Model
-
-    struct RecentResult: Identifiable {
-        let id: UUID          // race id
-        let raceName: String
-        let eventType: EventType
-        let gender: Gender?   // nil = mixed
-        let athleteCount: Int
-        let bestFinishMs: Int? // fastest final split across athletes
-        let completedAt: Date  // race endedAt
-        let meetId: UUID?
-        let meetName: String?
     }
 
     // MARK: \u{2013} Load
@@ -42,61 +27,8 @@ final class HomeViewModel: ObservableObject {
                 lookup[meet.id] = try store.fetchRaces(for: meet.id)
             }
             meetRaces = lookup
-
-            recentResults = try buildRecentResults(limit: 5)
         } catch {
             errorMessage = error.localizedDescription
-        }
-    }
-
-    // MARK: \u{2013} Recent Results Builder
-
-    private func buildRecentResults(limit: Int) throws -> [RecentResult] {
-        let completed = try store.fetchAllCompletedRaces()
-        let capped = Array(completed.prefix(limit))
-
-        return capped.compactMap { race in
-            let splits = (try? store.fetchSplits(for: race.id)) ?? []
-
-            // Best finish = lowest max-lapIndex elapsedMs per athlete
-            let bestFinish: Int? = {
-                let grouped = Dictionary(grouping: splits, by: { $0.athleteId })
-                let finishTimes = grouped.compactMap { (_, athleteSplits) -> Int? in
-                    athleteSplits.max(by: { $0.lapIndex < $1.lapIndex })?.elapsedMs
-                }
-                return finishTimes.min()
-            }()
-
-            // Determine dominant gender
-            let genders = race.athleteIds.compactMap { id in
-                athletes.first(where: { $0.id == id })?.gender
-            }
-            let dominantGender: Gender? = {
-                let maleCount = genders.filter { $0 == .male }.count
-                let femaleCount = genders.filter { $0 == .female }.count
-                if maleCount > 0 && femaleCount > 0 { return nil } // mixed
-                if maleCount > 0 { return .male }
-                if femaleCount > 0 { return .female }
-                return nil
-            }()
-
-            // Find parent meet name
-            let meetName: String? = {
-                guard let mid = race.meetId else { return nil }
-                return meets.first(where: { $0.id == mid })?.name
-            }()
-
-            return RecentResult(
-                id: race.id,
-                raceName: race.name,
-                eventType: race.eventType,
-                gender: dominantGender,
-                athleteCount: race.athleteIds.count,
-                bestFinishMs: bestFinish,
-                completedAt: race.endedAt ?? race.startedAt ?? Date(),
-                meetId: race.meetId,
-                meetName: meetName
-            )
         }
     }
 

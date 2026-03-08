@@ -173,7 +173,8 @@ struct LiveTimingView: View {
                             lastLapDelta: vm.lastLapDelta(for: athlete),
                             lapProgress: vm.lapProgress(for: athlete),
                             isComplete: RaceDomain.isComplete(
-                                athlete: athlete, splits: vm.splits, race: vm.race)
+                                athlete: athlete, splits: vm.splits, race: vm.race),
+                            finishTime: vm.finishTimeForDisplay(for: athlete)
                         ) {
                             vm.assign(to: athlete)
                         }
@@ -189,7 +190,8 @@ struct LiveTimingView: View {
                             splitTimes: vm.splitTimesForDisplay(for: athlete),
                             lapProgress: vm.lapProgress(for: athlete),
                             isComplete: RaceDomain.isComplete(
-                                athlete: athlete, splits: vm.splits, race: vm.race)
+                                athlete: athlete, splits: vm.splits, race: vm.race),
+                            finishTime: vm.finishTimeForDisplay(for: athlete)
                         ) {
                             vm.assign(to: athlete)
                         }

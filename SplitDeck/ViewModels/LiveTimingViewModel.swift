@@ -188,6 +188,14 @@ final class LiveTimingViewModel: ObservableObject {
         splits(for: athlete).last.map { $0.elapsedMs.formattedSplitTime }
     }
 
+    /// Formatted finish time for a completed athlete, or nil if not finished.
+    func finishTimeForDisplay(for athlete: Athlete) -> String? {
+        guard let ms = RaceDomain.finalTime(athlete: athlete, splits: splits, race: race) else {
+            return nil
+        }
+        return ms.formattedSplitTime
+    }
+
     func lapProgress(for athlete: Athlete) -> String {
         let completed = splits(for: athlete).count
         if race.isUnlimitedSplits {

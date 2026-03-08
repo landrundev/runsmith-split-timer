@@ -38,7 +38,6 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     heroSection
-                    recentResultsSection
                     pendingRacesSection
                     quickRaceHistorySection
                     emptyState
@@ -157,7 +156,7 @@ struct HomeView: View {
 
     private func handleHeroCTA(meet: Meet, inProgressRace: Race?, nextRace: Race?, allDone: Bool) {
         if let race = inProgressRace {
-            // Resume in-progress race \u{2013} push LiveTimingView
+            // Resume in-progress race \u{2013} fullScreenCover LiveTimingView
             ctaLiveRace = race
         } else if allDone {
             // All done \u{2013} card tap handles navigation to MeetDetail
@@ -167,22 +166,6 @@ struct HomeView: View {
                 meetId: meet.id, store: store, existingRaceId: race.id
             )
             showMeetRaceSetup = true
-        }
-    }
-
-    // MARK: \u{2013} Recent Results
-
-    @ViewBuilder
-    private var recentResultsSection: some View {
-        if !vm.recentResults.isEmpty {
-            sectionView(title: "Recent Results") {
-                ForEach(vm.recentResults) { result in
-                    NavigationLink(destination: resultDestination(result)) {
-                        RecentResultRow(result: result, athletes: vm.athletes)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
         }
     }
 
@@ -254,7 +237,7 @@ struct HomeView: View {
 
     @ViewBuilder
     private var emptyState: some View {
-        if vm.quickRaces.isEmpty && vm.nextMeet == nil && vm.recentResults.isEmpty {
+        if vm.quickRaces.isEmpty && vm.nextMeet == nil {
             VStack(spacing: 12) {
                 Image(systemName: "stopwatch")
                     .font(.system(size: 48))
@@ -321,30 +304,6 @@ struct HomeView: View {
         case .notStarted:
             let setupVM = RaceSetupViewModel(meetId: nil, store: store, existingRaceId: race.id)
             RaceSetupView(vm: setupVM, store: store, cache: cache)
-        }
-    }
-
-    @ViewBuilder
-    private func resultDestination(_ result: HomeViewModel.RecentResult) -> some View {
-        // Fetch fresh data for this race
-        let allRaces: [Race] = {
-            if let mid = result.meetId {
-                return (try? store.fetchRaces(for: mid)) ?? []
-            } else {
-                return (try? store.fetchRaces(for: nil)) ?? []
-            }
-        }()
-
-        if let race = allRaces.first(where: { $0.id == result.id }) {
-            let athletes = (try? store.fetchAthletes()) ?? []
-            let splits   = (try? store.fetchSplits(for: race.id)) ?? []
-            let meet: Meet? = {
-                guard let mid = result.meetId else { return nil }
-                return vm.meets.first(where: { $0.id == mid })
-            }()
-            ResultsView(
-                vm: ResultsViewModel(race: race, athletes: athletes, splits: splits, meet: meet)
-            )
         }
     }
 }

@@ -5,6 +5,7 @@ struct AthleteCardView: View {
     let splitTimes: [(label: String, cumulative: String, lap: String)]
     let lapProgress: String
     let isComplete: Bool
+    let finishTime: String?  // e.g. "4:32.18" \u{2013} total time for completed athlete
     let onTap: () -> Void
 
     var body: some View {
@@ -24,6 +25,14 @@ struct AthleteCardView: View {
                             .font(.headline)
                             .foregroundStyle(isComplete ? .secondary : .primary)
                         Spacer()
+
+                        if isComplete, let time = finishTime {
+                            // Total finish time \u{2013} the main point of the timer
+                            Text(time)
+                                .font(.headline.weight(.bold).monospacedDigit())
+                                .foregroundStyle(Theme.accentPrimary)
+                        }
+
                         Text(lapProgress)
                             .font(.caption)
                             .foregroundStyle(isComplete ? .green : .secondary)
