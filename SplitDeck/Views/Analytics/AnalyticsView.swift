@@ -14,7 +14,7 @@ struct AnalyticsView: View {
 
     private let store: SplitDeckStore
 
-    /// Distance-based sort order: shortest → longest, Custom last.
+    /// Distance-based sort order: shortest \u{2192} longest, Custom last.
     private static let eventSortOrder: [EventType] = [
         .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
     ]
@@ -32,7 +32,7 @@ struct AnalyticsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Custom segmented tab bar — scrollable
+            // Custom segmented tab bar \u{2014} scrollable
             tabBar
 
             // Tab content
@@ -62,7 +62,7 @@ struct AnalyticsView: View {
         }
     }
 
-    // MARK: – Tab Bar
+    // MARK: \u{2013} Tab Bar
 
     private var tabBar: some View {
         ScrollViewReader { proxy in
@@ -81,9 +81,9 @@ struct AnalyticsView: View {
                                 .background(
                                     selectedTab == i
                                         ? Theme.runsmithPink
-                                        : Color(.tertiarySystemFill)
+                                        : Theme.elevatedBackground
                                 )
-                                .foregroundStyle(selectedTab == i ? .white : .primary)
+                                .foregroundStyle(selectedTab == i ? .white : Theme.textPrimary)
                                 .clipShape(Capsule())
                         }
                         .id(i)
@@ -92,7 +92,7 @@ struct AnalyticsView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.screenBackground)
             .onChange(of: selectedTab) { newValue in
                 withAnimation {
                     proxy.scrollTo(newValue, anchor: .center)
@@ -101,7 +101,7 @@ struct AnalyticsView: View {
         }
     }
 
-    // MARK: – Tab 0: Overview
+    // MARK: \u{2013} Tab 0: Overview
 
     private var overviewTab: some View {
         ScrollView {
@@ -122,10 +122,10 @@ struct AnalyticsView: View {
                 if let first = stats.firstRaceDate, let last = stats.lastRaceDate {
                     HStack {
                         Image(systemName: "calendar.badge.clock")
-                            .foregroundStyle(.secondary)
-                        Text("\(first, format: .dateTime.month().day()) – \(last, format: .dateTime.month().day().year())")
+                            .foregroundStyle(Theme.textSecondary)
+                        Text("\(first, format: .dateTime.month().day()) \u{2013} \(last, format: .dateTime.month().day().year())")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.textSecondary)
                         Spacer()
                     }
                     .padding(.horizontal, 4)
@@ -136,7 +136,7 @@ struct AnalyticsView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("HIGHLIGHTS")
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.textSecondary)
                             .tracking(0.5)
 
                         ForEach(vm.raceHighlights.prefix(3)) { highlight in
@@ -148,7 +148,7 @@ struct AnalyticsView: View {
             }
             .padding(16)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Theme.screenBackground)
     }
 
     private func statCard(value: String, label: String, icon: String) -> some View {
@@ -159,19 +159,19 @@ struct AnalyticsView: View {
 
             Text(value)
                 .font(.system(size: 28, weight: .bold, design: .rounded))
-                .foregroundStyle(.primary)
+                .foregroundStyle(Theme.textPrimary)
 
             Text(label)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
     }
 
-    // MARK: – Tab 1: PR Board
+    // MARK: \u{2013} Tab 1: PR Board
 
     private var prBoardTab: some View {
         VStack(spacing: 0) {
@@ -205,7 +205,7 @@ struct AnalyticsView: View {
                 .padding(.horizontal, 16)
             }
             .padding(.vertical, 10)
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.screenBackground)
 
         ScrollView {
             if vm.prBoard.isEmpty {
@@ -281,8 +281,8 @@ struct AnalyticsView: View {
                                     }
                                 }
                             }
-                            .background(Color(.secondarySystemGroupedBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
                         }
                     }
                 }
@@ -290,7 +290,7 @@ struct AnalyticsView: View {
             }
         }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Theme.screenBackground)
     }
 
     private func prRow(_ entry: AnalyticsViewModel.PREntry) -> some View {
@@ -310,7 +310,7 @@ struct AnalyticsView: View {
                 if let date = entry.prDate {
                     Text(date, format: .dateTime.month(.abbreviated).day().year())
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                 }
             }
 
@@ -329,12 +329,12 @@ struct AnalyticsView: View {
 
                 Text("\(entry.raceCount) race\(entry.raceCount == 1 ? "" : "s")")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
             }
         }
     }
 
-    // MARK: – Tab 2: Leaderboard
+    // MARK: \u{2013} Tab 2: Leaderboard
 
     private var leaderboardTab: some View {
         VStack(spacing: 0) {
@@ -355,9 +355,9 @@ struct AnalyticsView: View {
                                     .background(
                                         vm.selectedEvent == event
                                             ? Theme.runsmithPink
-                                            : Color(.tertiarySystemFill)
+                                            : Theme.elevatedBackground
                                     )
-                                    .foregroundStyle(vm.selectedEvent == event ? .white : .primary)
+                                    .foregroundStyle(vm.selectedEvent == event ? .white : Theme.textPrimary)
                                     .clipShape(Capsule())
                             }
                         }
@@ -382,7 +382,7 @@ struct AnalyticsView: View {
                 .padding(.horizontal, 16)
             }
             .padding(.vertical, 10)
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.screenBackground)
 
             // Leaderboard list
             ScrollView {
@@ -424,13 +424,13 @@ struct AnalyticsView: View {
                             }
                         }
                     }
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .background(Theme.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
                     .padding(16)
                 }
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Theme.screenBackground)
     }
 
     private func eventPill(_ label: String, event: EventType?, selection: Binding<EventType?>) -> some View {
@@ -444,9 +444,9 @@ struct AnalyticsView: View {
                 .background(
                     selection.wrappedValue == event
                         ? Theme.runsmithPink
-                        : Color(.tertiarySystemFill)
+                        : Theme.elevatedBackground
                 )
-                .foregroundStyle(selection.wrappedValue == event ? .white : .primary)
+                .foregroundStyle(selection.wrappedValue == event ? .white : Theme.textPrimary)
                 .clipShape(Capsule())
         }
     }
@@ -462,9 +462,9 @@ struct AnalyticsView: View {
                 .background(
                     selection.wrappedValue == gender
                         ? Theme.runsmithPink.opacity(0.15)
-                        : Color(.tertiarySystemFill)
+                        : Theme.elevatedBackground
                 )
-                .foregroundStyle(selection.wrappedValue == gender ? Theme.runsmithPink : .primary)
+                .foregroundStyle(selection.wrappedValue == gender ? Theme.runsmithPink : Theme.textPrimary)
                 .clipShape(Capsule())
         }
     }
@@ -481,9 +481,9 @@ struct AnalyticsView: View {
                 .background(
                     vm.selectedGender == gender
                         ? Theme.runsmithPink.opacity(0.15)
-                        : Color(.tertiarySystemFill)
+                        : Theme.elevatedBackground
                 )
-                .foregroundStyle(vm.selectedGender == gender ? Theme.runsmithPink : .primary)
+                .foregroundStyle(vm.selectedGender == gender ? Theme.runsmithPink : Theme.textPrimary)
                 .clipShape(Capsule())
         }
     }
@@ -498,7 +498,7 @@ struct AnalyticsView: View {
             // Rank
             Text("\(displayRank)")
                 .font(.system(.title3, design: .rounded).weight(.bold))
-                .foregroundStyle(displayRank <= 3 ? Theme.runsmithPink : .secondary)
+                .foregroundStyle(displayRank <= 3 ? Theme.runsmithPink : Theme.textSecondary)
                 .frame(width: 32)
 
             Circle()
@@ -521,16 +521,16 @@ struct AnalyticsView: View {
                     }
                 }
 
-                Text("\(entry.raceCount)×")
+                Text("\(entry.raceCount)\u{00D7}")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
     }
 
-    // MARK: – Tab 3: Athletes
+    // MARK: \u{2013} Tab 3: Athletes
 
     private var athletesTab: some View {
         ScrollView {
@@ -549,14 +549,14 @@ struct AnalyticsView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "magnifyingglass")
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.textSecondary)
                             TextField("Search", text: $athleteSearchText)
                                 .font(.subheadline)
                                 .textFieldStyle(.plain)
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(Color(.tertiarySystemFill))
+                        .background(Theme.elevatedBackground)
                         .clipShape(Capsule())
                         .frame(maxWidth: 160)
                     }
@@ -580,7 +580,7 @@ struct AnalyticsView: View {
                 .padding(16)
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Theme.screenBackground)
     }
 
     private func athleteInsightCard(_ insight: AnalyticsViewModel.AthleteInsight) -> some View {
@@ -607,15 +607,15 @@ struct AnalyticsView: View {
                     HStack(spacing: 4) {
                         Text("\(insight.totalRaces) race\(insight.totalRaces == 1 ? "" : "s")")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.textSecondary)
 
                         Image(systemName: "chevron.right")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(Color(.tertiaryLabel))
+                            .foregroundStyle(Theme.textTertiary)
                     }
                 }
 
-                // Stats grid — 2 columns to prevent cramping on smaller devices
+                // Stats grid \u{2014} 2 columns to prevent cramping on smaller devices
                 let statItems = buildStatItems(insight)
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
@@ -635,7 +635,7 @@ struct AnalyticsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("PR TREND")
                             .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.textSecondary)
                             .tracking(0.5)
 
                         SparklineView(
@@ -648,8 +648,8 @@ struct AnalyticsView: View {
             }
             .padding(16)
         }
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
     }
 
     private struct StatItem {
@@ -679,14 +679,14 @@ struct AnalyticsView: View {
         VStack(spacing: 2) {
             Text(label)
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textSecondary)
 
             Text(value)
                 .font(.system(.subheadline, design: .monospaced).weight(.semibold))
 
             Text(sub)
                 .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(Theme.textTertiary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 6)
@@ -697,7 +697,7 @@ struct AnalyticsView: View {
         return String(format: "%.1fs", seconds)
     }
 
-    // MARK: – Tab 4: Highlights
+    // MARK: \u{2013} Tab 4: Highlights
 
     private var highlightsTab: some View {
         ScrollView {
@@ -712,7 +712,7 @@ struct AnalyticsView: View {
                 .padding(16)
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Theme.screenBackground)
     }
 
     private func highlightCard(_ highlight: AnalyticsViewModel.RaceHighlight) -> some View {
@@ -721,28 +721,28 @@ struct AnalyticsView: View {
                 .font(.system(size: 22, weight: .medium))
                 .foregroundStyle(Theme.runsmithPink)
                 .frame(width: 44, height: 44)
-                .background(Theme.runsmithPink.opacity(0.12))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .background(Theme.accentBackground)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(highlight.title)
                     .font(.headline)
                 Text(highlight.subtitle)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
                 Text(highlight.detail)
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(Theme.textTertiary)
             }
 
             Spacer()
         }
         .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
     }
 
-    // MARK: – Highlight Row (compact, for Overview tab)
+    // MARK: \u{2013} Highlight Row (compact, for Overview tab)
 
     private func highlightRow(_ highlight: AnalyticsViewModel.RaceHighlight) -> some View {
         HStack(spacing: 12) {
@@ -750,7 +750,7 @@ struct AnalyticsView: View {
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(Theme.runsmithPink)
                 .frame(width: 32, height: 32)
-                .background(Theme.runsmithPink.opacity(0.12))
+                .background(Theme.accentBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 1) {
@@ -758,33 +758,33 @@ struct AnalyticsView: View {
                     .font(.subheadline.weight(.medium))
                 Text(highlight.detail)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
             }
 
             Spacer()
         }
         .padding(12)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
-    // MARK: – Empty State
+    // MARK: \u{2013} Empty State
 
     private func emptyState(icon: String, message: String) -> some View {
         VStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 48))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textSecondary)
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
     }
 }
 
-// MARK: – Sparkline
+// MARK: \u{2013} Sparkline
 
 struct SparklineView: View {
     let points: [Double]

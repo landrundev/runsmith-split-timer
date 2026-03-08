@@ -155,14 +155,14 @@ struct AthleteProfileView: View {
 
     private func genderPicker(selection: Binding<Gender?>) -> some View {
         HStack(spacing: 12) {
-            Text("Gender").foregroundStyle(.secondary)
+            Text("Gender").foregroundStyle(Theme.textSecondary)
             Spacer()
             ForEach(Gender.allCases, id: \.self) { g in
                 Button(g.rawValue) {
                     selection.wrappedValue = g
                 }
                 .buttonStyle(.bordered)
-                .tint(selection.wrappedValue == g ? Theme.genderTint(g) : .secondary)
+                .tint(selection.wrappedValue == g ? Theme.genderTint(g) : Theme.textSecondary)
             }
         }
     }
@@ -187,7 +187,7 @@ struct AthleteProfileView: View {
                     if let team = vm.athlete.teamName {
                         Text(team)
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.textSecondary)
                     }
                 }
                 Spacer()
@@ -196,7 +196,7 @@ struct AthleteProfileView: View {
                         .font(.title3.weight(.bold))
                     Text("Races")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                 }
             }
         }
@@ -226,7 +226,7 @@ struct AthleteProfileView: View {
             if vm.raceHistory.isEmpty {
                 Text("No completed races yet")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
             } else {
                 ForEach(vm.raceHistory) { result in
                     let hasDetails = result.isRelay ? !result.relayLegs.isEmpty : !result.cumulativeTimesMs.isEmpty
@@ -273,7 +273,7 @@ struct AthleteProfileView: View {
                     }
                 }
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textSecondary)
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
@@ -286,7 +286,7 @@ struct AthleteProfileView: View {
                 } else if result.isUnlimited {
                     Text("\(result.splitCount) splits")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                 } else {
                     Text("DNF")
                         .font(.subheadline.weight(.bold))
@@ -316,7 +316,7 @@ struct AthleteProfileView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .font(.caption2.weight(.semibold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Theme.textSecondary)
             .padding(.bottom, 4)
 
             ForEach(Array(result.cumulativeTimesMs.enumerated()), id: \.offset) { i, cumMs in
@@ -353,7 +353,7 @@ struct AthleteProfileView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .font(.caption2.weight(.semibold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Theme.textSecondary)
             .padding(.bottom, 4)
 
             ForEach(result.relayLegs) { leg in
@@ -388,7 +388,7 @@ struct AthleteProfileView: View {
                                 .frame(maxWidth: .infinity)
                         }
                         .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                     }
                 }
 
@@ -416,7 +416,7 @@ struct AthleteProfileView: View {
         case 1: return Color(hex: "#B8960C")  // gold
         case 2: return Color(hex: "#6E6E6E")  // silver
         case 3: return Color(hex: "#8B4513")  // bronze
-        default: return .secondary
+        default: return Theme.textSecondary
         }
     }
 }

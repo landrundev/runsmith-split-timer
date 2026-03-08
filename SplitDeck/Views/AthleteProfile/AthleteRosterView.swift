@@ -70,11 +70,11 @@ struct AthleteRosterView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(coachName.isEmpty ? "Tap to set your name" : coachName)
-                            .foregroundStyle(coachName.isEmpty ? .secondary : .primary)
+                            .foregroundStyle(coachName.isEmpty ? Theme.textSecondary : Theme.textPrimary)
                         if !coachName.isEmpty {
                             Text("Coach Name")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.textSecondary)
                         }
                     }
 
@@ -109,12 +109,12 @@ struct AthleteRosterView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "person.3")
                         .font(.system(size: 40))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                     Text("No Athletes Yet")
                         .font(.headline)
                     Text("Tap + to add your first athlete.")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
@@ -147,7 +147,7 @@ struct AthleteRosterView: View {
                                 if let team = athlete.teamName {
                                     Text(team)
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(Theme.textSecondary)
                                 }
                             }
                         }
@@ -167,7 +167,7 @@ struct AthleteRosterView: View {
                         } label: {
                             Label("Edit", systemImage: "pencil")
                         }
-                        .tint(.blue)
+                        .tint(Theme.genderMale)
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
                         Button {
@@ -324,21 +324,21 @@ struct AthleteRosterView: View {
 
     private func genderPicker(selection: Binding<Gender?>) -> some View {
         HStack(spacing: 12) {
-            Text("Gender").foregroundStyle(.secondary)
+            Text("Gender").foregroundStyle(Theme.textSecondary)
             Spacer()
             ForEach(Gender.allCases, id: \.self) { g in
                 Button(g.rawValue) {
                     selection.wrappedValue = g
                 }
                 .buttonStyle(.bordered)
-                .tint(selection.wrappedValue == g ? Theme.genderTint(g) : .secondary)
+                .tint(selection.wrappedValue == g ? Theme.genderTint(g) : Theme.textSecondary)
             }
         }
     }
 
     private var genderFilterRow: some View {
         HStack(spacing: 8) {
-            Text("Filter").foregroundStyle(.secondary)
+            Text("Filter").foregroundStyle(Theme.textSecondary)
             Spacer()
             genderFilterButton("All", gender: nil)
             genderFilterButton("M", gender: .male)
@@ -351,7 +351,7 @@ struct AthleteRosterView: View {
             genderFilter = genderFilter == gender ? nil : gender
         }
         .buttonStyle(.bordered)
-        .tint(genderFilter == gender ? (gender.map { Theme.genderTint($0) } ?? Theme.runsmithPink) : .secondary)
+        .tint(genderFilter == gender ? (gender.map { Theme.genderTint($0) } ?? Theme.runsmithPink) : Theme.textSecondary)
     }
 
     private func colorPaletteGrid(selection: Binding<String>) -> some View {
