@@ -20,7 +20,7 @@ struct MainTabView: View {
                 case .home:
                     HomeView(vm: HomeViewModel(store: store), appearance: $appearance)
                 case .meets:
-                    HomeView(vm: HomeViewModel(store: store), appearance: $appearance)
+                    MeetsTabView(vm: HomeViewModel(store: store))
                 case .add:
                     // Placeholder — the (+) button triggers a sheet, not a tab
                     Color.clear

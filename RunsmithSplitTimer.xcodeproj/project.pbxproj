@@ -47,6 +47,7 @@
 		9EC0E0D3893535A20D4FD7BC /* TipManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26A33CB6B47D69EAF3ECB2BD /* TipManager.swift */; };
 		A00D125582AEF22BEAD3F96A /* RaceDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F69683CF963EBDB3E8FFE22 /* RaceDomain.swift */; };
 		A0359F2523B9F947CF057685 /* ExportSplitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55DBD7F6F485F4DDCB7776E8 /* ExportSplitsView.swift */; };
+		A1612EA74AA5E8E81E2C763F /* MeetsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD881F43D4DF1FD81E9F9F4 /* MeetsTabView.swift */; };
 		A68AA825821F7788B14E7BEC /* MergeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A84B2B09BC023E2A0F1047 /* MergeView.swift */; };
 		A84244A8841FAD448DC262A2 /* ArchiveViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B3D16FAFB4CC317480C0164 /* ArchiveViewModel.swift */; };
 		AD7DC3B4451D460BD713550F /* AthleteCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22816F99276C67DC2F708AA1 /* AthleteCardView.swift */; };
@@ -95,6 +96,7 @@
 		55DBD7F6F485F4DDCB7776E8 /* ExportSplitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportSplitsView.swift; sourceTree = "<group>"; };
 		57BE85BF81644B8271FB4DD6 /* ResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsView.swift; sourceTree = "<group>"; };
 		592212AC0943EEECCA541243 /* UnassignedMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnassignedMark.swift; sourceTree = "<group>"; };
+		5AD881F43D4DF1FD81E9F9F4 /* MeetsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetsTabView.swift; sourceTree = "<group>"; };
 		5D877B69427847289A6B51FF /* Split.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Split.swift; sourceTree = "<group>"; };
 		5FC29C5EB6D64350600FC8AA /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		5FE33AB7DD72D84EA9C9CF75 /* TimingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimingEngine.swift; sourceTree = "<group>"; };
@@ -143,6 +145,14 @@
 				B02F8B89A3ACC98CEDE93E36 /* MeetDetailView.swift */,
 			);
 			path = MeetDetail;
+			sourceTree = "<group>";
+		};
+		14C60E635E6776D7C33F9535 /* Meets */ = {
+			isa = PBXGroup;
+			children = (
+				5AD881F43D4DF1FD81E9F9F4 /* MeetsTabView.swift */,
+			);
+			path = Meets;
 			sourceTree = "<group>";
 		};
 		1A8D83B64E18ECA528A683E1 /* RosterImport */ = {
@@ -272,6 +282,7 @@
 				50D5DC6BD25CA7DA8E1FD087 /* LiveTiming */,
 				D6CB0E06B4A19114CEC4FAD1 /* Main */,
 				0E3D8BBD3789AF9861E50B13 /* MeetDetail */,
+				14C60E635E6776D7C33F9535 /* Meets */,
 				48F53A90E7B0C955D88CC46B /* Merge */,
 				80BAD936BD76F14F7C7D03A2 /* RaceSetup */,
 				B9ED572F1FC0BCE3D696510F /* RelayBuilder */,
@@ -497,6 +508,7 @@
 				D5BA6F46579852204621A952 /* Meet.swift in Sources */,
 				1BA5055F711162EA2448A8E9 /* MeetDetailView.swift in Sources */,
 				B404F9C191B47860EBBF00E4 /* MeetDetailViewModel.swift in Sources */,
+				A1612EA74AA5E8E81E2C763F /* MeetsTabView.swift in Sources */,
 				A68AA825821F7788B14E7BEC /* MergeView.swift in Sources */,
 				2A50B3529D2F32488C25A498 /* MergeViewModel.swift in Sources */,
 				3E69ADA79ACE1FD30A094C55 /* PayloadEncoder.swift in Sources */,
