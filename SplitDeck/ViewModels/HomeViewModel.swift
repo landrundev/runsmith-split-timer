@@ -124,6 +124,17 @@ final class HomeViewModel: ObservableObject {
         catch { errorMessage = error.localizedDescription }
     }
 
+    func movePendingRace(from source: IndexSet, to destination: Int) {
+        var reordered = pendingQuickRaces
+        reordered.move(fromOffsets: source, toOffset: destination)
+        do {
+            try store.updateRaceSortOrders(reordered.map(\.id))
+            load()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     func archive(race: Race) {
         do { try store.archive(raceId: race.id); load() }
         catch { errorMessage = error.localizedDescription }

@@ -49,7 +49,7 @@ struct MainTabView: View {
             // Custom tab bar
             customTabBar
         }
-        .sheet(isPresented: $showQuickRaceSetup) {
+        .sheet(isPresented: $showQuickRaceSetup, onDismiss: { homeVM?.load() }) {
             RaceSetupView(
                 vm: RaceSetupViewModel(meetId: nil, store: store),
                 store: store,

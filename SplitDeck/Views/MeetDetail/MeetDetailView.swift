@@ -11,6 +11,7 @@ struct MeetDetailView: View {
     @State private var raceToDelete: Race? = nil
     @State private var genderFilter: Gender? = nil
     @State private var pendingRaceToSetup: Race? = nil
+    @State private var selectedRace: Race? = nil
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -38,84 +39,41 @@ struct MeetDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                // Meet info header card
-                meetInfoCard
-
-                if vm.races.isEmpty {
-                    // Empty state
-                    VStack(spacing: 12) {
-                        Image(systemName: "figure.run")
-                            .font(.system(size: 48))
-                            .foregroundStyle(Theme.textMuted)
-                        Text("No Races")
-                            .font(.headline)
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("Tap + Add Race to create one.")
-                            .font(.subheadline)
-                            .foregroundStyle(Theme.textSecondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 40)
-                } else {
-                    // Gender filter pills
-                    genderFilterRow
-                        .padding(.horizontal, 16)
-
-                    // Race cards
-                    VStack(spacing: 8) {
-                        ForEach(filteredRaces) { race in
-                            raceCardButton(race)
-                                .contextMenu {
-                                    Button(role: .destructive) {
-                                        raceToDelete = race
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                    Button {
-                                        vm.archive(race: race)
-                                    } label: {
-                                        Label("Archive", systemImage: "archivebox")
-                                    }
-                                }
+        raceList
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Theme.screenBackground)
+            .navigationTitle(vm.meet.name)
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button {
+                            showAddRace = true
+                        } label: {
+                            Label("Add Race", systemImage: "plus")
                         }
+                        Button {
+                            showImportRace = true
+                        } label: {
+                            Label("Import Race", systemImage: "square.and.arrow.down")
+                        }
+                        Button {
+                            showShareMeet = true
+                        } label: {
+                            Label("Share Meet Config", systemImage: "person.2.wave.2")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
-                    .padding(.horizontal, 16)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if genderFilter == nil && !vm.races.isEmpty {
+                        EditButton()
+                    }
                 }
             }
-            .padding(.top, 8)
-            .padding(.bottom, 80)
-        }
-        .background(Theme.screenBackground)
-        .navigationTitle(vm.meet.name)
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Menu {
-                    Button {
-                        showAddRace = true
-                    } label: {
-                        Label("Add Race", systemImage: "plus")
-                    }
-
-                    Button {
-                        showImportRace = true
-                    } label: {
-                        Label("Import Race", systemImage: "square.and.arrow.down")
-                    }
-
-                    Button {
-                        showShareMeet = true
-                    } label: {
-                        Label("Share Meet Config", systemImage: "person.2.wave.2")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
-            }
-        }
-        .sheet(isPresented: $showShareMeet) {
+            .sheet(isPresented: $showShareMeet) {
             ShareMeetConfigView(config: vm.buildSharedMeetConfig())
         }
         .sheet(isPresented: $showImportRace, onDismiss: { vm.load() }) {
@@ -152,7 +110,104 @@ struct MeetDetailView: View {
         } message: { _ in
             Text("All recorded splits for this race will be permanently deleted.")
         }
+        .navigationDestination(isPresented: Binding(
+            get: { selectedRace != nil },
+            set: { if !$0 { selectedRace = nil } }
+        )) {
+            if let race = selectedRace {
+                raceDestination(race)
+            }
+        }
         .onAppear { vm.load() }
+    }
+
+    // MARK: – Race List
+
+    private var raceList: some View {
+        List {
+            meetInfoCard
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+
+            raceListContent
+        }
+    }
+
+    @ViewBuilder
+    private var raceListContent: some View {
+        if vm.races.isEmpty {
+            emptyRaceState
+        } else {
+            raceCardsSection
+        }
+    }
+
+    private var emptyRaceState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "figure.run")
+                .font(.system(size: 48))
+                .foregroundStyle(Theme.textMuted)
+            Text("No Races")
+                .font(.headline)
+                .foregroundStyle(Theme.textPrimary)
+            Text("Tap + Add Race to create one.")
+                .font(.subheadline)
+                .foregroundStyle(Theme.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+    }
+
+    @ViewBuilder
+    private var raceCardsSection: some View {
+        genderFilterRow
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+
+        raceCardRows
+    }
+
+    @ViewBuilder
+    private var raceCardRows: some View {
+        ForEach(filteredRaces) { race in
+            raceCardRow(race)
+        }
+        .onMove(perform: vm.moveRace)
+    }
+
+    private func raceCardRow(_ race: Race) -> some View {
+        Button {
+            if race.status == .notStarted {
+                pendingRaceToSetup = race
+            } else {
+                selectedRace = race
+            }
+        } label: {
+            MeetRaceCardRow(
+                race: race,
+                athletes: vm.athletes,
+                bestTime: vm.bestTimeDisplay(for: race)
+            )
+        }
+        .buttonStyle(.plain)
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) { raceToDelete = race } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            Button { vm.archive(race: race) } label: {
+                Label("Archive", systemImage: "archivebox")
+            }
+            .tint(.blue)
+        }
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
     }
 
     // MARK: – Meet Info Header Card
@@ -235,31 +290,6 @@ struct MeetDetailView: View {
         .overlay(
             Capsule().strokeBorder(isActive ? tintColor.opacity(0.3) : Color.clear, lineWidth: 1)
         )
-    }
-
-    // MARK: – Race Card Button
-
-    @ViewBuilder
-    private func raceCardButton(_ race: Race) -> some View {
-        if race.status == .notStarted {
-            Button { pendingRaceToSetup = race } label: {
-                MeetRaceCardRow(
-                    race: race,
-                    athletes: vm.athletes,
-                    bestTime: vm.bestTimeDisplay(for: race)
-                )
-            }
-            .buttonStyle(.plain)
-        } else {
-            NavigationLink(destination: raceDestination(race)) {
-                MeetRaceCardRow(
-                    race: race,
-                    athletes: vm.athletes,
-                    bestTime: vm.bestTimeDisplay(for: race)
-                )
-            }
-            .buttonStyle(.plain)
-        }
     }
 
     // MARK: – Navigation Destinations

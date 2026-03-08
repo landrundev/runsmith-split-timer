@@ -120,6 +120,17 @@ final class MeetDetailViewModel: ObservableObject {
         )
     }
 
+    func moveRace(from source: IndexSet, to destination: Int) {
+        var reordered = races
+        reordered.move(fromOffsets: source, toOffset: destination)
+        races = reordered
+        do {
+            try store.updateRaceSortOrders(reordered.map(\.id))
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     func archive(race: Race) {
         do {
             try store.archive(raceId: race.id)

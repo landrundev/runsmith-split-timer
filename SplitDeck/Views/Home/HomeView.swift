@@ -41,6 +41,13 @@ struct HomeView: View {
                 quickRaceHistorySection
 
                 emptyState
+
+                // Bottom spacer so content clears the custom tab bar
+                Color.clear
+                    .frame(height: 60)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets())
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
@@ -196,6 +203,7 @@ struct HomeView: View {
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 }
+                .onMove(perform: vm.movePendingRace)
             } header: {
                 Text("Pending Races")
                     .font(.footnote.weight(.semibold))

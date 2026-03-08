@@ -28,6 +28,7 @@
         <attribute name="meetId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="configId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String"/>
+        <attribute name="sortOrder" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="splitsPerLap" attributeType="Integer 16" defaultValueString="1" usesScalarValueType="YES"/>
         <attribute name="startedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="status" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>

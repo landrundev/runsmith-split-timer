@@ -114,6 +114,7 @@ struct Race: Identifiable, Codable, Hashable {
     var status: RaceStatus
     var isArchived: Bool
     var isMerged: Bool
+    var sortOrder: Int
 
     // Computed — never stored
     var laps: Int {
@@ -149,7 +150,8 @@ struct Race: Identifiable, Codable, Hashable {
         endedAt: Date? = nil,
         status: RaceStatus = .notStarted,
         isArchived: Bool = false,
-        isMerged: Bool = false
+        isMerged: Bool = false,
+        sortOrder: Int = 0
     ) {
         self.id = id
         self.meetId = meetId
@@ -166,5 +168,6 @@ struct Race: Identifiable, Codable, Hashable {
         self.status = status
         self.isArchived = isArchived
         self.isMerged = isMerged
+        self.sortOrder = sortOrder
     }
 }

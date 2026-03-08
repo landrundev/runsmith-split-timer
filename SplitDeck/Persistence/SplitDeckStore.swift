@@ -84,11 +84,21 @@ final class SplitDeckStore: ObservableObject {
             let nilFilter = NSPredicate(format: "meetId == nil")
             req.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [nilFilter, archiveFilter])
         }
-        req.sortDescriptors = [
-            NSSortDescriptor(key: "status", ascending: true),
-            NSSortDescriptor(key: "startedAt", ascending: false),
-            NSSortDescriptor(key: "name", ascending: true)
-        ]
+        if meetId != nil {
+            // Meet races: respect user-defined sort order
+            req.sortDescriptors = [
+                NSSortDescriptor(key: "sortOrder", ascending: true),
+                NSSortDescriptor(key: "name", ascending: true)
+            ]
+        } else {
+            // Quick races: status first (pending → started), then by date
+            req.sortDescriptors = [
+                NSSortDescriptor(key: "status", ascending: true),
+                NSSortDescriptor(key: "sortOrder", ascending: true),
+                NSSortDescriptor(key: "startedAt", ascending: false),
+                NSSortDescriptor(key: "name", ascending: true)
+            ]
+        }
         return try ctx.fetch(req).map(map)
     }
 
@@ -364,6 +374,16 @@ final class SplitDeckStore: ObservableObject {
         try ctx.save()
     }
 
+    /// Bulk-update sortOrder for an ordered list of race IDs.
+    func updateRaceSortOrders(_ orderedIds: [UUID]) throws {
+        for (index, id) in orderedIds.enumerated() {
+            if let entity = try fetchRaceEntity(id: id) {
+                entity.sortOrder = Int16(index)
+            }
+        }
+        try ctx.save()
+    }
+
     // MARK: – Fetch Archived
 
     func fetchArchivedAthletes() throws -> [Athlete] {
@@ -471,7 +491,8 @@ final class SplitDeckStore: ObservableObject {
             endedAt: entity.endedAt,
             status: RaceStatus(rawValue: entity.status) ?? .notStarted,
             isArchived: entity.isArchived,
-            isMerged: entity.isMerged
+            isMerged: entity.isMerged,
+            sortOrder: Int(entity.sortOrder)
         )
     }
 
@@ -521,6 +542,7 @@ final class SplitDeckStore: ObservableObject {
         entity.status = race.status.rawValue
         entity.isArchived = race.isArchived
         entity.isMerged = race.isMerged
+        entity.sortOrder = Int16(race.sortOrder)
     }
 
     private func map(_ split: Split, into entity: SplitEntity) {
