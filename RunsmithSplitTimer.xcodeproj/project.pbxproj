@@ -27,6 +27,7 @@
 		4A638C5605FF2EF3020849E4 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F2A4AC4296B6FC32B1F6A2 /* SettingsView.swift */; };
 		52589224CDB614F54C383013 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3840295052F8A21EF390B087 /* Assets.xcassets */; };
 		527F7D8CF38D86FE207F5504 /* ColorBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C445F0828F08EA29C544354C /* ColorBar.swift */; };
+		529268408F4922F7202C717D /* RaceHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D62238E5D623135760E1A5D /* RaceHistoryView.swift */; };
 		5557CB80626C4C8DF4A9C576 /* SharedRaceConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF97A96A4A096239BF7DF70 /* SharedRaceConfig.swift */; };
 		65D59B7C907F2A34424EFC67 /* ShareMeetConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D79CFC9494F0155770A77B1D /* ShareMeetConfigView.swift */; };
 		69C00CBF5469BF00F8C0863E /* RosterImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B67926C4487DEF5BDDE86DEF /* RosterImporter.swift */; };
@@ -117,6 +118,7 @@
 		95C31A50A75DF2F947173240 /* SavedRelayTeam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedRelayTeam.swift; sourceTree = "<group>"; };
 		9616DB739E616548E3CC4AE6 /* RelayBuilderViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayBuilderViewModel.swift; sourceTree = "<group>"; };
 		983B6342E3A87E4CD19AA2FD /* Athlete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Athlete.swift; sourceTree = "<group>"; };
+		9D62238E5D623135760E1A5D /* RaceHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RaceHistoryView.swift; sourceTree = "<group>"; };
 		A68AB182F1F2DB803B59A43F /* MeetDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetDetailViewModel.swift; sourceTree = "<group>"; };
 		ADE3532082051AEB1DDCBF08 /* SplitDeck.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = SplitDeck.xcdatamodel; sourceTree = "<group>"; };
 		B02F8B89A3ACC98CEDE93E36 /* MeetDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetDetailView.swift; sourceTree = "<group>"; };
@@ -187,6 +189,7 @@
 				5FC29C5EB6D64350600FC8AA /* AboutView.swift */,
 				CE1022E854CE99C67ED56AD3 /* HeroMeetCard.swift */,
 				72FF88CEB8B8D3ACF1C60D55 /* HomeView.swift */,
+				9D62238E5D623135760E1A5D /* RaceHistoryView.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -539,6 +542,7 @@
 				37171390CCA27BFA7683ECFF /* Race.swift in Sources */,
 				BADBA318200E4EB7FB4118F7 /* RaceCardRow.swift in Sources */,
 				A00D125582AEF22BEAD3F96A /* RaceDomain.swift in Sources */,
+				529268408F4922F7202C717D /* RaceHistoryView.swift in Sources */,
 				2CEF55566CD7EDD95C39CC01 /* RaceSetupView.swift in Sources */,
 				09EB142480D65C9438106D49 /* RaceSetupViewModel.swift in Sources */,
 				70B0D4AD1B94201087D79BAB /* RaceStateCache.swift in Sources */,

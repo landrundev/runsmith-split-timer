@@ -16,40 +16,10 @@ struct AthleteCardView: View {
                     .clipShape(RoundedRectangle(cornerRadius: Theme.colorBarWidth / 2))
                     .padding(.trailing, 12)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(Color(hex: athlete.colorHex))
-                            .frame(width: 10, height: 10)
-                        Text(athlete.name)
-                            .font(.headline)
-                            .foregroundStyle(isComplete ? .secondary : .primary)
-                        Spacer()
-
-                        if isComplete, let time = finishTime {
-                            // Total finish time \u{2013} the main point of the timer
-                            Text(time)
-                                .font(.headline.weight(.bold).monospacedDigit())
-                                .foregroundStyle(Theme.accentPrimary)
-                        }
-
-                        Text(lapProgress)
-                            .font(.caption)
-                            .foregroundStyle(isComplete ? .green : .secondary)
-                        if isComplete {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
-                                .imageScale(.large)
-                        }
-                    }
-
-                    if splitTimes.isEmpty {
-                        Text("No splits recorded")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                    } else {
-                        splitChips
-                    }
+                if isComplete {
+                    completedLayout
+                } else {
+                    activeLayout
                 }
 
                 Spacer(minLength: 0)
@@ -63,6 +33,68 @@ struct AthleteCardView: View {
         .buttonStyle(.plain)
         .disabled(isComplete)
     }
+
+    // MARK: \u{2013} Completed State
+    // Finish time is the hero. Name + check on left, big time on right.
+
+    private var completedLayout: some View {
+        HStack(spacing: 8) {
+            // Left: name + splits
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                        .imageScale(.medium)
+                    Text(athlete.name)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineLimit(1)
+                }
+
+                if !splitTimes.isEmpty {
+                    splitChips
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            // Right: finish time \u{2013} the most important number
+            if let time = finishTime {
+                Text(time)
+                    .font(.title2.weight(.bold).monospacedDigit())
+                    .foregroundStyle(Theme.accentPrimary)
+            }
+        }
+    }
+
+    // MARK: \u{2013} Active State (in-progress / waiting)
+
+    private var activeLayout: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color(hex: athlete.colorHex))
+                    .frame(width: 10, height: 10)
+                Text(athlete.name)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text(lapProgress)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if splitTimes.isEmpty {
+                Text("No splits recorded")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            } else {
+                splitChips
+            }
+        }
+    }
+
+    // MARK: \u{2013} Split Chips
 
     private var splitChips: some View {
         ScrollViewReader { proxy in

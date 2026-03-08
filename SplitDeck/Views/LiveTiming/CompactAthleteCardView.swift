@@ -16,42 +16,10 @@ struct CompactAthleteCardView: View {
                     .frame(width: 4)
                     .clipShape(Capsule())
 
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(Color(hex: athlete.colorHex))
-                            .frame(width: 7, height: 7)
-                        Text(athlete.name)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(isComplete ? .secondary : .primary)
-                            .lineLimit(1)
-                    }
-
-                    HStack(spacing: 4) {
-                        if isComplete, let time = finishTime {
-                            // Total finish time \u{2013} bold pink
-                            Text(time)
-                                .font(.caption.weight(.bold).monospacedDigit())
-                                .foregroundStyle(Theme.accentPrimary)
-                        } else if let delta = lastLapDelta {
-                            Text(delta)
-                                .font(.caption.weight(.semibold).monospacedDigit())
-                        } else {
-                            Text("\u{2014}")
-                                .font(.caption.monospacedDigit())
-                        }
-                        Spacer(minLength: 0)
-                        Text(lapProgress)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                }
-
                 if isComplete {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                        .font(.subheadline)
+                    compactCompletedLayout
+                } else {
+                    compactActiveLayout
                 }
             }
             .padding(.horizontal, 10)
@@ -62,5 +30,61 @@ struct CompactAthleteCardView: View {
         }
         .buttonStyle(.plain)
         .disabled(isComplete)
+    }
+
+    // MARK: \u{2013} Completed
+
+    private var compactCompletedLayout: some View {
+        HStack(spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                        .font(.caption)
+                    Text(athlete.name)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineLimit(1)
+                }
+
+                if let time = finishTime {
+                    Text(time)
+                        .font(.subheadline.weight(.bold).monospacedDigit())
+                        .foregroundStyle(Theme.accentPrimary)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    // MARK: \u{2013} Active
+
+    private var compactActiveLayout: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 4) {
+                Circle()
+                    .fill(Color(hex: athlete.colorHex))
+                    .frame(width: 7, height: 7)
+                Text(athlete.name)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+            }
+
+            HStack(spacing: 4) {
+                if let delta = lastLapDelta {
+                    Text(delta)
+                        .font(.caption.weight(.semibold).monospacedDigit())
+                } else {
+                    Text("\u{2014}")
+                        .font(.caption.monospacedDigit())
+                }
+                Spacer(minLength: 0)
+                Text(lapProgress)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
     }
 }

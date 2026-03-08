@@ -25,13 +25,8 @@ struct HomeView: View {
         return f
     }()
 
-    private var pendingQuickRaces: [Race] {
-        vm.quickRaces.filter { $0.status == .notStarted }
-    }
-
-    private var startedQuickRaces: [Race] {
-        vm.quickRaces.filter { $0.status != .notStarted }
-    }
+    /// Show at most 10 quick race history items on Home.
+    private static let homeHistoryLimit = 10
 
     var body: some View {
         NavigationStack {
@@ -113,7 +108,6 @@ struct HomeView: View {
             let allDone = vm.completedRaceCount(for: meet) >= vm.totalRaceCount(for: meet)
                 && vm.totalRaceCount(for: meet) > 0
 
-            // Tapping the card body \u{2013} MeetDetailView
             NavigationLink(destination: meetDestination(meet)) {
                 HeroMeetCard(
                     meet: meet,
@@ -122,7 +116,6 @@ struct HomeView: View {
                     totalCount: vm.totalRaceCount(for: meet),
                     hasInProgressRace: inProgressRace != nil
                 )
-                // Overlay the CTA as a separate tap target
                 .overlay(alignment: .bottom) {
                     Button {
                         handleHeroCTA(
@@ -132,7 +125,6 @@ struct HomeView: View {
                             allDone: allDone
                         )
                     } label: {
-                        // Invisible tap target covering the CTA area
                         Color.clear
                             .frame(height: 44)
                     }
@@ -143,9 +135,8 @@ struct HomeView: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 16)
         } else {
-            // No upcoming meet placeholder
             Button {
-                selectedTab = 1  // Switch to Meets tab
+                selectedTab = 1
             } label: {
                 NoMeetCard()
             }
@@ -156,12 +147,10 @@ struct HomeView: View {
 
     private func handleHeroCTA(meet: Meet, inProgressRace: Race?, nextRace: Race?, allDone: Bool) {
         if let race = inProgressRace {
-            // Resume in-progress race \u{2013} fullScreenCover LiveTimingView
             ctaLiveRace = race
         } else if allDone {
-            // All done \u{2013} card tap handles navigation to MeetDetail
+            // card tap handles navigation to MeetDetail
         } else if let race = nextRace {
-            // Start next race \u{2013} sheet RaceSetupView
             meetRaceSetupVM = RaceSetupViewModel(
                 meetId: meet.id, store: store, existingRaceId: race.id
             )
@@ -173,9 +162,9 @@ struct HomeView: View {
 
     @ViewBuilder
     private var pendingRacesSection: some View {
-        if !pendingQuickRaces.isEmpty {
+        if !vm.pendingQuickRaces.isEmpty {
             sectionView(title: "Pending Races") {
-                ForEach(pendingQuickRaces) { race in
+                ForEach(vm.pendingQuickRaces) { race in
                     Button { pendingRaceToSetup = race } label: {
                         RaceCardRow(
                             race: race,
@@ -201,13 +190,14 @@ struct HomeView: View {
         }
     }
 
-    // MARK: \u{2013} Quick Race History
+    // MARK: \u{2013} Quick Race History (capped at 10)
 
     @ViewBuilder
     private var quickRaceHistorySection: some View {
-        if !startedQuickRaces.isEmpty {
+        let allHistory = vm.startedQuickRaces
+        if !allHistory.isEmpty {
             sectionView(title: "Quick Race History") {
-                ForEach(startedQuickRaces) { race in
+                ForEach(allHistory.prefix(Self.homeHistoryLimit)) { race in
                     NavigationLink(destination: quickRaceDestination(race)) {
                         RaceCardRow(
                             race: race,
@@ -228,6 +218,31 @@ struct HomeView: View {
                             Label("Archive", systemImage: "archivebox")
                         }
                     }
+                }
+
+                // "See All" link when more than 10
+                if vm.hasMoreHistory {
+                    NavigationLink {
+                        RaceHistoryView(vm: vm, cache: cache)
+                    } label: {
+                        HStack {
+                            Text("See All Races")
+                                .font(.subheadline.weight(.medium))
+                            Spacer()
+                            Text("\(allHistory.count)")
+                                .font(.subheadline)
+                                .foregroundStyle(Theme.textTertiary)
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Theme.textTertiary)
+                        }
+                        .foregroundStyle(Theme.accentPrimary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .background(Theme.cardBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }

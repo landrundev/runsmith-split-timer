@@ -32,6 +32,24 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    // MARK: \u{2013} Quick Race Subsets
+
+    var pendingQuickRaces: [Race] {
+        quickRaces.filter { $0.status == .notStarted }
+    }
+
+    /// All started/completed quick races, newest first.
+    var startedQuickRaces: [Race] {
+        quickRaces
+            .filter { $0.status != .notStarted }
+            .sorted { ($0.startedAt ?? .distantPast) > ($1.startedAt ?? .distantPast) }
+    }
+
+    /// Whether there are more than the Home preview limit.
+    var hasMoreHistory: Bool {
+        startedQuickRaces.count > 10
+    }
+
     // MARK: \u{2013} Hero Card Helpers
 
     /// The nearest future (or today) non-archived meet.
