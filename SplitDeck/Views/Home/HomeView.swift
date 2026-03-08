@@ -6,9 +6,6 @@ struct HomeView: View {
     @EnvironmentObject var cache: RaceStateCache
 
     @State private var showAddMeet = false
-    @State private var showQuickRaceSetup = false
-    @State private var showImportRace = false
-    @State private var showDrawer = false
     @State private var newMeetName = ""
     @State private var newMeetDate = Date()
     @State private var newMeetLocation = ""
@@ -45,107 +42,82 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            ZStack(alignment: .bottom) {
-                meetList
-                bottomBar
-                drawerOverlay
-            }
-            .navigationTitle("Runsmith")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    NavigationLink {
-                        AthleteRosterView(store: store)
-                    } label: {
-                        Image(systemName: "person.2")
-                    }
-                }
-                ToolbarItem(placement: .principal) {
-                    NavigationLink {
-                        AboutView()
-                    } label: {
+            meetList
+                .navigationTitle("Runsmith")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
                         Image("RunsmithLogo")
                             .resizable()
                             .scaledToFit()
                             .frame(height: 28)
                     }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showAddMeet = true
-                    } label: {
-                        Image(systemName: "plus")
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            showAddMeet = true
+                        } label: {
+                            Image(systemName: "plus")
+                        }
                     }
                 }
-            }
-            .sheet(isPresented: $showAddMeet, onDismiss: {
-                if let meet = newlyCreatedMeet {
-                    navigationPath.append(meet)
-                    newlyCreatedMeet = nil
+                .sheet(isPresented: $showAddMeet, onDismiss: {
+                    if let meet = newlyCreatedMeet {
+                        navigationPath.append(meet)
+                        newlyCreatedMeet = nil
+                    }
+                }) {
+                    addMeetSheet
                 }
-            }) {
-                addMeetSheet
-            }
-            .sheet(item: $meetToEdit) { meet in
-                editMeetSheet(meet: meet)
-            }
-            .sheet(isPresented: $showImportRace, onDismiss: { vm.load() }) {
-                ImportRaceView(store: store)
-            }
-            .sheet(isPresented: $showQuickRaceSetup, onDismiss: { vm.load() }) {
-                RaceSetupView(
-                    vm: RaceSetupViewModel(meetId: nil, store: store),
-                    store: store,
-                    cache: cache
-                )
-            }
-            .sheet(item: $pendingRaceToSetup, onDismiss: { vm.load() }) { race in
-                RaceSetupView(
-                    vm: RaceSetupViewModel(meetId: nil, store: store, existingRaceId: race.id),
-                    store: store,
-                    cache: cache
-                )
-            }
-            .confirmationDialog(
-                "Delete \"\(meetToDelete?.name ?? "")\"?",
-                isPresented: Binding(
-                    get: { meetToDelete != nil },
-                    set: { if !$0 { meetToDelete = nil } }
-                ),
-                titleVisibility: .visible,
-                presenting: meetToDelete
-            ) { meet in
-                Button("Delete Meet & All Races", role: .destructive) {
-                    vm.delete(meet: meet)
-                    meetToDelete = nil
+                .sheet(item: $meetToEdit) { meet in
+                    editMeetSheet(meet: meet)
                 }
-                Button("Cancel", role: .cancel) { meetToDelete = nil }
-            } message: { _ in
-                Text("This will permanently delete the meet and all its races and splits.")
-            }
-            .confirmationDialog(
-                "Delete \"\(quickRaceToDelete?.name ?? "")\"?",
-                isPresented: Binding(
-                    get: { quickRaceToDelete != nil },
-                    set: { if !$0 { quickRaceToDelete = nil } }
-                ),
-                titleVisibility: .visible,
-                presenting: quickRaceToDelete
-            ) { race in
-                Button("Delete Race", role: .destructive) {
-                    vm.delete(race: race)
-                    quickRaceToDelete = nil
+                .sheet(item: $pendingRaceToSetup, onDismiss: { vm.load() }) { race in
+                    RaceSetupView(
+                        vm: RaceSetupViewModel(meetId: nil, store: store, existingRaceId: race.id),
+                        store: store,
+                        cache: cache
+                    )
                 }
-                Button("Cancel", role: .cancel) { quickRaceToDelete = nil }
-            }
-            .onAppear { vm.load() }
-            .navigationDestination(for: Meet.self) { meet in
-                MeetDetailView(
-                    vm: MeetDetailViewModel(meet: meet, store: store),
-                    store: store,
-                    cache: cache
-                )
-            }
+                .confirmationDialog(
+                    "Delete \"\(meetToDelete?.name ?? "")\"?",
+                    isPresented: Binding(
+                        get: { meetToDelete != nil },
+                        set: { if !$0 { meetToDelete = nil } }
+                    ),
+                    titleVisibility: .visible,
+                    presenting: meetToDelete
+                ) { meet in
+                    Button("Delete Meet & All Races", role: .destructive) {
+                        vm.delete(meet: meet)
+                        meetToDelete = nil
+                    }
+                    Button("Cancel", role: .cancel) { meetToDelete = nil }
+                } message: { _ in
+                    Text("This will permanently delete the meet and all its races and splits.")
+                }
+                .confirmationDialog(
+                    "Delete \"\(quickRaceToDelete?.name ?? "")\"?",
+                    isPresented: Binding(
+                        get: { quickRaceToDelete != nil },
+                        set: { if !$0 { quickRaceToDelete = nil } }
+                    ),
+                    titleVisibility: .visible,
+                    presenting: quickRaceToDelete
+                ) { race in
+                    Button("Delete Race", role: .destructive) {
+                        vm.delete(race: race)
+                        quickRaceToDelete = nil
+                    }
+                    Button("Cancel", role: .cancel) { quickRaceToDelete = nil }
+                }
+                .onAppear { vm.load() }
+                .navigationDestination(for: Meet.self) { meet in
+                    MeetDetailView(
+                        vm: MeetDetailViewModel(meet: meet, store: store),
+                        store: store,
+                        cache: cache
+                    )
+                }
         }
     }
 
@@ -267,7 +239,7 @@ struct HomeView: View {
         }
         .listStyle(.insetGrouped)
         .background(Theme.screenBackground)
-        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 80) }
+        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 64) }
     }
 
     /// Pending race row — opens sheet instead of push to avoid nested NavigationStack.
@@ -386,197 +358,6 @@ struct HomeView: View {
         .font(.caption2.weight(.semibold))
         .foregroundStyle(.green)
         .padding(.trailing, 6)
-    }
-
-    // MARK: – Bottom Action Bar
-
-    private var bottomBar: some View {
-        VStack(spacing: 0) {
-            Divider()
-            HStack(spacing: 10) {
-                // Grid icon — opens drawer
-                Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                        showDrawer = true
-                    }
-                } label: {
-                    Image(systemName: "square.grid.2x2")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(Theme.runsmithPink)
-                        .frame(width: 52, height: 52)
-                        .background(Theme.runsmithPink.opacity(0.12))
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                }
-
-                // Quick Race — primary action
-                Button {
-                    showQuickRaceSetup = true
-                } label: {
-                    Label("Quick Race", systemImage: "stopwatch")
-                }
-                .buttonStyle(GlassPrimaryButtonStyle())
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 10)
-            .padding(.bottom, 8)
-        }
-        .background(.bar)
-    }
-
-    // MARK: – Drawer Overlay
-
-    private var drawerOverlay: some View {
-        ZStack(alignment: .bottom) {
-            // Dimmed backdrop
-            if showDrawer {
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
-                    .onTapGesture {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                            showDrawer = false
-                        }
-                    }
-                    .transition(.opacity)
-            }
-
-            // Drawer sheet
-            if showDrawer {
-                VStack(spacing: 0) {
-                    // Drag handle
-                    Capsule()
-                        .fill(Color(.tertiaryLabel))
-                        .frame(width: 36, height: 5)
-                        .padding(.top, 10)
-                        .padding(.bottom, 14)
-
-                    // Section header
-                    HStack {
-                        Text("MORE ACTIONS")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .tracking(0.5)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 10)
-
-                    // Menu items — least used at top, most used at bottom
-                    VStack(spacing: 0) {
-                        // Analytics
-                        NavigationLink {
-                            AnalyticsView(store: store)
-                        } label: {
-                            drawerRow(
-                                icon: "chart.xyaxis.line",
-                                title: "Analytics",
-                                subtitle: "PRs, leaderboards, and insights"
-                            )
-                        }
-                        .simultaneousGesture(TapGesture().onEnded {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                                showDrawer = false
-                            }
-                        })
-
-                        Divider().padding(.leading, 66)
-
-                        // Archive
-                        NavigationLink {
-                            ArchiveView(vm: ArchiveViewModel(store: store))
-                        } label: {
-                            drawerRow(
-                                icon: "archivebox",
-                                title: "Archive",
-                                subtitle: "View archived meets and races"
-                            )
-                        }
-                        .simultaneousGesture(TapGesture().onEnded {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                                showDrawer = false
-                            }
-                        })
-
-                        Divider().padding(.leading, 66)
-
-                        // Import Race (middle)
-                        Button {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                                showDrawer = false
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                                showImportRace = true
-                            }
-                        } label: {
-                            drawerRow(
-                                icon: "square.and.arrow.down",
-                                title: "Import Race",
-                                subtitle: "Scan QR, import file, or paste"
-                            )
-                        }
-
-                        Divider().padding(.leading, 66)
-
-                        // Relay Builder
-                        NavigationLink {
-                            RelayBuilderView(
-                                vm: RelayBuilderViewModel(store: store)
-                            )
-                        } label: {
-                            drawerRow(
-                                icon: "arrow.triangle.branch",
-                                title: "Relay Builder",
-                                subtitle: "Build and save relay teams"
-                            )
-                        }
-                        .simultaneousGesture(TapGesture().onEnded {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                                showDrawer = false
-                            }
-                        })
-                    }
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 30)
-                }
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color(.systemGroupedBackground))
-                        .ignoresSafeArea(edges: .bottom)
-                )
-                .transition(.move(edge: .bottom))
-            }
-        }
-        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: showDrawer)
-    }
-
-    private func drawerRow(icon: String, title: String, subtitle: String) -> some View {
-        HStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Theme.runsmithPink)
-                .frame(width: 36, height: 36)
-                .background(Theme.runsmithPink.opacity(0.12))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(.primary)
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Color(.tertiaryLabel))
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .contentShape(Rectangle())
     }
 
     // MARK: – Edit Meet Sheet

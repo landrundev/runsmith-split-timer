@@ -9,7 +9,7 @@ struct SplitDeckApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView(vm: HomeViewModel(store: store))
+            MainTabView()
                 .environmentObject(store)
                 .environmentObject(cache)
                 .environment(\.appearanceSetting, appearance)
