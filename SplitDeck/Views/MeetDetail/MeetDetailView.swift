@@ -11,6 +11,13 @@ struct MeetDetailView: View {
     @State private var genderFilter: Gender? = nil
     @State private var pendingRaceToSetup: Race? = nil
 
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .long
+        f.timeStyle = .none
+        return f
+    }()
+
     private var filteredRaces: [Race] {
         guard let gender = genderFilter else { return vm.races }
         return vm.races.filter { race in
@@ -21,46 +28,65 @@ struct MeetDetailView: View {
         }
     }
 
-    var body: some View {
-        List {
-            if vm.races.isEmpty {
-                VStack(spacing: 12) {
-                    Image(systemName: "figure.run")
-                        .font(.system(size: 48))
-                        .foregroundStyle(.secondary)
-                    Text("No Races")
-                        .font(.headline)
-                    Text("Tap + Add Race to create one.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
-                .listRowBackground(Color.clear)
-            } else {
-                genderFilterRow
+    private var completedCount: Int {
+        vm.races.filter { $0.status == .completed }.count
+    }
 
-                ForEach(filteredRaces) { race in
-                    raceRow(race)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) {
-                                raceToDelete = race
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
+    private var inProgressCount: Int {
+        vm.races.filter { $0.status == .inProgress }.count
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                // Meet info header card
+                meetInfoCard
+
+                if vm.races.isEmpty {
+                    // Empty state
+                    VStack(spacing: 12) {
+                        Image(systemName: "figure.run")
+                            .font(.system(size: 48))
+                            .foregroundStyle(Theme.textMuted)
+                        Text("No Races")
+                            .font(.headline)
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("Tap + Add Race to create one.")
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 40)
+                } else {
+                    // Gender filter pills
+                    genderFilterRow
+                        .padding(.horizontal, 16)
+
+                    // Race cards
+                    VStack(spacing: 8) {
+                        ForEach(filteredRaces) { race in
+                            raceCardButton(race)
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        raceToDelete = race
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                    Button {
+                                        vm.archive(race: race)
+                                    } label: {
+                                        Label("Archive", systemImage: "archivebox")
+                                    }
+                                }
                         }
-                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                            Button {
-                                vm.archive(race: race)
-                            } label: {
-                                Label("Archive", systemImage: "archivebox")
-                            }
-                            .tint(.orange)
-                        }
+                    }
+                    .padding(.horizontal, 16)
                 }
             }
+            .padding(.top, 8)
+            .padding(.bottom, 80)
         }
-        .listStyle(.insetGrouped)
+        .background(Theme.screenBackground)
         .navigationTitle(vm.meet.name)
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -112,54 +138,106 @@ struct MeetDetailView: View {
         .onAppear { vm.load() }
     }
 
+    // MARK: – Meet Info Header Card
+
+    private var meetInfoCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Date + Location
+            HStack(spacing: 12) {
+                Label(Self.dateFormatter.string(from: vm.meet.date), systemImage: "calendar")
+                if let loc = vm.meet.location {
+                    Label(loc, systemImage: "mappin")
+                }
+            }
+            .font(.subheadline)
+            .foregroundStyle(Theme.textSecondary)
+
+            // Stats row
+            HStack(spacing: 16) {
+                statPill(icon: "stopwatch", value: "\(vm.races.count)", label: "Total")
+                if completedCount > 0 {
+                    statPill(icon: "checkmark.circle", value: "\(completedCount)", label: "Done", color: .green)
+                }
+                if inProgressCount > 0 {
+                    statPill(icon: "play.circle", value: "\(inProgressCount)", label: "Live", color: .orange)
+                }
+                Spacer()
+            }
+        }
+        .padding(16)
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+        .padding(.horizontal, 16)
+    }
+
+    private func statPill(icon: String, value: String, label: String, color: Color = Theme.textPrimary) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundStyle(color)
+            Text(value)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(color)
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(Theme.textSecondary)
+        }
+    }
+
+    // MARK: – Gender Filter
+
+    private var genderFilterRow: some View {
+        HStack(spacing: 8) {
+            Text("Filter")
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(Theme.textSecondary)
+            Spacer()
+            genderFilterButton("All", gender: nil)
+            genderFilterButton("M", gender: .male)
+            genderFilterButton("F", gender: .female)
+        }
+    }
+
+    private func genderFilterButton(_ label: String, gender: Gender?) -> some View {
+        let isActive = genderFilter == gender
+        let tintColor: Color = {
+            if !isActive { return Theme.textTertiary }
+            if let g = gender { return Theme.genderTint(g) }
+            return Theme.accentPrimary
+        }()
+
+        return Button(label) {
+            genderFilter = genderFilter == gender ? nil : gender
+        }
+        .font(.caption.weight(.semibold))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(isActive ? tintColor.opacity(0.15) : Theme.cardBackground)
+        .foregroundStyle(isActive ? tintColor : Theme.textSecondary)
+        .clipShape(Capsule())
+        .overlay(
+            Capsule().strokeBorder(isActive ? tintColor.opacity(0.3) : Color.clear, lineWidth: 1)
+        )
+    }
+
+    // MARK: – Race Card Button
+
     @ViewBuilder
-    private func raceRow(_ race: Race) -> some View {
+    private func raceCardButton(_ race: Race) -> some View {
         if race.status == .notStarted {
             Button { pendingRaceToSetup = race } label: {
-                raceRowContent(race)
+                MeetRaceCardRow(race: race, athletes: vm.athletes)
             }
             .buttonStyle(.plain)
         } else {
             NavigationLink(destination: raceDestination(race)) {
-                raceRowContent(race)
+                MeetRaceCardRow(race: race, athletes: vm.athletes)
             }
+            .buttonStyle(.plain)
         }
     }
 
-    private func raceRowContent(_ race: Race) -> some View {
-        HStack(spacing: 0) {
-            raceGenderBar(race)
-                .padding(.trailing, 10)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(race.name)
-                    .font(.headline)
-                HStack(spacing: 4) {
-                    Text(race.eventType.displayName)
-                    if race.status == .notStarted && !race.athleteIds.isEmpty {
-                        Text("·")
-                        Text("\(race.athleteIds.count) athlete\(race.athleteIds.count == 1 ? "" : "s")")
-                    }
-                }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            }
-            Spacer()
-            if race.isMerged { waBadge }
-            statusBadge(race.status)
-        }
-        .padding(.vertical, 4)
-        .contentShape(Rectangle())
-    }
-
-    private var waBadge: some View {
-        HStack(spacing: 2) {
-            Image(systemName: "checkmark.seal.fill")
-            Text("WA")
-        }
-        .font(.caption2.weight(.semibold))
-        .foregroundStyle(.green)
-        .padding(.trailing, 6)
-    }
+    // MARK: – Navigation Destinations
 
     @ViewBuilder
     private func raceDestination(_ race: Race) -> some View {
@@ -179,60 +257,5 @@ struct MeetDetailView: View {
             let resultsVM = ResultsViewModel(race: race, athletes: athletes, splits: splits, meet: vm.meet)
             ResultsView(vm: resultsVM)
         }
-    }
-
-    private func raceGenderBar(_ race: Race) -> some View {
-        let genders = race.athleteIds.compactMap { id in
-            vm.athletes.first(where: { $0.id == id })?.gender
-        }
-        let hasMale = genders.contains(.male)
-        let hasFemale = genders.contains(.female)
-
-        let fill: AnyShapeStyle
-        if hasMale && hasFemale {
-            fill = AnyShapeStyle(LinearGradient(
-                colors: [.blue, Color(hex: "#FF5CA1")],
-                startPoint: .top, endPoint: .bottom
-            ))
-        } else if hasMale {
-            fill = AnyShapeStyle(Color.blue)
-        } else if hasFemale {
-            fill = AnyShapeStyle(Color(hex: "#FF5CA1"))
-        } else {
-            fill = AnyShapeStyle(Color(.quaternaryLabel))
-        }
-
-        return Rectangle()
-            .fill(fill)
-            .frame(width: 4)
-            .clipShape(Capsule())
-    }
-
-    private var genderFilterRow: some View {
-        HStack(spacing: 8) {
-            Text("Filter").foregroundStyle(.secondary)
-            Spacer()
-            genderFilterButton("All", gender: nil)
-            genderFilterButton("M", gender: .male)
-            genderFilterButton("F", gender: .female)
-        }
-    }
-
-    private func genderFilterButton(_ label: String, gender: Gender?) -> some View {
-        Button(label) {
-            genderFilter = genderFilter == gender ? nil : gender
-        }
-        .buttonStyle(.bordered)
-        .tint(genderFilter == gender ? (gender.map { Theme.genderTint($0) } ?? Theme.runsmithPink) : .secondary)
-    }
-
-    private func statusBadge(_ status: RaceStatus) -> some View {
-        Text(status.displayName)
-            .font(.caption.weight(.semibold))
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(Theme.statusColor(status).opacity(0.15))
-            .foregroundStyle(Theme.statusColor(status))
-            .clipShape(Capsule())
     }
 }
