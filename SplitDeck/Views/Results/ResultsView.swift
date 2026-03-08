@@ -209,45 +209,62 @@ struct ResultsView: View {
                     }
                 }
 
-                // Split columns — scrollable for races with many splits
+                // Split columns — wrapping rows (max 4 per row)
                 if !vm.columnLabels.isEmpty {
-                    let labels = vm.columnLabels
-                    let needsScroll = labels.count > 5
-
-                    if needsScroll {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            splitColumnsGrid(athlete: entry.athlete, labels: labels)
-                        }
-                    } else {
-                        splitColumnsGrid(athlete: entry.athlete, labels: labels)
-                    }
+                    wrappingSplitColumns(athlete: entry.athlete, labels: vm.columnLabels)
                 }
             }
         }
         .padding(.vertical, 12)
     }
 
-    /// Renders the label + value columns for one athlete's splits.
-    /// Uses fixed-width columns so values never overlap.
-    private func splitColumnsGrid(athlete: Athlete, labels: [String]) -> some View {
-        let columnWidth: CGFloat = labels.count <= 5 ? .infinity : 68
+    /// Max columns per row before wrapping.
+    private static let columnsPerRow = 4
 
-        return HStack(spacing: 4) {
-            ForEach(Array(labels.enumerated()), id: \.offset) { i, label in
-                VStack(spacing: 2) {
-                    Text(label)
-                        .font(.caption2)
-                        .foregroundStyle(Theme.textSecondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                    let val = vm.cellValue(athlete: athlete, splitOrdinal: i + 1)
-                    Text(val.displayString)
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(Theme.textPrimary)
-                        .lineLimit(1)
+    /// Splits column indices into balanced rows of ≤ columnsPerRow.
+    private func splitColumnRows(count: Int) -> [[Int]] {
+        guard count > 0 else { return [] }
+
+        let maxPerRow = Self.columnsPerRow
+        if count <= maxPerRow { return [Array(0..<count)] }
+
+        let rowCount = (count + maxPerRow - 1) / maxPerRow
+        let basePerRow = count / rowCount
+        let remainder = count % rowCount
+
+        var rows: [[Int]] = []
+        var idx = 0
+        for r in 0..<rowCount {
+            let cols = basePerRow + (r >= rowCount - remainder ? 1 : 0)
+            rows.append(Array(idx..<(idx + cols)))
+            idx += cols
+        }
+        return rows
+    }
+
+    /// Renders wrapping split columns for one athlete (max 4 per row, balanced).
+    private func wrappingSplitColumns(athlete: Athlete, labels: [String]) -> some View {
+        let rows = splitColumnRows(count: labels.count)
+
+        return VStack(alignment: .leading, spacing: 4) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                HStack(spacing: 4) {
+                    ForEach(row, id: \.self) { i in
+                        VStack(spacing: 2) {
+                            Text(labels[i])
+                                .font(.caption2)
+                                .foregroundStyle(Theme.textSecondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                            let val = vm.cellValue(athlete: athlete, splitOrdinal: i + 1)
+                            Text(val.displayString)
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(Theme.textPrimary)
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
                 }
-                .frame(maxWidth: columnWidth)
-                .frame(minWidth: columnWidth == .infinity ? 0 : columnWidth)
             }
         }
     }

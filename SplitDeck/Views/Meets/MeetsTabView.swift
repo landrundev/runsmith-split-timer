@@ -23,58 +23,57 @@ struct MeetsTabView: View {
     // Delete confirmation
     @State private var meetToDelete: Meet? = nil
 
+    // MARK: \u{2013} Computed Sections
+
+    /// Non-archived meets with an in-progress race.
+    private var liveMeets: [Meet] {
+        vm.meets.filter { !$0.isArchived && vm.meetStatus(for: $0) == .inProgress }
+    }
+
+    /// Non-archived, non-live meets whose date is within the current school year
+    /// (roughly Aug 1 of previous year through Jul 31 of current year).
+    private var thisSeasonMeets: [Meet] {
+        let calendar = Calendar.current
+        let now = Date()
+        let year = calendar.component(.year, from: now)
+        let month = calendar.component(.month, from: now)
+        // School year: Aug-Jul. If before August, season started last year.
+        let seasonStartYear = month >= 8 ? year : year - 1
+        let seasonStart = calendar.date(from: DateComponents(year: seasonStartYear, month: 8, day: 1))!
+        let seasonEnd = calendar.date(from: DateComponents(year: seasonStartYear + 1, month: 7, day: 31))!
+
+        return vm.meets.filter { meet in
+            !meet.isArchived
+            && vm.meetStatus(for: meet) != .inProgress
+            && meet.date >= seasonStart
+            && meet.date <= seasonEnd
+        }
+        .sorted { $0.date > $1.date }
+    }
+
+    /// Archived meets.
+    private var archivedMeets: [Meet] {
+        vm.meets.filter { $0.isArchived }
+            .sorted { $0.date > $1.date }
+    }
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             ScrollView {
                 if vm.meets.isEmpty {
-                    VStack(spacing: 12) {
-                        Image(systemName: "calendar.badge.plus")
-                            .font(.system(size: 48))
-                            .foregroundStyle(Theme.textMuted)
-                        Text("No Meets Yet")
-                            .font(.headline)
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("Tap + to create your first meet.")
-                            .font(.subheadline)
-                            .foregroundStyle(Theme.textSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 60)
+                    emptyState
                 } else {
-                    VStack(spacing: 8) {
-                        ForEach(vm.meets) { meet in
-                            NavigationLink(value: meet) {
-                                MeetCardRow(
-                                    meet: meet,
-                                    raceCount: vm.meetRaces[meet.id]?.count ?? 0,
-                                    status: vm.meetStatus(for: meet)
-                                )
-                            }
-                            .buttonStyle(.plain)
-                            .contextMenu {
-                                Button(role: .destructive) {
-                                    meetToDelete = meet
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                                Button {
-                                    editMeetName = meet.name
-                                    editMeetDate = meet.date
-                                    editMeetLocation = meet.location ?? ""
-                                    meetToEdit = meet
-                                } label: {
-                                    Label("Edit", systemImage: "pencil")
-                                }
-                                Button {
-                                    vm.archive(meet: meet)
-                                } label: {
-                                    Label("Archive", systemImage: "archivebox")
-                                }
-                            }
+                    VStack(spacing: 16) {
+                        if !liveMeets.isEmpty {
+                            meetSection(title: "Live", meets: liveMeets)
+                        }
+                        if !thisSeasonMeets.isEmpty {
+                            meetSection(title: "This Season", meets: thisSeasonMeets)
+                        }
+                        if !archivedMeets.isEmpty {
+                            meetSection(title: "Archived", meets: archivedMeets)
                         }
                     }
-                    .padding(.horizontal, 16)
                     .padding(.top, 8)
                     .padding(.bottom, 80)
                 }
@@ -130,7 +129,75 @@ struct MeetsTabView: View {
         }
     }
 
-    // MARK: – Add Meet Sheet
+    // MARK: \u{2013} Empty State
+
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "calendar.badge.plus")
+                .font(.system(size: 48))
+                .foregroundStyle(Theme.textMuted)
+            Text("No Meets Yet")
+                .font(.headline)
+                .foregroundStyle(Theme.textPrimary)
+            Text("Tap + to create your first meet.")
+                .font(.subheadline)
+                .foregroundStyle(Theme.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
+    }
+
+    // MARK: \u{2013} Section Builder
+
+    @ViewBuilder
+    private func meetSection(title: String, meets: [Meet]) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Theme.textSecondary)
+                .textCase(.uppercase)
+                .padding(.horizontal, 16)
+
+            VStack(spacing: 8) {
+                ForEach(meets) { meet in
+                    NavigationLink(value: meet) {
+                        MeetCardRow(
+                            meet: meet,
+                            raceCount: vm.totalRaceCount(for: meet),
+                            completedCount: vm.completedRaceCount(for: meet),
+                            status: vm.meetStatus(for: meet)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            meetToDelete = meet
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                        Button {
+                            editMeetName = meet.name
+                            editMeetDate = meet.date
+                            editMeetLocation = meet.location ?? ""
+                            meetToEdit = meet
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        Button {
+                            vm.archive(meet: meet)
+                        } label: {
+                            Label(meet.isArchived ? "Unarchive" : "Archive",
+                                  systemImage: meet.isArchived ? "tray.and.arrow.up" : "archivebox")
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+
+    // MARK: \u{2013} Add Meet Sheet
 
     private var addMeetSheet: some View {
         NavigationStack {
@@ -168,7 +235,7 @@ struct MeetsTabView: View {
         }
     }
 
-    // MARK: – Edit Meet Sheet
+    // MARK: \u{2013} Edit Meet Sheet
 
     private func editMeetSheet(meet: Meet) -> some View {
         NavigationStack {

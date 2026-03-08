@@ -8,6 +8,9 @@ struct AthleteCardView: View {
     let finishTime: String?  // e.g. "4:32.18" \u{2013} total time for completed athlete
     let onTap: () -> Void
 
+    /// Max chips per row before wrapping.
+    private static let chipsPerRow = 4
+
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 0) {
@@ -35,7 +38,6 @@ struct AthleteCardView: View {
     }
 
     // MARK: \u{2013} Completed State
-    // Finish time is the hero \u{2013} own row, full width for splits below.
 
     private var completedLayout: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -51,7 +53,6 @@ struct AthleteCardView: View {
 
                 Spacer(minLength: 4)
 
-                // Finish time \u{2013} the most important number on the card
                 if let time = finishTime {
                     Text(time)
                         .font(.title2.weight(.heavy).monospacedDigit())
@@ -59,9 +60,9 @@ struct AthleteCardView: View {
                 }
             }
 
-            // Row 2: split chips \u{2013} full width, nothing competing
+            // Row 2+: split chips \u{2013} wrapping rows, no horizontal scroll
             if !splitTimes.isEmpty {
-                splitChips
+                wrappingSplitChips
             }
         }
     }
@@ -88,38 +89,60 @@ struct AthleteCardView: View {
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             } else {
-                splitChips
+                wrappingSplitChips
             }
         }
     }
 
-    // MARK: \u{2013} Split Chips
+    // MARK: \u{2013} Wrapping Split Chips (multi-row)
 
-    private var splitChips: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
+    /// Splits the chips into balanced rows of \u{2264} chipsPerRow.
+    /// e.g. 8 chips \u{2192} 4 + 4, 6 \u{2192} 3 + 3, 5 \u{2192} 3 + 2, 3 \u{2192} 3
+    private var chipRows: [[Int]] {
+        let count = splitTimes.count
+        guard count > 0 else { return [] }
+
+        let maxPerRow = Self.chipsPerRow
+        if count <= maxPerRow { return [Array(0..<count)] }
+
+        let rowCount = (count + maxPerRow - 1) / maxPerRow
+        let basePerRow = count / rowCount
+        let remainder = count % rowCount
+
+        var rows: [[Int]] = []
+        var idx = 0
+        for r in 0..<rowCount {
+            // Distribute remainder to later rows so top rows are shorter or equal
+            let cols = basePerRow + (r >= rowCount - remainder ? 1 : 0)
+            rows.append(Array(idx..<(idx + cols)))
+            idx += cols
+        }
+        return rows
+    }
+
+    private var wrappingSplitChips: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(Array(chipRows.enumerated()), id: \.offset) { _, row in
                 HStack(spacing: 6) {
-                    ForEach(Array(splitTimes.enumerated()), id: \.offset) { i, split in
-                        VStack(spacing: 1) {
-                            Text(split.lap)
-                                .font(.caption.weight(.semibold).monospacedDigit())
-                            Text(split.label)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(.tertiarySystemFill))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                        .id(i)
+                    ForEach(row, id: \.self) { i in
+                        chipView(for: splitTimes[i])
                     }
                 }
             }
-            .onChange(of: splitTimes.count) { _ in
-                withAnimation {
-                    proxy.scrollTo(splitTimes.count - 1, anchor: .trailing)
-                }
-            }
         }
+    }
+
+    private func chipView(for split: (label: String, cumulative: String, lap: String)) -> some View {
+        VStack(spacing: 1) {
+            Text(split.lap)
+                .font(.caption.weight(.semibold).monospacedDigit())
+            Text(split.label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color(.tertiarySystemFill))
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 }
