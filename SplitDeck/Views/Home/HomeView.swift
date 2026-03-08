@@ -27,75 +27,110 @@ struct HomeView: View {
         vm.quickRaces.filter { $0.status != .notStarted }
     }
 
+    /// The nearest future (or today) non-archived meet, sorted by date.
+    private var nextMeet: Meet? {
+        let today = Calendar.current.startOfDay(for: Date())
+        return vm.meets
+            .filter { !$0.isArchived && Calendar.current.startOfDay(for: $0.date) >= today }
+            .sorted { $0.date < $1.date }
+            .first
+    }
+
     var body: some View {
         NavigationStack {
-            List {
-                if vm.quickRaces.isEmpty {
-                    VStack(spacing: 12) {
-                        Image(systemName: "stopwatch")
-                            .font(.system(size: 48))
-                            .foregroundStyle(.secondary)
-                        Text("No Quick Races Yet")
-                            .font(.headline)
-                        Text("Tap + to start a quick race.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Hero meet card
+                    if let meet = nextMeet {
+                        NavigationLink(destination: meetDestination(meet)) {
+                            HeroMeetCard(
+                                meet: meet,
+                                raceCount: vm.meetRaces[meet.id]?.count ?? 0,
+                                status: vm.meetStatus(for: meet)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 16)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 40)
-                    .listRowBackground(Color.clear)
-                } else {
+
+                    // Pending quick races
                     if !pendingQuickRaces.isEmpty {
-                        Section("Pending Races") {
+                        sectionView(title: "Pending Races") {
                             ForEach(pendingQuickRaces) { race in
-                                pendingRaceRow(race)
-                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                        Button(role: .destructive) {
-                                            quickRaceToDelete = race
-                                        } label: {
-                                            Label("Delete", systemImage: "trash")
-                                        }
+                                Button { pendingRaceToSetup = race } label: {
+                                    RaceCardRow(
+                                        race: race,
+                                        athletes: vm.athletes,
+                                        dateFormatter: Self.dateFormatter
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        quickRaceToDelete = race
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
                                     }
-                                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                        Button {
-                                            vm.archive(race: race)
-                                        } label: {
-                                            Label("Archive", systemImage: "archivebox")
-                                        }
-                                        .tint(.orange)
+                                    Button {
+                                        vm.archive(race: race)
+                                    } label: {
+                                        Label("Archive", systemImage: "archivebox")
                                     }
+                                }
                             }
                         }
                     }
 
+                    // Quick Race History
                     if !startedQuickRaces.isEmpty {
-                        Section("Quick Race History") {
+                        sectionView(title: "Quick Race History") {
                             ForEach(startedQuickRaces) { race in
-                                quickRaceRow(race)
-                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                        Button(role: .destructive) {
-                                            quickRaceToDelete = race
-                                        } label: {
-                                            Label("Delete", systemImage: "trash")
-                                        }
+                                NavigationLink(destination: quickRaceDestination(race)) {
+                                    RaceCardRow(
+                                        race: race,
+                                        athletes: vm.athletes,
+                                        dateFormatter: Self.dateFormatter
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        quickRaceToDelete = race
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
                                     }
-                                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                        Button {
-                                            vm.archive(race: race)
-                                        } label: {
-                                            Label("Archive", systemImage: "archivebox")
-                                        }
-                                        .tint(.orange)
+                                    Button {
+                                        vm.archive(race: race)
+                                    } label: {
+                                        Label("Archive", systemImage: "archivebox")
                                     }
+                                }
                             }
                         }
                     }
+
+                    // Empty state
+                    if vm.quickRaces.isEmpty && nextMeet == nil {
+                        VStack(spacing: 12) {
+                            Image(systemName: "stopwatch")
+                                .font(.system(size: 48))
+                                .foregroundStyle(Theme.textMuted)
+                            Text("No Races Yet")
+                                .font(.headline)
+                                .foregroundStyle(Theme.textPrimary)
+                            Text("Tap + to start a quick race.")
+                                .font(.subheadline)
+                                .foregroundStyle(Theme.textSecondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 60)
+                    }
                 }
+                .padding(.top, 8)
+                .padding(.bottom, 80)
             }
-            .listStyle(.insetGrouped)
             .background(Theme.screenBackground)
-            .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 64) }
             .navigationTitle("Runsmith")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -139,80 +174,33 @@ struct HomeView: View {
         }
     }
 
-    // MARK: – Race Rows
-
-    /// Pending race row — opens sheet instead of push to avoid nested NavigationStack.
-    @ViewBuilder
-    private func pendingRaceRow(_ race: Race) -> some View {
-        Button { pendingRaceToSetup = race } label: {
-            HStack(spacing: 0) {
-                raceGenderBar(race)
-                    .padding(.trailing, 10)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(race.name)
-                        .font(.headline)
-                    Text(race.startedAt.map { Self.dateFormatter.string(from: $0) } ?? "")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                if race.isMerged { waBadge }
-                statusBadge(race.status)
-            }
-            .padding(.vertical, 4)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
+    // MARK: – Section Builder
 
     @ViewBuilder
-    private func quickRaceRow(_ race: Race) -> some View {
-        NavigationLink(destination: quickRaceDestination(race)) {
-            HStack(spacing: 0) {
-                raceGenderBar(race)
-                    .padding(.trailing, 10)
+    private func sectionView<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Theme.textSecondary)
+                .textCase(.uppercase)
+                .padding(.horizontal, 16)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(race.name)
-                        .font(.headline)
-                    Text(race.startedAt.map { Self.dateFormatter.string(from: $0) } ?? "")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                if race.isMerged { waBadge }
-                statusBadge(race.status)
+            VStack(spacing: 8) {
+                content()
             }
-            .padding(.vertical, 4)
+            .padding(.horizontal, 16)
         }
     }
 
-    /// Gender bar for a race: blue if all male, pink if all female, split gradient if mixed.
-    private func raceGenderBar(_ race: Race) -> some View {
-        let genders = race.athleteIds.compactMap { id in
-            vm.athletes.first(where: { $0.id == id })?.gender
-        }
-        let hasMale = genders.contains(.male)
-        let hasFemale = genders.contains(.female)
+    // MARK: – Navigation Destinations
 
-        let fill: AnyShapeStyle
-        if hasMale && hasFemale {
-            fill = AnyShapeStyle(LinearGradient(
-                colors: [.blue, Color(hex: "#FF5CA1")],
-                startPoint: .top, endPoint: .bottom
-            ))
-        } else if hasMale {
-            fill = AnyShapeStyle(Color.blue)
-        } else if hasFemale {
-            fill = AnyShapeStyle(Color(hex: "#FF5CA1"))
-        } else {
-            fill = AnyShapeStyle(Color(.quaternaryLabel))
-        }
-
-        return Rectangle()
-            .fill(fill)
-            .frame(width: 4)
-            .clipShape(Capsule())
+    @ViewBuilder
+    private func meetDestination(_ meet: Meet) -> some View {
+        MeetDetailView(
+            vm: MeetDetailViewModel(meet: meet, store: store),
+            store: store,
+            cache: cache
+        )
     }
 
     @ViewBuilder
@@ -236,71 +224,5 @@ struct HomeView: View {
             let setupVM = RaceSetupViewModel(meetId: nil, store: store, existingRaceId: race.id)
             RaceSetupView(vm: setupVM, store: store, cache: cache)
         }
-    }
-
-    private func statusBadge(_ status: RaceStatus) -> some View {
-        Text(status.displayName)
-            .font(.caption.weight(.semibold))
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(Theme.statusColor(status).opacity(0.15))
-            .foregroundStyle(Theme.statusColor(status))
-            .clipShape(Capsule())
-    }
-
-    private var waBadge: some View {
-        HStack(spacing: 2) {
-            Image(systemName: "checkmark.seal.fill")
-            Text("WA")
-        }
-        .font(.caption2.weight(.semibold))
-        .foregroundStyle(.green)
-        .padding(.trailing, 6)
-    }
-}
-
-// MARK: – Meet Row
-
-struct MeetRowView: View {
-    let meet: Meet
-    var raceCount: Int = 0
-    var status: RaceStatus = .notStarted
-
-    private static let dateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateStyle = .medium
-        f.timeStyle = .none
-        return f
-    }()
-
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(meet.name)
-                    .font(.headline)
-                HStack(spacing: 4) {
-                    Text(Self.dateFormatter.string(from: meet.date))
-                    if let loc = meet.location {
-                        Text("·")
-                        Text(loc)
-                    }
-                    if raceCount > 0 {
-                        Text("·")
-                        Text("\(raceCount) race\(raceCount == 1 ? "" : "s")")
-                    }
-                }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            }
-            Spacer()
-            Text(status.displayName)
-                .font(.caption.weight(.semibold))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(Theme.statusColor(status).opacity(0.15))
-                .foregroundStyle(Theme.statusColor(status))
-                .clipShape(Capsule())
-        }
-        .padding(.vertical, 4)
     }
 }

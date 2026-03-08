@@ -25,61 +25,61 @@ struct MeetsTabView: View {
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            List {
+            ScrollView {
                 if vm.meets.isEmpty {
                     VStack(spacing: 12) {
                         Image(systemName: "calendar.badge.plus")
                             .font(.system(size: 48))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.textMuted)
                         Text("No Meets Yet")
                             .font(.headline)
+                            .foregroundStyle(Theme.textPrimary)
                         Text("Tap + to create your first meet.")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.textSecondary)
                             .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 40)
-                    .listRowBackground(Color.clear)
+                    .padding(.vertical, 60)
                 } else {
-                    ForEach(vm.meets) { meet in
-                        NavigationLink(value: meet) {
-                            MeetRowView(
-                                meet: meet,
-                                raceCount: vm.meetRaces[meet.id]?.count ?? 0,
-                                status: vm.meetStatus(for: meet)
-                            )
-                        }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) {
-                                meetToDelete = meet
-                            } label: {
-                                Label("Delete", systemImage: "trash")
+                    VStack(spacing: 8) {
+                        ForEach(vm.meets) { meet in
+                            NavigationLink(value: meet) {
+                                MeetCardRow(
+                                    meet: meet,
+                                    raceCount: vm.meetRaces[meet.id]?.count ?? 0,
+                                    status: vm.meetStatus(for: meet)
+                                )
                             }
-                            Button {
-                                editMeetName = meet.name
-                                editMeetDate = meet.date
-                                editMeetLocation = meet.location ?? ""
-                                meetToEdit = meet
-                            } label: {
-                                Label("Edit", systemImage: "pencil")
+                            .buttonStyle(.plain)
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    meetToDelete = meet
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                                Button {
+                                    editMeetName = meet.name
+                                    editMeetDate = meet.date
+                                    editMeetLocation = meet.location ?? ""
+                                    meetToEdit = meet
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+                                Button {
+                                    vm.archive(meet: meet)
+                                } label: {
+                                    Label("Archive", systemImage: "archivebox")
+                                }
                             }
-                            .tint(.blue)
-                        }
-                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                            Button {
-                                vm.archive(meet: meet)
-                            } label: {
-                                Label("Archive", systemImage: "archivebox")
-                            }
-                            .tint(.orange)
                         }
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 80)
                 }
             }
-            .listStyle(.insetGrouped)
             .background(Theme.screenBackground)
-            .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 64) }
             .navigationTitle("Meets")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
