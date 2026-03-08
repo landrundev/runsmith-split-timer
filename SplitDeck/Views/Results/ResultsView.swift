@@ -24,7 +24,6 @@ struct ResultsView: View {
                 icon: "person.2.badge.gearshape",
                 message: "Tap the \u{00B7}\u{00B7}\u{00B7} menu to share or merge splits. Use Export for Merge to send your splits to a head coach via QR code. Use Merge Coach Data if you\u{2019}re the head coach combining splits from assistants."
             )
-            Divider()
 
             Picker("Display", selection: $vm.displayMode) {
                 ForEach(DisplayMode.allCases, id: \.self) { mode in
@@ -32,9 +31,9 @@ struct ResultsView: View {
                 }
             }
             .pickerStyle(.segmented)
-            .padding(.horizontal)
-            .padding(.top, 8)
-            .padding(.bottom, 4)
+            .padding(.horizontal, 16)
+            .padding(.top, 10)
+            .padding(.bottom, 6)
 
             Divider()
 
@@ -101,27 +100,28 @@ struct ResultsView: View {
     // MARK: – Race Info Header
 
     private var raceInfoHeader: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(vm.race.name)
                 .font(.headline)
+                .foregroundStyle(Theme.textPrimary)
 
             HStack(spacing: 6) {
                 Text(vm.race.eventType.displayName)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
 
                 if let meet = vm.meet {
-                    Text("·").foregroundStyle(.tertiary)
+                    Text("\u{00B7}").foregroundStyle(Theme.textTertiary)
                     Text(meet.name)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                 }
 
                 if let date = vm.race.startedAt {
-                    Text("·").foregroundStyle(.tertiary)
+                    Text("\u{00B7}").foregroundStyle(Theme.textTertiary)
                     Text(Self.dateFormatter.string(from: date))
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                 }
             }
 
@@ -136,8 +136,8 @@ struct ResultsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Color(.secondarySystemGroupedBackground))
+        .padding(.vertical, 14)
+        .background(Theme.cardBackground)
     }
 
     // MARK: – Done Button (bottom)
@@ -161,6 +161,7 @@ struct ResultsView: View {
                 ForEach(vm.rankedAthletes, id: \.athlete.id) { entry in
                     athleteBlock(entry: entry)
                     Divider()
+                        .padding(.horizontal, 16)
                 }
             }
             .padding(.horizontal, 16)
@@ -179,9 +180,9 @@ struct ResultsView: View {
 
                 // Name + total time row (always full width, no scroll)
                 HStack(spacing: 6) {
-                    Text(entry.place.map { "\($0)" } ?? "—")
+                    Text(entry.place.map { "\($0)" } ?? "\u{2014}")
                         .font(.footnote.weight(.bold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                         .frame(width: 20, alignment: .leading)
 
                     Circle()
@@ -190,6 +191,7 @@ struct ResultsView: View {
 
                     Text(entry.athlete.name)
                         .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.textPrimary)
                         .lineLimit(1)
 
                     Spacer()
@@ -203,7 +205,7 @@ struct ResultsView: View {
                         Text(finalVal.displayString)
                             .font(.subheadline.weight(.bold))
                             .monospacedDigit()
-                            .foregroundStyle(entry.place != nil ? .primary : .tertiary)
+                            .foregroundStyle(entry.place != nil ? Theme.textPrimary : Theme.textTertiary)
                     }
                 }
 
@@ -235,12 +237,13 @@ struct ResultsView: View {
                 VStack(spacing: 2) {
                     Text(label)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                     let val = vm.cellValue(athlete: athlete, splitOrdinal: i + 1)
                     Text(val.displayString)
                         .font(.caption.monospacedDigit())
+                        .foregroundStyle(Theme.textPrimary)
                         .lineLimit(1)
                 }
                 .frame(maxWidth: columnWidth)
@@ -266,7 +269,7 @@ struct ResultsView: View {
                         .frame(width: 90, alignment: .trailing)
                 }
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textSecondary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
 
@@ -278,7 +281,7 @@ struct ResultsView: View {
                         HStack(spacing: 8) {
                             Text("\(entry.leg)")
                                 .font(.footnote.weight(.bold))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.textSecondary)
                                 .frame(width: 36, alignment: .leading)
 
                             Circle()
@@ -287,6 +290,7 @@ struct ResultsView: View {
 
                             Text(entry.athlete.firstName)
                                 .font(.subheadline)
+                                .foregroundStyle(Theme.textPrimary)
                                 .lineLimit(1)
 
                             Spacer()
@@ -294,10 +298,12 @@ struct ResultsView: View {
                             if vm.displayMode == .cumulative {
                                 Text(entry.cumulativeMs.map { $0.formattedSplitTime } ?? "\u{2014}")
                                     .font(.subheadline.weight(.semibold).monospacedDigit())
+                                    .foregroundStyle(Theme.textPrimary)
                                     .frame(width: 90, alignment: .trailing)
                             } else {
                                 Text(entry.legMs.map { $0.formattedSplitTime } ?? "\u{2014}")
                                     .font(.subheadline.weight(.semibold).monospacedDigit())
+                                    .foregroundStyle(Theme.textPrimary)
                                     .frame(width: 90, alignment: .trailing)
                             }
                         }
@@ -320,16 +326,16 @@ struct ResultsView: View {
                                         VStack(spacing: 1) {
                                             Text(detail.label)
                                                 .font(.system(size: 10))
-                                                .foregroundStyle(.tertiary)
+                                                .foregroundStyle(Theme.textTertiary)
                                             Text(detail.lapMs.formattedSplitTime)
                                                 .font(.caption.monospacedDigit())
-                                                .foregroundStyle(.secondary)
+                                                .foregroundStyle(Theme.textSecondary)
                                         }
                                     }
                                     if vm.displayMode == .cumulative {
                                         Text("(\(entry.legMs.map { $0.formattedSplitTime } ?? "\u{2014}"))")
                                             .font(.caption.monospacedDigit())
-                                            .foregroundStyle(.tertiary)
+                                            .foregroundStyle(Theme.textTertiary)
                                     }
                                     Spacer()
                                 }
@@ -347,14 +353,16 @@ struct ResultsView: View {
                     HStack {
                         Text("Total")
                             .font(.subheadline.weight(.bold))
+                            .foregroundStyle(Theme.textPrimary)
                         Spacer()
                         Text(total.formattedSplitTime)
                             .font(.subheadline.weight(.bold).monospacedDigit())
+                            .foregroundStyle(Theme.textPrimary)
                             .frame(width: 90, alignment: .trailing)
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(Color(.secondarySystemGroupedBackground))
+                    .background(Theme.cardBackground)
                 }
             }
         }
@@ -383,7 +391,7 @@ private struct SharePreviewSheet: View {
                     .padding()
                     .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.screenBackground)
             .navigationTitle("Share Results")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
