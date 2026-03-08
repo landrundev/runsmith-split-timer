@@ -27,7 +27,7 @@ struct AboutView: View {
                 // About the app
                 VStack(alignment: .leading, spacing: 12) {
                     sectionHeader("About", icon: "stopwatch")
-                    Text("Runsmith Split Timer is a precision timing tool built for track & field coaches. Record splits, manage athletes, build relay teams, and analyze results \u{2014} all from your pocket.")
+                    Text("Runsmith Split Timer is a precision timing tool built for track & field coaches. Time individual and relay events from 100m to 10,000m, manage rosters, coordinate multi-coach timing, and analyze your season \u{2014} all from your pocket.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -38,15 +38,19 @@ struct AboutView: View {
                     sectionHeader("Features", icon: "sparkles")
 
                     featureRow(icon: "timer", title: "Live Split Timing",
-                               detail: "Tap-to-mark splits with real-time elapsed clock. Assign marks to athletes on the fly.")
-                    featureRow(icon: "person.3.fill", title: "Athlete Management",
-                               detail: "Create athlete profiles, track personal bests, and view race history across all meets.")
+                               detail: "Tap-to-mark splits with real-time elapsed clock. Assign marks to athletes on the fly or tap athlete cards directly.")
                     featureRow(icon: "figure.run", title: "Relay Builder",
-                               detail: "Build relay teams using PR and average rankings. Save teams and start races directly.")
+                               detail: "Build 4\u{00D7}100m, 4\u{00D7}200m, 4\u{00D7}400m, and 4\u{00D7}800m relay teams using PR rankings. Save teams, reorder legs, and record optional intermediate splits.")
+                    featureRow(icon: "person.2.wave.2", title: "Multi-Coach Timing",
+                               detail: "Share race configs via QR code or file. Assistant coaches time independently, then merge splits back to the host.")
+                    featureRow(icon: "chart.xyaxis.line", title: "Analytics Dashboard",
+                               detail: "Season overview, personal records board, event leaderboards, athlete insights with consistency scores, and PR trend sparklines.")
+                    featureRow(icon: "person.3.fill", title: "Athlete Profiles",
+                               detail: "Per-athlete race history, personal bests by event, relay team context, and split-level PRs across all meets.")
                     featureRow(icon: "chart.bar.fill", title: "Results & Export",
-                               detail: "View results with cumulative and lap time breakdowns. Export to CSV or share as an image card.")
+                               detail: "Cumulative and lap time views. Share results as image cards or export to CSV. Relay results show per-leg and intermediate breakdowns.")
                     featureRow(icon: "tray.full.fill", title: "Meet Organization",
-                               detail: "Group races by meet with date and location. Keep your season organized in one place.")
+                               detail: "Group races by meet with date and location. Gender-filtered rosters, heat labels, and full archive system.")
                     featureRow(icon: "arrow.counterclockwise", title: "Crash Recovery",
                                detail: "Mid-race state is saved continuously. Resume right where you left off if the app closes.")
                 }
