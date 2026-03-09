@@ -97,6 +97,27 @@ final class MergeViewModel: ObservableObject {
         }
         guard !isDuplicate else { return }
         importedPayloads.append(payload)
+
+        // Cache the imported payload wrapped as a single-race meet payload
+        let cached = CoachMeetPayload(
+            version: 1,
+            id: UUID(),
+            meetId: race.meetId ?? UUID(),
+            meetName: "Single Race Import",
+            coachName: payload.coachName,
+            exportedAt: payload.exportedAt,
+            racePayloads: [
+                RacePayloadEntry(
+                    configId: payload.configId,
+                    raceId: race.id,
+                    meetId: race.meetId ?? UUID(),
+                    raceName: race.name,
+                    athleteSplits: payload.athleteSplits
+                )
+            ]
+        )
+        store.cacheImportedPayload(cached)
+
         computePreview()
     }
 

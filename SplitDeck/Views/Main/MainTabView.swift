@@ -4,6 +4,7 @@ struct MainTabView: View {
     @EnvironmentObject var store: SplitDeckStore
     @EnvironmentObject var cache: RaceStateCache
     @Binding var appearance: AppearanceSetting
+    @Binding var pendingFileURL: URL?
 
     @State private var selectedTab: Tab = .home
     @State private var showQuickRaceSetup = false
@@ -11,6 +12,11 @@ struct MainTabView: View {
 
     /// Single shared ViewModel — both Home and Meets tabs observe the same data.
     @State private var homeVM: HomeViewModel?
+
+    // File auto-open state
+    @State private var pendingMeetPayload: CoachMeetPayload? = nil
+    @State private var showBulkMergeForFile = false
+    @State private var showImportRaceForFile = false
 
     enum Tab: Int {
         case home, meets, add, roster, analytics
@@ -60,10 +66,62 @@ struct MainTabView: View {
         .sheet(isPresented: $showImportRace, onDismiss: { homeVM?.load() }) {
             ImportRaceView(store: store)
         }
+        .sheet(isPresented: $showBulkMergeForFile, onDismiss: {
+            pendingMeetPayload = nil
+            homeVM?.load()
+        }) {
+            if let payload = pendingMeetPayload {
+                if let meet = findMeet(id: payload.meetId) {
+                    BulkMergeView(
+                        vm: MeetDetailViewModel(meet: meet, store: store),
+                        store: store,
+                        preloadedPayload: payload
+                    )
+                } else {
+                    BulkMergeFileErrorView(
+                        meetName: payload.meetName,
+                        onDismiss: { showBulkMergeForFile = false }
+                    )
+                }
+            }
+        }
+        .sheet(isPresented: $showImportRaceForFile, onDismiss: {
+            homeVM?.load()
+        }) {
+            ImportRaceView(store: store)
+        }
         .onAppear {
             if homeVM == nil {
                 homeVM = HomeViewModel(store: store)
             }
+        }
+        .onChange(of: pendingFileURL) { newValue in
+            guard let url = newValue else { return }
+            pendingFileURL = nil
+
+            // Read the file data
+            let accessing = url.startAccessingSecurityScopedResource()
+            defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+            guard let data = try? Data(contentsOf: url) else { return }
+
+            // Detect content type and route to the right screen
+            if let meetPayload = PayloadEncoder.decodeMeetPayload(from: data),
+               !meetPayload.racePayloads.isEmpty {
+                // Timing data — route to BulkMergeView
+                pendingMeetPayload = meetPayload
+                selectedTab = .meets
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    showBulkMergeForFile = true
+                }
+            } else if PayloadEncoder.decodeMeetConfig(from: data) != nil
+                        || PayloadEncoder.decodeRaceConfig(from: data) != nil {
+                // Race/Meet config — route to ImportRaceView
+                selectedTab = .home
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    showImportRaceForFile = true
+                }
+            }
+            // Unknown content — ignore silently
         }
     }
 
@@ -143,5 +201,17 @@ struct MainTabView: View {
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
+    }
+
+    // MARK: – Helpers
+
+    private func findMeet(id: UUID) -> Meet? {
+        if let vm = homeVM, let meet = vm.meets.first(where: { $0.id == id }) {
+            return meet
+        }
+        if let vm = homeVM, let meet = vm.archivedMeets.first(where: { $0.id == id }) {
+            return meet
+        }
+        return nil
     }
 }

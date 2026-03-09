@@ -50,7 +50,11 @@ struct ImportRaceView: View {
             }
             .fileImporter(
                 isPresented: $showFileImporter,
-                allowedContentTypes: [UTType.json, UTType.data],
+                allowedContentTypes: [
+                    PayloadEncoder.runsmithType,
+                    UTType.json,
+                    UTType.data
+                ],
                 allowsMultipleSelection: false
             ) { result in
                 handleFileImport(result)
@@ -265,12 +269,21 @@ struct ImportRaceView: View {
                 errorMessage = "Could not save the meet: \(error.localizedDescription)"
             }
 
+        case .meetPayload:
+            errorMessage = "This file contains timing data (splits), not a race/meet setup. Use \"Merge Coach Data\" from the meet detail screen to import this."
+
         case .splitPayload:
-            errorMessage = "This looks like a split export, not a race config. Ask the host coach for the pre-race share data."
+            errorMessage = "This file contains timing data (splits), not a race/meet setup. Use \"Merge Coach Data\" from the results screen to import this."
         }
     }
 
     private func processJSONData(_ data: Data) {
+        // Try meet payload first (timing data) — give a helpful redirect
+        if let _ = PayloadEncoder.decodeMeetPayload(from: data) {
+            errorMessage = "This is a timing data file, not a race/meet setup. Use \"Merge Coach Data\" from the meet detail screen to import timing data."
+            return
+        }
+
         // Try meet config first (more specific), then race config
         if let meetConfig = PayloadEncoder.decodeMeetConfig(from: data) {
             do {
@@ -289,7 +302,7 @@ struct ImportRaceView: View {
                 errorMessage = "Could not save the race: \(error.localizedDescription)"
             }
         } else {
-            errorMessage = "The file doesn't appear to be a valid Runsmith race or meet config."
+            errorMessage = "The file doesn't appear to be a valid Runsmith file."
         }
     }
 

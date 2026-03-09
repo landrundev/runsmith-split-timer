@@ -16,6 +16,8 @@ struct MeetDetailView: View {
     @State private var editName = ""
     @State private var editDate = Date()
     @State private var editLocation = ""
+    @State private var showExportMeetData = false
+    @State private var showBulkMerge = false
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -53,27 +55,48 @@ struct MeetDetailView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button {
+                            showAddRace = true
+                        } label: {
+                            Label("Add Race", systemImage: "plus")
+                        }
+
+                        Divider()
+
+                        Button {
+                            showShareMeet = true
+                        } label: {
+                            Label("Share Meet Setup", systemImage: "person.2.wave.2")
+                        }
+
+                        Button {
+                            showImportRace = true
+                        } label: {
+                            Label("Import Race", systemImage: "square.and.arrow.down")
+                        }
+
+                        Divider()
+
+                        Button {
+                            showExportMeetData = true
+                        } label: {
+                            Label("Export My Timing Data", systemImage: "square.and.arrow.up")
+                        }
+
+                        Button {
+                            showBulkMerge = true
+                        } label: {
+                            Label("Merge Coach Data", systemImage: "arrow.triangle.merge")
+                        }
+
+                        Divider()
+
+                        Button {
                             editName = vm.meet.name
                             editDate = vm.meet.date
                             editLocation = vm.meet.location ?? ""
                             showEditMeet = true
                         } label: {
                             Label("Edit Meet", systemImage: "pencil")
-                        }
-                        Button {
-                            showAddRace = true
-                        } label: {
-                            Label("Add Race", systemImage: "plus")
-                        }
-                        Button {
-                            showImportRace = true
-                        } label: {
-                            Label("Import Race", systemImage: "square.and.arrow.down")
-                        }
-                        Button {
-                            showShareMeet = true
-                        } label: {
-                            Label("Share Meet Config", systemImage: "person.2.wave.2")
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
@@ -100,6 +123,15 @@ struct MeetDetailView: View {
         }
         .sheet(isPresented: $showEditMeet) {
             editMeetSheet
+        }
+        .sheet(isPresented: $showExportMeetData) {
+            ExportMeetDataView(
+                payload: vm.buildCoachMeetPayload(),
+                meetName: vm.meet.name
+            )
+        }
+        .sheet(isPresented: $showBulkMerge, onDismiss: { vm.load() }) {
+            BulkMergeView(vm: vm, store: store)
         }
         .sheet(item: $pendingRaceToSetup, onDismiss: { vm.load() }) { race in
             RaceSetupView(

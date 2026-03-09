@@ -1,6 +1,7 @@
 import SwiftUI
 import CoreImage
 import CoreImage.CIFilterBuiltins
+import UniformTypeIdentifiers
 
 /// Shown when the host taps "Share with Coaches" in Race Setup.
 /// Displays a QR code and share/copy options for the SharedRaceConfig.
@@ -92,9 +93,8 @@ struct ShareRaceConfigView: View {
 
                 // MARK: — Action Buttons
                 Section {
-                    // Share JSON file via system share sheet
                     if let jsonData = PayloadEncoder.encodeJSON(config),
-                       let url = writeToTemporaryFile(data: jsonData, filename: "race-config.json") {
+                       let url = writeRunsmithFile(data: jsonData, filename: "\(sanitizedName(config.raceName))-config.runsmith") {
                         ShareLink(item: url, preview: SharePreview(config.raceName, icon: Image(systemName: "flag.checkered"))) {
                             Label("Share File", systemImage: "square.and.arrow.up")
                                 .frame(maxWidth: .infinity)
@@ -154,9 +154,16 @@ struct ShareRaceConfigView: View {
 
     // MARK: — Temp File for ShareLink
 
-    private func writeToTemporaryFile(data: Data, filename: String) -> URL? {
+    private func writeRunsmithFile(data: Data, filename: String) -> URL? {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
         try? data.write(to: url)
         return url
+    }
+
+    private func sanitizedName(_ name: String) -> String {
+        name.replacingOccurrences(of: " ", with: "-")
+            .replacingOccurrences(of: "/", with: "-")
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber || $0 == "-" }
     }
 }

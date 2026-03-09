@@ -1,4 +1,5 @@
 import Foundation
+import UniformTypeIdentifiers
 
 enum PayloadEncoder {
 
@@ -50,6 +51,48 @@ enum PayloadEncoder {
         return try? decoder.decode(CoachSplitPayload.self, from: data)
     }
 
+    // MARK: – CoachMeetPayload JSON
+
+    /// Encode a CoachMeetPayload to JSON data.
+    static func encodeJSON(_ payload: CoachMeetPayload) -> Data? {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.sortedKeys, .prettyPrinted]
+        return try? encoder.encode(payload)
+    }
+
+    /// Decode a CoachMeetPayload from JSON data.
+    static func decodeMeetPayload(from data: Data) -> CoachMeetPayload? {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try? decoder.decode(CoachMeetPayload.self, from: data)
+    }
+
+    // MARK: – .runsmith File Type
+
+    /// Custom UTType for `.runsmith` files.
+    static let runsmithType = UTType(exportedAs: "com.runsmith.splitdeck.timing-data")
+
+    /// Writes a CoachMeetPayload to a temporary `.runsmith` file for sharing.
+    static func writeRunsmithFile(_ payload: CoachMeetPayload, meetName: String) -> URL? {
+        guard let data = encodeJSON(payload) else { return nil }
+        let safeName = meetName
+            .replacingOccurrences(of: " ", with: "-")
+            .replacingOccurrences(of: "/", with: "-")
+        let filename = "\(safeName)-timing-data.runsmith"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        try? data.write(to: url)
+        return url
+    }
+
+    /// Reads a `.runsmith` file URL and decodes the CoachMeetPayload.
+    static func readRunsmithFile(at url: URL) -> CoachMeetPayload? {
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return decodeMeetPayload(from: data)
+    }
+
     // MARK: – QR Code (zlib-compressed base64)
 
     /// Encode any Codable value to a compact string suitable for a QR code.
@@ -93,13 +136,18 @@ enum PayloadEncoder {
         case raceConfig(SharedRaceConfig)
         case meetConfig(SharedMeetConfig)
         case splitPayload(CoachSplitPayload)
+        case meetPayload(CoachMeetPayload)
     }
 
-    /// Attempt to decode a scanned QR string as a SharedMeetConfig, SharedRaceConfig,
-    /// or CoachSplitPayload. Returns whichever succeeds, or nil if none match.
-    /// SharedMeetConfig is tried first because it contains a `races` array that
-    /// distinguishes it from SharedRaceConfig.
+    /// Attempt to decode a scanned QR string as one of the known payload types.
+    /// Returns whichever succeeds, or nil if none match.
+    /// Tries most-specific types first to avoid false positives.
     static func decodeQR(_ string: String) -> QRContent? {
+        // Try most-specific types first
+        if let meetPayload = decodeFromQR(string, as: CoachMeetPayload.self),
+           !meetPayload.racePayloads.isEmpty {
+            return .meetPayload(meetPayload)
+        }
         if let meetConfig = decodeFromQR(string, as: SharedMeetConfig.self) {
             return .meetConfig(meetConfig)
         }

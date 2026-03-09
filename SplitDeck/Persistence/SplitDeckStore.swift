@@ -384,6 +384,73 @@ final class SplitDeckStore: ObservableObject {
         try ctx.save()
     }
 
+    // MARK: – Existence Checks
+
+    /// Returns true if a meet with this ID exists in Core Data.
+    func meetExists(id: UUID) -> Bool {
+        (try? fetchMeetEntity(id: id)) != nil
+    }
+
+    /// Returns true if a race with this configId exists in Core Data.
+    func raceExists(configId: UUID) -> Bool {
+        let req = RaceEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "configId == %@", configId as CVarArg)
+        req.fetchLimit = 1
+        return (try? ctx.count(for: req)) ?? 0 > 0
+    }
+
+    /// Returns the Race matching a configId, if it exists.
+    func fetchRace(byConfigId configId: UUID) -> Race? {
+        let req = RaceEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "configId == %@", configId as CVarArg)
+        req.fetchLimit = 1
+        guard let entity = try? ctx.fetch(req).first else { return nil }
+        return map(entity)
+    }
+
+    // MARK: – Coach Import Cache
+
+    /// Saves a CoachMeetPayload to the app's cache directory for later review.
+    func cacheImportedPayload(_ payload: CoachMeetPayload) {
+        let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("CoachImports", isDirectory: true)
+        try? FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+
+        let filename = "\(payload.id.uuidString).json"
+        let fileURL = cacheDir.appendingPathComponent(filename)
+
+        if let data = PayloadEncoder.encodeJSON(payload) {
+            try? data.write(to: fileURL)
+        }
+    }
+
+    /// Loads all cached CoachMeetPayloads, sorted by export date descending.
+    func fetchCachedPayloads() -> [CoachMeetPayload] {
+        let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("CoachImports", isDirectory: true)
+
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: cacheDir,
+            includingPropertiesForKeys: nil
+        ) else { return [] }
+
+        return files
+            .filter { $0.pathExtension == "json" }
+            .compactMap { url -> CoachMeetPayload? in
+                guard let data = try? Data(contentsOf: url) else { return nil }
+                return PayloadEncoder.decodeMeetPayload(from: data)
+            }
+            .sorted { $0.exportedAt > $1.exportedAt }
+    }
+
+    /// Deletes a cached payload by its ID.
+    func deleteCachedPayload(id: UUID) {
+        let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("CoachImports", isDirectory: true)
+        let fileURL = cacheDir.appendingPathComponent("\(id.uuidString).json")
+        try? FileManager.default.removeItem(at: fileURL)
+    }
+
     // MARK: – Fetch Archived
 
     func fetchArchivedAthletes() throws -> [Athlete] {

@@ -24,6 +24,44 @@
 	<string>Runsmith needs camera access to scan QR codes for multi-coach race sharing.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save race result cards to your photo library.</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Runsmith Timing Data</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.runsmith.splitdeck.timing-data</string>
+			</array>
+		</dict>
+	</array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.json</string>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Runsmith Timing Data</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.runsmith.splitdeck.timing-data</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>runsmith</string>
+				</array>
+				<key>public.mime-type</key>
+				<string>application/x-runsmith</string>
+			</dict>
+		</dict>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

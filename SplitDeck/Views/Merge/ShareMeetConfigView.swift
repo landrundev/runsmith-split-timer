@@ -1,6 +1,7 @@
 import SwiftUI
 import CoreImage
 import CoreImage.CIFilterBuiltins
+import UniformTypeIdentifiers
 
 /// Shown when the host taps "Share with Coaches" from MeetDetailView.
 /// Displays a QR code and share/copy options for the SharedMeetConfig.
@@ -138,7 +139,7 @@ struct ShareMeetConfigView: View {
                 // MARK: — Action Buttons
                 Section {
                     if let jsonData = PayloadEncoder.encodeJSON(config),
-                       let url = writeToTemporaryFile(data: jsonData, filename: "meet-config.json") {
+                       let url = writeRunsmithFile(data: jsonData, filename: "\(sanitizedName(config.meetName))-config.runsmith") {
                         ShareLink(item: url, preview: SharePreview(config.meetName, icon: Image(systemName: "calendar"))) {
                             Label("Share File", systemImage: "square.and.arrow.up")
                                 .frame(maxWidth: .infinity)
@@ -196,9 +197,16 @@ struct ShareMeetConfigView: View {
 
     // MARK: — Temp File for ShareLink
 
-    private func writeToTemporaryFile(data: Data, filename: String) -> URL? {
+    private func writeRunsmithFile(data: Data, filename: String) -> URL? {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
         try? data.write(to: url)
         return url
+    }
+
+    private func sanitizedName(_ name: String) -> String {
+        name.replacingOccurrences(of: " ", with: "-")
+            .replacingOccurrences(of: "/", with: "-")
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber || $0 == "-" }
     }
 }

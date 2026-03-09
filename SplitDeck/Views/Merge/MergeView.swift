@@ -46,7 +46,11 @@ struct MergeView: View {
             }
             .fileImporter(
                 isPresented: $showFileImporter,
-                allowedContentTypes: [UTType.json, UTType.data],
+                allowedContentTypes: [
+                    PayloadEncoder.runsmithType,
+                    UTType.json,
+                    UTType.data
+                ],
                 allowsMultipleSelection: false
             ) { result in
                 handleFileImport(result)
@@ -332,6 +336,27 @@ struct MergeView: View {
         switch content {
         case .splitPayload(let payload):
             vm.importPayload(payload)
+        case .meetPayload(let meetPayload):
+            // Extract matching race from bulk payload
+            let matching = meetPayload.racePayloads.first { entry in
+                if let configId = vm.race.configId {
+                    return entry.configId == configId
+                }
+                return false
+            }
+            if let match = matching {
+                let singlePayload = CoachSplitPayload(
+                    version: 1,
+                    configId: match.configId,
+                    coachName: meetPayload.coachName,
+                    exportedAt: meetPayload.exportedAt,
+                    athleteSplits: match.athleteSplits,
+                    raceName: match.raceName,
+                    eventType: nil,
+                    meetName: meetPayload.meetName
+                )
+                vm.importPayload(singlePayload)
+            }
         case .raceConfig, .meetConfig:
             break
         }
@@ -349,9 +374,37 @@ struct MergeView: View {
                 showFileError = true
                 return
             }
+
+            // Try single-race split payload first
             if let payload = PayloadEncoder.decodeSplitPayload(from: data) {
                 vm.importPayload(payload)
-            } else {
+            }
+            // Try bulk meet payload — extract only the race that matches
+            else if let meetPayload = PayloadEncoder.decodeMeetPayload(from: data) {
+                let matching = meetPayload.racePayloads.first { entry in
+                    if let configId = vm.race.configId {
+                        return entry.configId == configId
+                    }
+                    return false
+                }
+                if let match = matching {
+                    let singlePayload = CoachSplitPayload(
+                        version: 1,
+                        configId: match.configId,
+                        coachName: meetPayload.coachName,
+                        exportedAt: meetPayload.exportedAt,
+                        athleteSplits: match.athleteSplits,
+                        raceName: match.raceName,
+                        eventType: nil,
+                        meetName: meetPayload.meetName
+                    )
+                    vm.importPayload(singlePayload)
+                } else {
+                    fileImportError = "This file contains timing data for a different meet/race. Use \"Merge Coach Data\" from the meet detail screen for bulk merge."
+                    showFileError = true
+                }
+            }
+            else {
                 fileImportError = "The file doesn't appear to be a valid Runsmith split export."
                 showFileError = true
             }

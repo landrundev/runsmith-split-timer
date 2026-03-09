@@ -1,6 +1,7 @@
 import SwiftUI
 import CoreImage
 import CoreImage.CIFilterBuiltins
+import UniformTypeIdentifiers
 
 /// Shown to assistant coaches after their race ends.
 /// Displays a QR code of the CoachSplitPayload that the host coach scans
@@ -171,9 +172,8 @@ struct ExportSplitsView: View {
 
     private var actionSection: some View {
         Section {
-            // Share JSON file via system share sheet
             if let jsonData = PayloadEncoder.encodeJSON(currentPayload),
-               let url = writeToTemporaryFile(data: jsonData, filename: "splits-\(sanitizedCoachName).json") {
+               let url = writeRunsmithFile(data: jsonData, filename: "splits-\(sanitizedCoachName).runsmith") {
                 ShareLink(
                     item: url,
                     preview: SharePreview(
@@ -237,7 +237,7 @@ struct ExportSplitsView: View {
         return UIImage(cgImage: cgImage)
     }
 
-    private func writeToTemporaryFile(data: Data, filename: String) -> URL? {
+    private func writeRunsmithFile(data: Data, filename: String) -> URL? {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
         try? data.write(to: url)
         return url
