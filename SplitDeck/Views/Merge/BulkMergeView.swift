@@ -160,20 +160,6 @@ struct BulkMergeView: View {
                 Section {
                     row(icon: "person.circle", label: "Coach", value: payload.coachName)
                     row(icon: "calendar", label: "Meet", value: payload.meetName)
-                    HStack {
-                        Label("Meet Verified", systemImage: "shield")
-                            .foregroundStyle(Theme.textSecondary)
-                        Spacer()
-                        if store.meetExists(id: payload.meetId) {
-                            Label("Found", systemImage: "checkmark.circle.fill")
-                                .font(.subheadline)
-                                .foregroundStyle(.green)
-                        } else {
-                            Label("Not Found", systemImage: "xmark.circle.fill")
-                                .font(.subheadline)
-                                .foregroundStyle(.red)
-                        }
-                    }
                     row(icon: "flag.checkered", label: "Races Received", value: "\(payload.racePayloads.count)")
                     HStack {
                         Label("Races Matched", systemImage: "checkmark.circle")
@@ -482,8 +468,7 @@ struct BulkMergeView: View {
     private func flagReason(_ status: MeetDetailViewModel.RaceMatchResult.MatchStatus) -> String {
         switch status {
         case .matched: return ""
-        case .meetNotFound: return "Meet not found on this device"
-        case .raceNotFound: return "Race not found in this meet"
+        case .raceNotFound: return "Race not found — config may not have been shared"
         }
     }
 

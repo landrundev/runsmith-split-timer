@@ -175,28 +175,15 @@ final class MeetDetailViewModel: ObservableObject {
         let payload: RacePayloadEntry
 
         enum MatchStatus {
-            case matched            // Race + meet found locally
-            case meetNotFound       // Meet ID not in local DB
+            case matched            // Race found locally by configId
             case raceNotFound       // Race configId not in local DB
         }
     }
 
-    /// Verifies each race in the payload against the local database.
+    /// Verifies each race in the payload against the local database by configId.
+    /// Does not require meetId to match — coaches may create meets independently.
     func verifyPayload(_ payload: CoachMeetPayload) -> [RaceMatchResult] {
-        let meetFound = store.meetExists(id: payload.meetId)
-
         return payload.racePayloads.map { entry in
-            if !meetFound {
-                return RaceMatchResult(
-                    id: entry.configId,
-                    raceName: entry.raceName,
-                    athleteCount: entry.athleteSplits.count,
-                    status: .meetNotFound,
-                    localRace: nil,
-                    payload: entry
-                )
-            }
-
             if let localRace = store.fetchRace(byConfigId: entry.configId) {
                 return RaceMatchResult(
                     id: entry.configId,
