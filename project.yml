@@ -42,6 +42,7 @@ targets:
         NSCameraUsageDescription: "Runsmith needs camera access to scan QR codes for multi-coach race sharing."
         NSPhotoLibraryAddUsageDescription: "Save race result cards to your photo library."
         UIRequiresFullScreen: NO
+        LSSupportsOpeningDocumentsInPlace: YES
         CFBundleDocumentTypes:
           - CFBundleTypeName: Runsmith Timing Data
             CFBundleTypeRole: Viewer
@@ -63,6 +64,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.runsmith.splitdeck
         INFOPLIST_FILE: SplitDeck/App/Info.plist
         MARKETING_VERSION: "2.0.0"
-        CURRENT_PROJECT_VERSION: "31"
+        CURRENT_PROJECT_VERSION: "32"
         DEVELOPMENT_TEAM: "8N9TUSKDW3"
         CODE_SIGN_STYLE: Automatic

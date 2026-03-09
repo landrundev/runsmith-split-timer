@@ -24,6 +24,8 @@
 	<string>Runsmith needs camera access to scan QR codes for multi-coach race sharing.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save race result cards to your photo library.</string>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
