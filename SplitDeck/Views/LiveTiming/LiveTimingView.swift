@@ -277,7 +277,7 @@ struct LiveTimingView: View {
                     }
                 } else if isDone {
                     if hasIntermediates {
-                        // Show intermediate splits (lap time) + total leg time in parens
+                        // Show intermediate splits (lap times) under name
                         let details = vm.relayLegSplitDetails(legIndex: legIndex)
                         HStack(alignment: .bottom, spacing: 12) {
                             ForEach(Array(details.enumerated()), id: \.offset) { _, detail in
@@ -290,16 +290,7 @@ struct LiveTimingView: View {
                                         .foregroundStyle(Theme.textSecondary)
                                 }
                             }
-                            if let totalLeg = details.last?.legCumulMs {
-                                Text("(\(totalLeg.formattedSplitTime))")
-                                    .font(.caption2.monospacedDigit())
-                                    .foregroundStyle(Theme.textTertiary)
-                            }
                         }
-                    } else if let delta = vm.relayLegDelta(legIndex: legIndex) {
-                        Text(delta.formattedSplitTime)
-                            .font(.caption.weight(.semibold).monospacedDigit())
-                            .foregroundStyle(Theme.textSecondary)
                     }
                 } else {
                     Text("Waiting")
@@ -311,11 +302,19 @@ struct LiveTimingView: View {
             Spacer()
 
             if isDone {
-                if let cumulMs = vm.splits.filter({ $0.athleteId == athlete.id })
-                    .max(by: { $0.elapsedMs < $1.elapsedMs })?.elapsedMs {
-                    Text(cumulMs.formattedSplitTime)
-                        .font(.caption.weight(.bold).monospacedDigit())
-                        .foregroundStyle(Theme.textPrimary)
+                let cumulMs = vm.splits.filter({ $0.athleteId == athlete.id })
+                    .max(by: { $0.elapsedMs < $1.elapsedMs })?.elapsedMs
+                VStack(alignment: .trailing, spacing: 2) {
+                    if let delta = vm.relayLegDelta(legIndex: legIndex) {
+                        Text(delta.formattedSplitTime)
+                            .font(.caption.weight(.bold).monospacedDigit())
+                            .foregroundStyle(Theme.textPrimary)
+                    }
+                    if let cumul = cumulMs {
+                        Text(cumul.formattedSplitTime)
+                            .font(.system(size: 10).monospacedDigit())
+                            .foregroundStyle(Theme.textTertiary)
+                    }
                 }
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
