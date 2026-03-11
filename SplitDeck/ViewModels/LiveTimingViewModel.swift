@@ -245,9 +245,10 @@ final class LiveTimingViewModel: ObservableObject {
         return athletes.allSatisfy { RaceDomain.isComplete(athlete: $0, splits: splits, race: race) }
     }
 
-    /// True when at least one athlete hasn't finished (bounded individual races only).
+    /// True when at least one athlete hasn't finished (individual or relay).
     var hasIncompleteAthletes: Bool {
-        guard !isRelay, !athletes.isEmpty, !race.isUnlimitedSplits else { return false }
+        if isRelay { return !isRelayComplete }
+        guard !athletes.isEmpty, !race.isUnlimitedSplits else { return false }
         return !allAthletesComplete
     }
 

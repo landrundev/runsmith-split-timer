@@ -320,14 +320,25 @@ struct LiveTimingView: View {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
             } else if isCurrent {
-                if vm.isCurrentLegPartial {
-                    // Show progress indicator for partial leg
-                    Text("\(vm.currentLegSplitNumber - 1)/\(vm.race.splitsPerLap)")
-                        .font(.caption2.weight(.bold).monospacedDigit())
+                // Live elapsed time for current leg
+                let prevLegEndMs: Int = {
+                    if legIndex > 0 {
+                        let prevId = vm.race.athleteIds[legIndex - 1]
+                        return vm.splits.filter { $0.athleteId == prevId }
+                            .max(by: { $0.elapsedMs < $1.elapsedMs })?.elapsedMs ?? 0
+                    }
+                    return 0
+                }()
+                let legElapsed = max(0, vm.engine.elapsedMs - prevLegEndMs)
+                VStack(spacing: 2) {
+                    Text(legElapsed.formattedSplitTime)
+                        .font(.caption.weight(.bold).monospacedDigit())
                         .foregroundStyle(Theme.runsmithPink)
-                } else {
-                    Image(systemName: "figure.run")
-                        .foregroundStyle(Theme.runsmithPink)
+                    if vm.isCurrentLegPartial {
+                        Text("\(vm.currentLegSplitNumber - 1)/\(vm.race.splitsPerLap)")
+                            .font(.system(size: 9, weight: .bold).monospacedDigit())
+                            .foregroundStyle(Theme.textTertiary)
+                    }
                 }
             } else if isWaiting {
                 Image(systemName: "line.3.horizontal")
