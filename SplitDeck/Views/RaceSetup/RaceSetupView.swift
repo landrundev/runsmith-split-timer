@@ -11,6 +11,8 @@ struct RaceSetupView: View {
     let cache: RaceStateCache
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isWideLayout: Bool { sizeClass == .regular }
     @State private var showAddAthlete = false
     @State private var navigateToLiveTiming = false
     @State private var createdRace: Race?
@@ -40,21 +42,33 @@ struct RaceSetupView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                eventSection
-                athleteSection
-
-                Button {
-                    vm.ensureConfigId()
-                    showShareConfig = true
-                } label: {
-                    Label("Share with Coaches", systemImage: "person.2.wave.2")
+            Group {
+                if isWideLayout {
+                    HStack(spacing: 0) {
+                        Form {
+                            eventSection
+                            shareWithCoachesButton
+                        }
+                        .frame(maxWidth: .infinity)
+                        Divider()
+                        List {
+                            athleteSection
+                        }
+                        .listStyle(.insetGrouped)
+                        .environment(\.editMode, .constant(.active))
+                        .frame(maxWidth: .infinity)
+                    }
+                } else {
+                    Form {
+                        eventSection
+                        athleteSection
+                        shareWithCoachesButton
+                    }
+                    .environment(\.editMode, .constant(.active))
                 }
-                .disabled(!vm.isValid)
             }
             .navigationTitle(vm.existingRaceId != nil ? "Edit Race" : "Race Setup")
             .navigationBarTitleDisplayMode(.inline)
-            .environment(\.editMode, .constant(.active))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -99,6 +113,18 @@ struct RaceSetupView: View {
                 }
             }
         }
+    }
+
+    // MARK: – Share Button
+
+    private var shareWithCoachesButton: some View {
+        Button {
+            vm.ensureConfigId()
+            showShareConfig = true
+        } label: {
+            Label("Share with Coaches", systemImage: "person.2.wave.2")
+        }
+        .disabled(!vm.isValid)
     }
 
     // MARK: – Event Section

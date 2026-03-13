@@ -19,6 +19,9 @@ struct MeetDetailView: View {
     @State private var showExportMeetData = false
     @State private var showBulkMerge = false
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isWideLayout: Bool { sizeClass == .regular }
+
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateStyle = .long
@@ -108,32 +111,32 @@ struct MeetDetailView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showShareMeet) {
+            .adaptiveSheet(isPresented: $showShareMeet) {
             ShareMeetConfigView(config: vm.buildSharedMeetConfig())
         }
-        .sheet(isPresented: $showImportRace, onDismiss: { vm.load() }) {
+        .adaptiveSheet(isPresented: $showImportRace, onDismiss: { vm.load() }) {
             ImportRaceView(store: store)
         }
-        .sheet(isPresented: $showAddRace, onDismiss: { vm.load() }) {
+        .adaptiveSheet(isPresented: $showAddRace, onDismiss: { vm.load() }) {
             RaceSetupView(
                 vm: RaceSetupViewModel(meetId: vm.meet.id, store: store),
                 store: store,
                 cache: cache
             )
         }
-        .sheet(isPresented: $showEditMeet) {
+        .adaptiveSheet(isPresented: $showEditMeet) {
             editMeetSheet
         }
-        .sheet(isPresented: $showExportMeetData) {
+        .adaptiveSheet(isPresented: $showExportMeetData) {
             ExportMeetDataView(
                 payload: vm.buildCoachMeetPayload(),
                 meetName: vm.meet.name
             )
         }
-        .sheet(isPresented: $showBulkMerge, onDismiss: { vm.load() }) {
+        .adaptiveSheet(isPresented: $showBulkMerge, onDismiss: { vm.load() }) {
             BulkMergeView(vm: vm, store: store)
         }
-        .sheet(item: $pendingRaceToSetup, onDismiss: { vm.load() }) { race in
+        .adaptiveSheet(item: $pendingRaceToSetup, onDismiss: { vm.load() }) { race in
             RaceSetupView(
                 vm: RaceSetupViewModel(meetId: vm.meet.id, store: store, existingRaceId: race.id),
                 store: store,
@@ -243,13 +246,24 @@ struct MeetDetailView: View {
 
     @ViewBuilder
     private var raceCardRows: some View {
-        ForEach(filteredRaces) { race in
-            raceCardRow(race)
+        if isWideLayout {
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                ForEach(filteredRaces) { race in
+                    raceCardButton(race)
+                }
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+        } else {
+            ForEach(filteredRaces) { race in
+                raceCardRow(race)
+            }
+            .onMove(perform: vm.moveRace)
         }
-        .onMove(perform: vm.moveRace)
     }
 
-    private func raceCardRow(_ race: Race) -> some View {
+    private func raceCardButton(_ race: Race) -> some View {
         Button {
             if race.status == .notStarted {
                 pendingRaceToSetup = race
@@ -264,20 +278,24 @@ struct MeetDetailView: View {
             )
         }
         .buttonStyle(.plain)
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button(role: .destructive) { raceToDelete = race } label: {
-                Label("Delete", systemImage: "trash")
+    }
+
+    private func raceCardRow(_ race: Race) -> some View {
+        raceCardButton(race)
+            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                Button(role: .destructive) { raceToDelete = race } label: {
+                    Label("Delete", systemImage: "trash")
+                }
             }
-        }
-        .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            Button { vm.archive(race: race) } label: {
-                Label("Archive", systemImage: "archivebox")
+            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                Button { vm.archive(race: race) } label: {
+                    Label("Archive", systemImage: "archivebox")
+                }
+                .tint(.blue)
             }
-            .tint(.blue)
-        }
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
-        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
     }
 
     // MARK: – Meet Info Header Card
@@ -309,6 +327,7 @@ struct MeetDetailView: View {
         .padding(16)
         .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+        .frame(maxWidth: isWideLayout ? 700 : .infinity)
         .padding(.horizontal, 16)
     }
 

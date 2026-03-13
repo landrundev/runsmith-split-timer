@@ -56,17 +56,17 @@ struct MainTabView: View {
             // Custom tab bar
             customTabBar
         }
-        .sheet(isPresented: $showQuickRaceSetup, onDismiss: { homeVM?.load() }) {
+        .adaptiveSheet(isPresented: $showQuickRaceSetup, onDismiss: { homeVM?.load() }) {
             RaceSetupView(
                 vm: RaceSetupViewModel(meetId: nil, store: store),
                 store: store,
                 cache: cache
             )
         }
-        .sheet(isPresented: $showImportRace, onDismiss: { homeVM?.load() }) {
+        .adaptiveSheet(isPresented: $showImportRace, onDismiss: { homeVM?.load() }) {
             ImportRaceView(store: store)
         }
-        .sheet(isPresented: $showBulkMergeForFile, onDismiss: {
+        .adaptiveSheet(isPresented: $showBulkMergeForFile, onDismiss: {
             pendingMeetPayload = nil
             homeVM?.load()
         }) {
@@ -85,7 +85,7 @@ struct MainTabView: View {
                 }
             }
         }
-        .sheet(isPresented: $showImportRaceForFile, onDismiss: {
+        .adaptiveSheet(isPresented: $showImportRaceForFile, onDismiss: {
             homeVM?.load()
         }) {
             ImportRaceView(store: store)

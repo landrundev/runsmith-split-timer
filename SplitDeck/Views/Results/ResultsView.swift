@@ -8,6 +8,8 @@ struct ResultsView: View {
     @State private var showExport = false
     @State private var showMerge = false
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isWideLayout: Bool { sizeClass == .regular }
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -78,10 +80,10 @@ struct ResultsView: View {
                 doneButton
             }
         }
-        .sheet(isPresented: $showExport) {
+        .adaptiveSheet(isPresented: $showExport) {
             ExportSplitsView(payload: vm.buildCoachSplitPayload())
         }
-        .sheet(isPresented: $showMerge) {
+        .adaptiveSheet(isPresented: $showMerge) {
             MergeView(vm: MergeViewModel(
                 race: vm.race,
                 athletes: vm.orderedAthletes,
@@ -89,7 +91,7 @@ struct ResultsView: View {
                 store: store
             ))
         }
-        .sheet(item: Binding(
+        .adaptiveSheet(item: Binding(
             get: { previewImage.map { SharePreviewItem(image: $0) } },
             set: { if $0 == nil { previewImage = nil } }
         )) { item in
@@ -157,14 +159,29 @@ struct ResultsView: View {
 
     private var resultsTable: some View {
         ScrollView(.vertical) {
-            LazyVStack(spacing: 0) {
-                ForEach(vm.rankedAthletes, id: \.athlete.id) { entry in
-                    athleteBlock(entry: entry)
-                    Divider()
-                        .padding(.horizontal, 16)
+            if isWideLayout {
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)],
+                    spacing: 0
+                ) {
+                    ForEach(vm.rankedAthletes, id: \.athlete.id) { entry in
+                        VStack(spacing: 0) {
+                            athleteBlock(entry: entry)
+                            Divider()
+                        }
+                    }
                 }
+                .padding(.horizontal, 16)
+            } else {
+                LazyVStack(spacing: 0) {
+                    ForEach(vm.rankedAthletes, id: \.athlete.id) { entry in
+                        athleteBlock(entry: entry)
+                        Divider()
+                            .padding(.horizontal, 16)
+                    }
+                }
+                .padding(.horizontal, 16)
             }
-            .padding(.horizontal, 16)
         }
     }
 
@@ -219,12 +236,12 @@ struct ResultsView: View {
     }
 
     /// Max columns per row before wrapping.
-    private static let columnsPerRow = 4
+    private var columnsPerRow: Int { isWideLayout ? 6 : 4 }
 
     /// Chunks column indices into rows of columnsPerRow, filling top rows first.
     private func splitColumnRows(count: Int) -> [[Int]] {
         guard count > 0 else { return [] }
-        let max = Self.columnsPerRow
+        let max = columnsPerRow
         var rows: [[Int]] = []
         var idx = 0
         while idx < count {
@@ -268,6 +285,8 @@ struct ResultsView: View {
         let hasIntermediates = vm.race.splitsPerLap > 1
 
         return ScrollView(.vertical) {
+            // Center relay table with max width on iPad
+            Group {
             VStack(spacing: 0) {
                 // Column headers
                 HStack {
@@ -375,6 +394,8 @@ struct ResultsView: View {
                     .background(Theme.cardBackground)
                 }
             }
+            }
+            .frame(maxWidth: isWideLayout ? 800 : .infinity)
         }
     }
 }

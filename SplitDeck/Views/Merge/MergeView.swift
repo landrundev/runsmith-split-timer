@@ -38,7 +38,7 @@ struct MergeView: View {
             .safeAreaInset(edge: .bottom) {
                 saveButton
             }
-            .sheet(isPresented: $vm.showScanner) {
+            .adaptiveSheet(isPresented: $vm.showScanner) {
                 QRScannerView { scanned in
                     vm.showScanner = false
                     handleScannedString(scanned)

@@ -6,6 +6,8 @@ struct HomeView: View {
     @EnvironmentObject var cache: RaceStateCache
     @Binding var appearance: AppearanceSetting
     @Binding var selectedTab: MainTabView.Tab
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isWideLayout: Bool { sizeClass == .regular }
 
     // Delete confirmation
     @State private var quickRaceToDelete: Race? = nil
@@ -69,14 +71,14 @@ struct HomeView: View {
                         .frame(height: 28)
                 }
             }
-            .sheet(item: $pendingRaceToSetup, onDismiss: { vm.load() }) { race in
+            .adaptiveSheet(item: $pendingRaceToSetup, onDismiss: { vm.load() }) { race in
                 RaceSetupView(
                     vm: RaceSetupViewModel(meetId: nil, store: store, existingRaceId: race.id),
                     store: store,
                     cache: cache
                 )
             }
-            .sheet(isPresented: $showMeetRaceSetup, onDismiss: { vm.load() }) {
+            .adaptiveSheet(isPresented: $showMeetRaceSetup, onDismiss: { vm.load() }) {
                 if let setupVM = meetRaceSetupVM {
                     RaceSetupView(vm: setupVM, store: store, cache: cache)
                 }
@@ -175,35 +177,53 @@ struct HomeView: View {
     private var pendingRacesSection: some View {
         if !vm.pendingQuickRaces.isEmpty {
             Section {
-                ForEach(vm.pendingQuickRaces) { race in
-                    Button { pendingRaceToSetup = race } label: {
-                        RaceCardRow(
-                            race: race,
-                            athletes: vm.athletes,
-                            dateFormatter: Self.dateFormatter
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            quickRaceToDelete = race
-                        } label: {
-                            Label("Delete", systemImage: "trash")
+                if isWideLayout {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                        ForEach(vm.pendingQuickRaces) { race in
+                            Button { pendingRaceToSetup = race } label: {
+                                RaceCardRow(
+                                    race: race,
+                                    athletes: vm.athletes,
+                                    dateFormatter: Self.dateFormatter
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
-                    }
-                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                        Button {
-                            vm.archive(race: race)
-                        } label: {
-                            Label("Archive", systemImage: "archivebox")
-                        }
-                        .tint(.blue)
                     }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                } else {
+                    ForEach(vm.pendingQuickRaces) { race in
+                        Button { pendingRaceToSetup = race } label: {
+                            RaceCardRow(
+                                race: race,
+                                athletes: vm.athletes,
+                                dateFormatter: Self.dateFormatter
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                quickRaceToDelete = race
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button {
+                                vm.archive(race: race)
+                            } label: {
+                                Label("Archive", systemImage: "archivebox")
+                            }
+                            .tint(.blue)
+                        }
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    }
+                    .onMove(perform: vm.movePendingRace)
                 }
-                .onMove(perform: vm.movePendingRace)
             } header: {
                 Text("Pending Races")
                     .font(.footnote.weight(.semibold))
@@ -220,33 +240,51 @@ struct HomeView: View {
         let allHistory = vm.startedQuickRaces
         if !allHistory.isEmpty {
             Section {
-                ForEach(allHistory.prefix(Self.homeHistoryLimit)) { race in
-                    NavigationLink(destination: quickRaceDestination(race)) {
-                        RaceCardRow(
-                            race: race,
-                            athletes: vm.athletes,
-                            dateFormatter: Self.dateFormatter
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            quickRaceToDelete = race
-                        } label: {
-                            Label("Delete", systemImage: "trash")
+                if isWideLayout {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                        ForEach(allHistory.prefix(Self.homeHistoryLimit)) { race in
+                            NavigationLink(destination: quickRaceDestination(race)) {
+                                RaceCardRow(
+                                    race: race,
+                                    athletes: vm.athletes,
+                                    dateFormatter: Self.dateFormatter
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
-                    }
-                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                        Button {
-                            vm.archive(race: race)
-                        } label: {
-                            Label("Archive", systemImage: "archivebox")
-                        }
-                        .tint(.blue)
                     }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                } else {
+                    ForEach(allHistory.prefix(Self.homeHistoryLimit)) { race in
+                        NavigationLink(destination: quickRaceDestination(race)) {
+                            RaceCardRow(
+                                race: race,
+                                athletes: vm.athletes,
+                                dateFormatter: Self.dateFormatter
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                quickRaceToDelete = race
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button {
+                                vm.archive(race: race)
+                            } label: {
+                                Label("Archive", systemImage: "archivebox")
+                            }
+                            .tint(.blue)
+                        }
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    }
                 }
 
                 // "See All" link when more than 10

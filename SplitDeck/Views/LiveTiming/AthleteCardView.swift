@@ -8,8 +8,10 @@ struct AthleteCardView: View {
     let finishTime: String?  // e.g. "4:32.18" \u{2013} total time for completed athlete
     let onTap: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     /// Max chips per row before wrapping.
-    private static let chipsPerRow = 4
+    private var chipsPerRow: Int { sizeClass == .regular ? 6 : 4 }
 
     var body: some View {
         Button(action: onTap) {
@@ -101,7 +103,7 @@ struct AthleteCardView: View {
     private var chipRows: [[Int]] {
         let count = splitTimes.count
         guard count > 0 else { return [] }
-        let max = Self.chipsPerRow
+        let max = chipsPerRow
         var rows: [[Int]] = []
         var idx = 0
         while idx < count {

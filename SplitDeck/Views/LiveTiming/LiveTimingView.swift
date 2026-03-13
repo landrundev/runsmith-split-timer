@@ -6,6 +6,8 @@ struct LiveTimingView: View {
     var onRaceComplete: (() -> Void)? = nil
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isWideLayout: Bool { sizeClass == .regular }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -158,15 +160,17 @@ struct LiveTimingView: View {
         }
     }
 
-    private var useCompactGrid: Bool { vm.athletes.count > 8 }
+    private var useCompactGrid: Bool { vm.athletes.count > (isWideLayout ? 16 : 8) }
+
+    private var compactGridColumns: [GridItem] {
+        let count = isWideLayout ? 4 : 2
+        return Array(repeating: GridItem(.flexible(), spacing: 8), count: count)
+    }
 
     private var regularAthleteList: some View {
         ScrollView {
             if useCompactGrid {
-                LazyVGrid(
-                    columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)],
-                    spacing: 8
-                ) {
+                LazyVGrid(columns: compactGridColumns, spacing: 8) {
                     ForEach(vm.athletes) { athlete in
                         CompactAthleteCardView(
                             athlete: athlete,
@@ -182,6 +186,26 @@ struct LiveTimingView: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
+            } else if isWideLayout {
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
+                    spacing: 10
+                ) {
+                    ForEach(vm.athletes) { athlete in
+                        AthleteCardView(
+                            athlete: athlete,
+                            splitTimes: vm.splitTimesForDisplay(for: athlete),
+                            lapProgress: vm.lapProgress(for: athlete),
+                            isComplete: RaceDomain.isComplete(
+                                athlete: athlete, splits: vm.splits, race: vm.race),
+                            finishTime: vm.finishTimeForDisplay(for: athlete)
+                        ) {
+                            vm.assign(to: athlete)
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             } else {
                 LazyVStack(spacing: 10) {
                     ForEach(vm.athletes) { athlete in
@@ -216,6 +240,7 @@ struct LiveTimingView: View {
         }
         .listStyle(.plain)
         .environment(\.editMode, .constant(.active))
+        .frame(maxWidth: isWideLayout ? 700 : .infinity)
     }
 
     private func relayLegRow(legIndex: Int, athlete: Athlete) -> some View {

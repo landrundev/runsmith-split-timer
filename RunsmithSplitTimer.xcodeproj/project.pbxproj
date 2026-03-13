@@ -37,6 +37,7 @@
 		6F187688BACFD45F4B4C515A /* ResultsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F80EDA2F8E6EE9E75CE5CA /* ResultsViewModel.swift */; };
 		70B0D4AD1B94201087D79BAB /* RaceStateCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B548F352C6C7398141852A0 /* RaceStateCache.swift */; };
 		7105656E56C0527457925B7C /* AnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF5EE4A9614A58C8B4D2699 /* AnalyticsView.swift */; };
+		7713C5AF7EB0D5CD64F733D7 /* AdaptiveSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C8A295EAB0935EC14A14AD2 /* AdaptiveSheet.swift */; };
 		7C5DE16F5D1220887F06FCC6 /* HeroMeetCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1022E854CE99C67ED56AD3 /* HeroMeetCard.swift */; };
 		7C87335282BE8D68DCB7EF8A /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB956097BDEF28F33EE5EEC /* MainTabView.swift */; };
 		83D74901536904C9FE32A512 /* ShareRaceConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF76C64D176D48461AFE4C5B /* ShareRaceConfigView.swift */; };
@@ -98,6 +99,7 @@
 		32053B808398A44F4D58A590 /* ArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveView.swift; sourceTree = "<group>"; };
 		34971AC10EB3458014C26665 /* SplitDeckStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitDeckStore.swift; sourceTree = "<group>"; };
 		3840295052F8A21EF390B087 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		3C8A295EAB0935EC14A14AD2 /* AdaptiveSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveSheet.swift; sourceTree = "<group>"; };
 		3D812937365A0963C9FE9958 /* RaceSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RaceSetupView.swift; sourceTree = "<group>"; };
 		3F69683CF963EBDB3E8FFE22 /* RaceDomain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RaceDomain.swift; sourceTree = "<group>"; };
 		47F2A4AC4296B6FC32B1F6A2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -184,6 +186,7 @@
 		1C54E2652B087682CE7EE967 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				3C8A295EAB0935EC14A14AD2 /* AdaptiveSheet.swift */,
 				FE86AA33E741D6665AC30180 /* MeetCardRow.swift */,
 				BFDE47332C705D19E547DA90 /* MeetRaceCardRow.swift */,
 				4B8D6C4E1103648D301A5CA1 /* RaceCardRow.swift */,
@@ -516,6 +519,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0CE05CDAD03DA81A55A16D71 /* AboutView.swift in Sources */,
+				7713C5AF7EB0D5CD64F733D7 /* AdaptiveSheet.swift in Sources */,
 				7105656E56C0527457925B7C /* AnalyticsView.swift in Sources */,
 				F6B6FB1ABD22E62E2BD5405B /* AnalyticsViewModel.swift in Sources */,
 				9DE13BD267B2B44A22303A51 /* AppearanceSetting.swift in Sources */,
@@ -597,7 +601,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 36;
 				DEVELOPMENT_TEAM = 8N9TUSKDW3;
 				INFOPLIST_FILE = SplitDeck/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -740,7 +744,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 36;
 				DEVELOPMENT_TEAM = 8N9TUSKDW3;
 				INFOPLIST_FILE = SplitDeck/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
