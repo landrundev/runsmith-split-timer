@@ -42,6 +42,25 @@ final class SplitDeckStore: ObservableObject {
         try ctx.save()
     }
 
+    /// Finds an existing athlete by name (case-insensitive) or silently creates
+    /// a new one with a minimal profile. Used by spectator mode to avoid forcing
+    /// parents through full roster setup.
+    func findOrCreateSpectatorAthlete(name: String, gender: Gender = .male) throws -> Athlete {
+        let req = AthleteEntity.fetchRequest()
+        req.predicate = NSPredicate(format: "name ==[cd] %@", name)
+        req.fetchLimit = 1
+        if let existing = try ctx.fetch(req).first {
+            return map(existing)
+        }
+        let athlete = Athlete(
+            name: name,
+            colorHex: RosterImporter.colorPalette.randomElement() ?? "#FF3B30",
+            gender: gender
+        )
+        try save(athlete)
+        return athlete
+    }
+
     func delete(athleteId: UUID) throws {
         guard let entity = try fetchAthleteEntity(id: athleteId) else { return }
         ctx.delete(entity)

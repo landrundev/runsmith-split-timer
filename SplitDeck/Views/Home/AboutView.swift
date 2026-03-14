@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var showSwitchToFan = false
     private let runsmithURL = URL(string: "https://runsmith.app.link/")!
 
     var body: some View {
@@ -91,6 +92,30 @@ struct AboutView: View {
 
                 Divider().padding(.horizontal)
 
+                // Switch mode
+                VStack(alignment: .leading, spacing: 12) {
+                    Button {
+                        showSwitchToFan = true
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Switch to Fan Mode")
+                                    .font(.subheadline.weight(.semibold))
+                                Text("Time your own athlete and track their PRs")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+                }
+                .padding(.horizontal)
+
+                Divider().padding(.horizontal)
+
                 // Footer
                 VStack(spacing: 6) {
                     Text("Made for coaches, by coaches.")
@@ -105,6 +130,16 @@ struct AboutView: View {
         .background(Theme.screenBackground.ignoresSafeArea())
         .navigationTitle("About")
         .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog("Switch to Fan Mode?",
+                            isPresented: $showSwitchToFan,
+                            titleVisibility: .visible) {
+            Button("Switch to Fan Mode") {
+                AppSettings.appMode = .spectator
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Your meets, rosters, and race history are kept. Switch back anytime.")
+        }
     }
 
     // MARK: – Helpers

@@ -12,7 +12,9 @@
 		0927059CF66C78EA31C867F7 /* MeetCardRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE86AA33E741D6665AC30180 /* MeetCardRow.swift */; };
 		09EB142480D65C9438106D49 /* RaceSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A031E4142C9058EF08DEBE9 /* RaceSetupViewModel.swift */; };
 		0CE05CDAD03DA81A55A16D71 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FC29C5EB6D64350600FC8AA /* AboutView.swift */; };
+		0D85858B37AC18D9876ED109 /* ModeSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 929799BA799434D1A56752D8 /* ModeSelectorView.swift */; };
 		10076C69AA3CD9A6C638516B /* MeetRaceCardRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFDE47332C705D19E547DA90 /* MeetRaceCardRow.swift */; };
+		12ED0D347A271FB888AA003C /* SpectatorHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BEE1EC77DA5D2C3F9C9F28 /* SpectatorHomeView.swift */; };
 		1A37159E60C57CAFD06D2BFB /* ResultsCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F17121B12636D402BE0494 /* ResultsCardView.swift */; };
 		1BA5055F711162EA2448A8E9 /* MeetDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02F8B89A3ACC98CEDE93E36 /* MeetDetailView.swift */; };
 		1C552CE22234D906DB87720A /* RaceDomainTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B956E3D620CE0BEFA88FAEFC /* RaceDomainTests.swift */; };
@@ -24,6 +26,7 @@
 		37171390CCA27BFA7683ECFF /* Race.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93175D56ABAEDC79E4C794B3 /* Race.swift */; };
 		37A6EB641D50763F0EC4E858 /* AthleteProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A190C975E445F6E55481E08 /* AthleteProfileView.swift */; };
 		3E69ADA79ACE1FD30A094C55 /* PayloadEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD61869AF46FB9DA543E8E4 /* PayloadEncoder.swift */; };
+		42C0AE3F8DFFC068D39793BF /* SpectatorRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD94C5A20CF2F40D3944D1D9 /* SpectatorRootView.swift */; };
 		43F40A75A46E51AAA2EF6891 /* AthleteProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221CC82841835CBCD8E139A0 /* AthleteProfileViewModel.swift */; };
 		46A713C3E39CE8FF16EEC744 /* RosterImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E67BEC18DA7A13812ED302 /* RosterImportView.swift */; };
 		4A638C5605FF2EF3020849E4 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F2A4AC4296B6FC32B1F6A2 /* SettingsView.swift */; };
@@ -31,6 +34,7 @@
 		52589224CDB614F54C383013 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3840295052F8A21EF390B087 /* Assets.xcassets */; };
 		527F7D8CF38D86FE207F5504 /* ColorBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C445F0828F08EA29C544354C /* ColorBar.swift */; };
 		529268408F4922F7202C717D /* RaceHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D62238E5D623135760E1A5D /* RaceHistoryView.swift */; };
+		5326E9F64906DAB536BFBBED /* SpectatorAthleteDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9180A57C4BDA1A43CF7829C0 /* SpectatorAthleteDetailView.swift */; };
 		5557CB80626C4C8DF4A9C576 /* SharedRaceConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF97A96A4A096239BF7DF70 /* SharedRaceConfig.swift */; };
 		59030C96538DC1F57B12B260 /* PaceCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A44C31CC9BAEF810F6B2DB6E /* PaceCalculator.swift */; };
 		611289B1288492A12CA72E9E /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7762FF50BAEDBD6EF28E2D04 /* AppSettings.swift */; };
@@ -44,6 +48,7 @@
 		7713C5AF7EB0D5CD64F733D7 /* AdaptiveSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C8A295EAB0935EC14A14AD2 /* AdaptiveSheet.swift */; };
 		7C5DE16F5D1220887F06FCC6 /* HeroMeetCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1022E854CE99C67ED56AD3 /* HeroMeetCard.swift */; };
 		7C87335282BE8D68DCB7EF8A /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB956097BDEF28F33EE5EEC /* MainTabView.swift */; };
+		7CBC0F580E20A338E93C9B37 /* SpectatorStagingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F55B9992B4911C4B09E12B0 /* SpectatorStagingView.swift */; };
 		83D74901536904C9FE32A512 /* ShareRaceConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF76C64D176D48461AFE4C5B /* ShareRaceConfigView.swift */; };
 		84C210A7BF88D39CCF2779BD /* ResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57BE85BF81644B8271FB4DD6 /* ResultsView.swift */; };
 		85DECC45C53B273E377E91CD /* CoachIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB0556F276BEC797727502A7 /* CoachIdentity.swift */; };
@@ -51,6 +56,7 @@
 		8A1D09DB95DC90FE9BF904D4 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C80CEB71BCBFD4A3B4B37FD /* QRScannerView.swift */; };
 		8AA329EB6209E9834CE1209B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7766A2D83FB4A1CC2FAAF8FB /* Theme.swift */; };
 		8BBCA2723C950081C068EB17 /* BulkMergeFileErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51379A713AA8D220567B4AB7 /* BulkMergeFileErrorView.swift */; };
+		8BD155A10112A545000D506C /* SpectatorSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0DF5E2A51004D8268212FF2 /* SpectatorSetupView.swift */; };
 		8E4B03044E2CB11C9C6C6057 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0621D38455ED4C89A659FBEB /* HomeViewModel.swift */; };
 		940224D3C4FDC3D31CD48F77 /* SplitDeck.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 73496D30D2CF2129FEC0EE5E /* SplitDeck.xcdatamodeld */; };
 		9935B96036449CAF5F6A3BD3 /* Athlete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983B6342E3A87E4CD19AA2FD /* Athlete.swift */; };
@@ -64,7 +70,9 @@
 		A84244A8841FAD448DC262A2 /* ArchiveViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B3D16FAFB4CC317480C0164 /* ArchiveViewModel.swift */; };
 		A937F4E28A9F267F33A3F49E /* BulkMergeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AF71A54D69CB7658A7C04BC /* BulkMergeView.swift */; };
 		AD7DC3B4451D460BD713550F /* AthleteCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22816F99276C67DC2F708AA1 /* AthleteCardView.swift */; };
+		B097800DB157AFDA093373DC /* SpectatorRelaySetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2F011B2DE8930C2B917BE5C /* SpectatorRelaySetupView.swift */; };
 		B404F9C191B47860EBBF00E4 /* MeetDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A68AB182F1F2DB803B59A43F /* MeetDetailViewModel.swift */; };
+		B4A67FB52722D46A1FC3040E /* SpectatorSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFBB3350951D9A027719421 /* SpectatorSettingsView.swift */; };
 		BADBA318200E4EB7FB4118F7 /* RaceCardRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8D6C4E1103648D301A5CA1 /* RaceCardRow.swift */; };
 		C1B43ED253E983B76E1C1360 /* CoachSplitPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95E95F3FC6BC830E04E4942 /* CoachSplitPayload.swift */; };
 		C2C0132469CAE63A71E2B23B /* UnassignedMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592212AC0943EEECCA541243 /* UnassignedMark.swift */; };
@@ -102,6 +110,7 @@
 		0B47F1621BCC343B786B1D69 /* AppearanceSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceSetting.swift; sourceTree = "<group>"; };
 		0D5545723FBB96972FCEB8C7 /* CompactAthleteCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactAthleteCardView.swift; sourceTree = "<group>"; };
 		0E729CE74F1588333BE72148 /* RelayRecommender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayRecommender.swift; sourceTree = "<group>"; };
+		0F55B9992B4911C4B09E12B0 /* SpectatorStagingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectatorStagingView.swift; sourceTree = "<group>"; };
 		110FB51AD12891B38900F30E /* RelayBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayBuilderView.swift; sourceTree = "<group>"; };
 		15415B5F64D5CF6C857AF04F /* RunsmithSplitTimer.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RunsmithSplitTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A190C975E445F6E55481E08 /* AthleteProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteProfileView.swift; sourceTree = "<group>"; };
@@ -141,11 +150,14 @@
 		88D3BAA858E22F979FCD3FAC /* AthleteRosterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteRosterView.swift; sourceTree = "<group>"; };
 		8B3D16FAFB4CC317480C0164 /* ArchiveViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveViewModel.swift; sourceTree = "<group>"; };
 		8B7E10E626A51518A3584E3D /* CoachMeetPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachMeetPayload.swift; sourceTree = "<group>"; };
+		9180A57C4BDA1A43CF7829C0 /* SpectatorAthleteDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectatorAthleteDetailView.swift; sourceTree = "<group>"; };
+		929799BA799434D1A56752D8 /* ModeSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeSelectorView.swift; sourceTree = "<group>"; };
 		93175D56ABAEDC79E4C794B3 /* Race.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Race.swift; sourceTree = "<group>"; };
 		95C31A50A75DF2F947173240 /* SavedRelayTeam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedRelayTeam.swift; sourceTree = "<group>"; };
 		9616DB739E616548E3CC4AE6 /* RelayBuilderViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayBuilderViewModel.swift; sourceTree = "<group>"; };
 		983B6342E3A87E4CD19AA2FD /* Athlete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Athlete.swift; sourceTree = "<group>"; };
 		9D62238E5D623135760E1A5D /* RaceHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RaceHistoryView.swift; sourceTree = "<group>"; };
+		A2F011B2DE8930C2B917BE5C /* SpectatorRelaySetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectatorRelaySetupView.swift; sourceTree = "<group>"; };
 		A44C31CC9BAEF810F6B2DB6E /* PaceCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaceCalculator.swift; sourceTree = "<group>"; };
 		A68AB182F1F2DB803B59A43F /* MeetDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetDetailViewModel.swift; sourceTree = "<group>"; };
 		ADE3532082051AEB1DDCBF08 /* SplitDeck.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = SplitDeck.xcdatamodel; sourceTree = "<group>"; };
@@ -164,6 +176,7 @@
 		D12CE3E6B8D19009BF55087D /* AnalyticsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsViewModel.swift; sourceTree = "<group>"; };
 		D79CFC9494F0155770A77B1D /* ShareMeetConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareMeetConfigView.swift; sourceTree = "<group>"; };
 		D9323BED1D9566725EABCD06 /* SplitMergerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitMergerTests.swift; sourceTree = "<group>"; };
+		DD94C5A20CF2F40D3944D1D9 /* SpectatorRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectatorRootView.swift; sourceTree = "<group>"; };
 		DF0BEBE348AD4BFEBF2C0CA7 /* Meet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meet.swift; sourceTree = "<group>"; };
 		DFB956097BDEF28F33EE5EEC /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		E108A36EE73BC01960F84847 /* LiveTimingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTimingViewModel.swift; sourceTree = "<group>"; };
@@ -172,8 +185,11 @@
 		E79BA0870757AAE4764F6F8B /* LiveTimingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTimingView.swift; sourceTree = "<group>"; };
 		EAE3B7B55B5AF96ACE36FBA1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EB0556F276BEC797727502A7 /* CoachIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachIdentity.swift; sourceTree = "<group>"; };
+		EEFBB3350951D9A027719421 /* SpectatorSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectatorSettingsView.swift; sourceTree = "<group>"; };
 		F070D2C01B00E11E16689F02 /* RaceStagingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RaceStagingView.swift; sourceTree = "<group>"; };
+		F0DF5E2A51004D8268212FF2 /* SpectatorSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectatorSetupView.swift; sourceTree = "<group>"; };
 		F0F80EDA2F8E6EE9E75CE5CA /* ResultsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsViewModel.swift; sourceTree = "<group>"; };
+		F1BEE1EC77DA5D2C3F9C9F28 /* SpectatorHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectatorHomeView.swift; sourceTree = "<group>"; };
 		F95E95F3FC6BC830E04E4942 /* CoachSplitPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachSplitPayload.swift; sourceTree = "<group>"; };
 		FBF5EE4A9614A58C8B4D2699 /* AnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsView.swift; sourceTree = "<group>"; };
 		FE86AA33E741D6665AC30180 /* MeetCardRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetCardRow.swift; sourceTree = "<group>"; };
@@ -358,6 +374,7 @@
 				1A8D83B64E18ECA528A683E1 /* RosterImport */,
 				D7633432FC7646DB33D26E12 /* Settings */,
 				1C54E2652B087682CE7EE967 /* Shared */,
+				C20A474377A39AC421B7EDDF /* Spectator */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -401,6 +418,21 @@
 				E3C9814AEFCFD5EB2BE0CE9F /* TipCardView.swift */,
 			);
 			path = Components;
+			sourceTree = "<group>";
+		};
+		C20A474377A39AC421B7EDDF /* Spectator */ = {
+			isa = PBXGroup;
+			children = (
+				929799BA799434D1A56752D8 /* ModeSelectorView.swift */,
+				9180A57C4BDA1A43CF7829C0 /* SpectatorAthleteDetailView.swift */,
+				F1BEE1EC77DA5D2C3F9C9F28 /* SpectatorHomeView.swift */,
+				A2F011B2DE8930C2B917BE5C /* SpectatorRelaySetupView.swift */,
+				DD94C5A20CF2F40D3944D1D9 /* SpectatorRootView.swift */,
+				EEFBB3350951D9A027719421 /* SpectatorSettingsView.swift */,
+				F0DF5E2A51004D8268212FF2 /* SpectatorSetupView.swift */,
+				0F55B9992B4911C4B09E12B0 /* SpectatorStagingView.swift */,
+			);
+			path = Spectator;
 			sourceTree = "<group>";
 		};
 		CDF7922CD2FD47C879319746 /* ViewModels */ = {
@@ -616,6 +648,7 @@
 				A1612EA74AA5E8E81E2C763F /* MeetsTabView.swift in Sources */,
 				A68AA825821F7788B14E7BEC /* MergeView.swift in Sources */,
 				2A50B3529D2F32488C25A498 /* MergeViewModel.swift in Sources */,
+				0D85858B37AC18D9876ED109 /* ModeSelectorView.swift in Sources */,
 				59030C96538DC1F57B12B260 /* PaceCalculator.swift in Sources */,
 				3E69ADA79ACE1FD30A094C55 /* PayloadEncoder.swift in Sources */,
 				8A1D09DB95DC90FE9BF904D4 /* QRScannerView.swift in Sources */,
@@ -640,6 +673,13 @@
 				65D59B7C907F2A34424EFC67 /* ShareMeetConfigView.swift in Sources */,
 				83D74901536904C9FE32A512 /* ShareRaceConfigView.swift in Sources */,
 				5557CB80626C4C8DF4A9C576 /* SharedRaceConfig.swift in Sources */,
+				5326E9F64906DAB536BFBBED /* SpectatorAthleteDetailView.swift in Sources */,
+				12ED0D347A271FB888AA003C /* SpectatorHomeView.swift in Sources */,
+				B097800DB157AFDA093373DC /* SpectatorRelaySetupView.swift in Sources */,
+				42C0AE3F8DFFC068D39793BF /* SpectatorRootView.swift in Sources */,
+				B4A67FB52722D46A1FC3040E /* SpectatorSettingsView.swift in Sources */,
+				8BD155A10112A545000D506C /* SpectatorSetupView.swift in Sources */,
+				7CBC0F580E20A338E93C9B37 /* SpectatorStagingView.swift in Sources */,
 				FC66AA0E1F24F4523C2F2467 /* Split.swift in Sources */,
 				940224D3C4FDC3D31CD48F77 /* SplitDeck.xcdatamodeld in Sources */,
 				D8DBD5629AF5F0C6688EAA3A /* SplitDeckApp.swift in Sources */,
@@ -679,14 +719,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 38;
+				CURRENT_PROJECT_VERSION = 39;
 				DEVELOPMENT_TEAM = 8N9TUSKDW3;
 				INFOPLIST_FILE = SplitDeck/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.1.0;
+				MARKETING_VERSION = 2.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.runsmith.splitdeck;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -860,14 +900,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 38;
+				CURRENT_PROJECT_VERSION = 39;
 				DEVELOPMENT_TEAM = 8N9TUSKDW3;
 				INFOPLIST_FILE = SplitDeck/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.1.0;
+				MARKETING_VERSION = 2.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.runsmith.splitdeck;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
