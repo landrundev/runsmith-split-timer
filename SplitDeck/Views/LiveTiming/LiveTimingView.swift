@@ -10,6 +10,27 @@ struct LiveTimingView: View {
     private var isWideLayout: Bool { sizeClass == .regular }
 
     var body: some View {
+        Group {
+            if vm.navigateToResults, let resultsVM = vm.resultsViewModel {
+                ResultsView(vm: resultsVM, onDone: { vm.shouldDismiss = true })
+            } else {
+                timingContent
+            }
+        }
+        .onChange(of: vm.shouldDismiss) { should in
+            if should {
+                if let onRaceComplete {
+                    onRaceComplete()
+                } else {
+                    dismiss()
+                }
+            }
+        }
+    }
+
+    // MARK: – Timing Content
+
+    private var timingContent: some View {
         VStack(spacing: 0) {
             clockHeader
             if !vm.isRelay {
@@ -83,23 +104,6 @@ struct LiveTimingView: View {
         }
         .onAppear { vm.onAppear() }
         .onDisappear { vm.onDisappear() }
-        .onChange(of: vm.shouldDismiss) { should in
-            if should {
-                vm.navigateToResults = false
-                if let onRaceComplete {
-                    onRaceComplete()
-                } else {
-                    dismiss()
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $vm.navigateToResults) {
-            NavigationStack {
-                if let resultsVM = vm.resultsViewModel {
-                    ResultsView(vm: resultsVM, onDone: { vm.shouldDismiss = true })
-                }
-            }
-        }
     }
 
     // MARK: – Clock Header

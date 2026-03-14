@@ -4,10 +4,9 @@ struct ResultsView: View {
     @ObservedObject var vm: ResultsViewModel
     @EnvironmentObject var store: SplitDeckStore
     var onDone: (() -> Void)? = nil
-    @State private var previewImage: UIImage? = nil
+    @State private var shareItem: SharePreviewItem? = nil
     @State private var showExport = false
     @State private var showMerge = false
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
     private var isWideLayout: Bool { sizeClass == .regular }
 
@@ -54,7 +53,7 @@ struct ResultsView: View {
                 Menu {
                     Button {
                         let data = vm.buildCardData()
-                        previewImage = CardRenderer.render(data: data)
+                        shareItem = SharePreviewItem(image: CardRenderer.render(data: data))
                     } label: {
                         Label("Share Results", systemImage: "square.and.arrow.up")
                     }
@@ -91,10 +90,7 @@ struct ResultsView: View {
                 store: store
             ))
         }
-        .adaptiveSheet(item: Binding(
-            get: { previewImage.map { SharePreviewItem(image: $0) } },
-            set: { if $0 == nil { previewImage = nil } }
-        )) { item in
+        .adaptiveSheet(item: $shareItem) { item in
             SharePreviewSheet(image: item.image, csvURL: vm.csvFileURL())
         }
     }
@@ -147,7 +143,6 @@ struct ResultsView: View {
     private var doneButton: some View {
         Button {
             onDone?()
-            dismiss()
         } label: {
             Text("Done")
         }
