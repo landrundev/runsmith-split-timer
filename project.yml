@@ -63,7 +63,22 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.runsmith.splitdeck
         INFOPLIST_FILE: SplitDeck/App/Info.plist
-        MARKETING_VERSION: "2.0.0"
-        CURRENT_PROJECT_VERSION: "36"
+        MARKETING_VERSION: "2.1.0"
+        CURRENT_PROJECT_VERSION: "38"
+        DEVELOPMENT_TEAM: "8N9TUSKDW3"
+        CODE_SIGN_STYLE: Automatic
+
+  RunsmithSplitTimerTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: SplitDeckTests
+        excludes:
+          - "**/.DS_Store"
+    dependencies:
+      - target: RunsmithSplitTimer
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
         DEVELOPMENT_TEAM: "8N9TUSKDW3"
         CODE_SIGN_STYLE: Automatic

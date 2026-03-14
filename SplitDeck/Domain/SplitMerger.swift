@@ -14,8 +14,8 @@ enum SplitMerger {
     }
 
     enum SplitFlag: Equatable {
-        case clean                   // All values within 500ms tolerance of median
-        case outlier(coachIndex: Int) // One source was >500ms off the median; excluded
+        case clean                   // All values within dynamic tolerance (2% of median, floored at 200ms, capped at 1000ms)
+        case outlier(coachIndex: Int) // One source exceeded dynamic tolerance (2% of median, floored at 200ms, capped at 1000ms); excluded
         case singleTimer             // Only one source recorded this split
     }
 
@@ -30,8 +30,9 @@ enum SplitMerger {
     ///
     /// For each split index:
     ///   - 1 value  → use as-is, flag `.singleTimer`
-    ///   - 2+ values → compute median, exclude any value >500ms from median (flag `.outlier`),
-    ///                 then apply the chosen strategy to the remaining clean values.
+    ///   - 2+ values → compute median, exclude any value exceeding a dynamic tolerance
+    ///                 (2% of median, floored at 200ms, capped at 1000ms) from the median
+    ///                 (flag `.outlier`), then apply the chosen strategy to the remaining clean values.
     ///
     /// - Parameters:
     ///   - hostSplits:   The host coach's elapsedMs values, ordered by split index.
@@ -72,12 +73,13 @@ enum SplitMerger {
             let sorted = values.map(\.ms).sorted()
             let medianValue = sorted[sorted.count / 2]
 
-            // Partition into clean (within 500ms) and outlier (>500ms off median)
+            // Partition into clean (within dynamic tolerance) and outlier (exceeds tolerance)
+            let tolerance = max(200, min(1000, Int(Double(medianValue) * 0.02)))
             var cleanValues: [Int] = []
             var firstOutlierSourceIndex: Int? = nil
 
             for (sourceIdx, ms) in values {
-                if abs(ms - medianValue) > 500 {
+                if abs(ms - medianValue) > tolerance {
                     // Record the first outlier's source index for the flag
                     if firstOutlierSourceIndex == nil {
                         // sourceIdx 0 = host, sourceIdx 1+ = coachSplits[sourceIdx - 1]

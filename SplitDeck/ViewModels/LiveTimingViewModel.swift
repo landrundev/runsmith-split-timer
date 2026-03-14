@@ -183,6 +183,23 @@ final class LiveTimingViewModel: ObservableObject {
         return (last.elapsedMs - prev).formattedSplitTime
     }
 
+    /// Last lap delta in raw milliseconds (used by pace calculation).
+    func lastLapDeltaMs(for athlete: Athlete) -> Int? {
+        let sorted = splits(for: athlete)
+        guard let last = sorted.last else { return nil }
+        let prev = sorted.count >= 2 ? sorted[sorted.count - 2].elapsedMs : 0
+        return last.elapsedMs - prev
+    }
+
+    /// Formatted pace string for the athlete's most recent lap, e.g. "5:12/mi".
+    func paceDisplay(for athlete: Athlete) -> String? {
+        guard let deltaMs = lastLapDeltaMs(for: athlete) else { return nil }
+        let lapMeters = race.trackLengthMeters / max(race.splitsPerLap, 1)
+        let raw = UserDefaults.standard.string(forKey: "paceUnit") ?? PaceUnit.perMile.rawValue
+        let unit = PaceUnit(rawValue: raw) ?? .perMile
+        return PaceCalculator.format(lapMs: deltaMs, lapMeters: lapMeters, unit: unit)
+    }
+
     /// Last cumulative time for compact cards
     func lastCumulativeTime(for athlete: Athlete) -> String? {
         splits(for: athlete).last.map { $0.elapsedMs.formattedSplitTime }

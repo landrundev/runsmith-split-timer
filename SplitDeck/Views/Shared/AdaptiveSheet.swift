@@ -1,5 +1,34 @@
 import SwiftUI
 
+// MARK: — Tab Bar Visibility
+
+private struct TabBarHiddenKey: EnvironmentKey {
+    static let defaultValue: Binding<Bool>? = nil
+}
+
+extension EnvironmentValues {
+    var tabBarHidden: Binding<Bool>? {
+        get { self[TabBarHiddenKey.self] }
+        set { self[TabBarHiddenKey.self] = newValue }
+    }
+}
+
+private struct HidesTabBarModifier: ViewModifier {
+    @Environment(\.tabBarHidden) private var tabBarHidden
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear { tabBarHidden?.wrappedValue = true }
+            .onDisappear { tabBarHidden?.wrappedValue = false }
+    }
+}
+
+extension View {
+    func hidesTabBar() -> some View {
+        modifier(HidesTabBarModifier())
+    }
+}
+
 // MARK: — isPresented variant
 
 private struct AdaptiveSheetModifier<SheetContent: View>: ViewModifier {

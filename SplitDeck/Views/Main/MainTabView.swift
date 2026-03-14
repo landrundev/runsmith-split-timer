@@ -14,6 +14,8 @@ struct MainTabView: View {
     @State private var homeVM: HomeViewModel?
 
     // File auto-open state
+    @State private var tabBarHidden = false
+
     @State private var pendingMeetPayload: CoachMeetPayload? = nil
     @State private var showBulkMergeForFile = false
     @State private var showImportRaceForFile = false
@@ -53,8 +55,14 @@ struct MainTabView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // Custom tab bar
-            customTabBar
+            // Custom tab bar — hidden when a detail view is pushed
+            if !tabBarHidden {
+                customTabBar
+            }
+        }
+        .environment(\.tabBarHidden, $tabBarHidden)
+        .onChange(of: selectedTab) { _ in
+            tabBarHidden = false
         }
         .adaptiveSheet(isPresented: $showQuickRaceSetup, onDismiss: { homeVM?.load() }) {
             RaceSetupView(

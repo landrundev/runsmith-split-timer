@@ -2,7 +2,6 @@ import SwiftUI
 
 struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
-
     private let runsmithURL = URL(string: "https://runsmith.app.link/")!
 
     var body: some View {

@@ -2,6 +2,12 @@ import Foundation
 
 enum RosterImporter {
 
+    static let colorPalette = [
+        "#FF3B30", "#FF9500", "#FFCC00", "#34C759",
+        "#00C7BE", "#007AFF", "#5856D6", "#FF2D55",
+        "#AF52DE", "#A2845E"
+    ]
+
     struct ImportRow {
         let name: String
         let gender: Gender
@@ -67,7 +73,7 @@ enum RosterImporter {
             return ImportResult(rows: [.error(line: 1, reason: "Missing required columns: First Name, Last Name, Gender")])
         }
 
-        let colorPalette = RaceSetupViewModel.colorPalette
+        let colorPalette = Self.colorPalette
         var results: [RowResult] = []
 
         for (i, line) in lines.dropFirst().enumerated() {

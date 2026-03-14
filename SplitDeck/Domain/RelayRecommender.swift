@@ -17,7 +17,7 @@ struct AthleteRelayCandidate: Identifiable {
 enum RelayRecommender {
 
     static let supportedRelayTypes: [EventType] = [
-        .relay4x400, .relay4x800, .relay4x1600, .relay4x3200
+        .relay4x100, .relay4x200, .relay4x400, .relay4x800
     ]
 
     /// Rank athletes for a relay event by their best time at the leg distance.

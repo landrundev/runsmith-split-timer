@@ -448,21 +448,24 @@ struct MeetDetailView: View {
 
     @ViewBuilder
     private func raceDestination(_ race: Race) -> some View {
-        switch race.status {
-        case .notStarted:
-            let setupVM = RaceSetupViewModel(meetId: vm.meet.id, store: store, existingRaceId: race.id)
-            RaceSetupView(vm: setupVM, store: store, cache: cache)
+        Group {
+            switch race.status {
+            case .notStarted:
+                let setupVM = RaceSetupViewModel(meetId: vm.meet.id, store: store, existingRaceId: race.id)
+                RaceSetupView(vm: setupVM, store: store, cache: cache)
 
-        case .inProgress:
-            let athletes = (try? store.fetchAthletes()) ?? []
-            let liveVM = LiveTimingViewModel(race: race, athletes: athletes, store: store, cache: cache)
-            LiveTimingView(vm: liveVM, cache: cache)
+            case .inProgress:
+                let athletes = (try? store.fetchAthletes()) ?? []
+                let liveVM = LiveTimingViewModel(race: race, athletes: athletes, store: store, cache: cache)
+                LiveTimingView(vm: liveVM, cache: cache)
 
-        case .completed:
-            let athletes = (try? store.fetchAthletes()) ?? []
-            let splits   = (try? store.fetchSplits(for: race.id)) ?? []
-            let resultsVM = ResultsViewModel(race: race, athletes: athletes, splits: splits, meet: vm.meet)
-            ResultsView(vm: resultsVM)
+            case .completed:
+                let athletes = (try? store.fetchAthletes()) ?? []
+                let splits   = (try? store.fetchSplits(for: race.id)) ?? []
+                let resultsVM = ResultsViewModel(race: race, athletes: athletes, splits: splits, meet: vm.meet)
+                ResultsView(vm: resultsVM)
+            }
         }
+        .hidesTabBar()
     }
 }

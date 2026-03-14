@@ -138,6 +138,7 @@ struct MeetsTabView: View {
                     store: store,
                     cache: cache
                 )
+                .hidesTabBar()
             }
         }
     }

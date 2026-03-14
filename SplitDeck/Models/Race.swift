@@ -5,10 +5,10 @@ enum EventType: Int16, Codable, CaseIterable {
     case m1600 = 1
     case m3200 = 2
     case custom = 3
-    case relay4x400  = 4
-    case relay4x800  = 5
-    case relay4x1600 = 6
-    case relay4x3200 = 7
+    case relay4x100  = 4
+    case relay4x200  = 5
+    case relay4x400 = 6
+    case relay4x800 = 7
     case m400   = 8
     case m1500  = 9
     case m5000  = 10
@@ -30,16 +30,16 @@ enum EventType: Int16, Codable, CaseIterable {
         case .m5000:     return "5000m"
         case .m10000:    return "10000m"
         case .custom:    return "Custom"
-        case .relay4x400:  return "4\u{00D7}100m"
-        case .relay4x800:  return "4\u{00D7}200m"
-        case .relay4x1600: return "4\u{00D7}400m"
-        case .relay4x3200: return "4\u{00D7}800m"
+        case .relay4x100:  return "4\u{00D7}100m"
+        case .relay4x200:  return "4\u{00D7}200m"
+        case .relay4x400: return "4\u{00D7}400m"
+        case .relay4x800: return "4\u{00D7}800m"
         }
     }
 
     var isRelay: Bool {
         switch self {
-        case .relay4x400, .relay4x800, .relay4x1600, .relay4x3200: return true
+        case .relay4x100, .relay4x200, .relay4x400, .relay4x800: return true
         default: return false
         }
     }
@@ -47,10 +47,10 @@ enum EventType: Int16, Codable, CaseIterable {
     /// Distance per relay leg. nil for individual events.
     var legDistanceMeters: Int? {
         switch self {
-        case .relay4x400:  return 100
-        case .relay4x800:  return 200
-        case .relay4x1600: return 400
-        case .relay4x3200: return 800
+        case .relay4x100:  return 100
+        case .relay4x200:  return 200
+        case .relay4x400: return 400
+        case .relay4x800: return 800
         default:           return nil
         }
     }

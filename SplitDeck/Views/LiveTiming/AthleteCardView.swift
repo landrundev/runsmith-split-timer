@@ -4,8 +4,9 @@ struct AthleteCardView: View {
     let athlete: Athlete
     let splitTimes: [(label: String, cumulative: String, lap: String)]
     let lapProgress: String
+    let paceDisplay: String?  // e.g. "5:12/mi"
     let isComplete: Bool
-    let finishTime: String?  // e.g. "4:32.18" \u{2013} total time for completed athlete
+    let finishTime: String?  // e.g. "4:32.18"\u{2013} total time for completed athlete
     let onTap: () -> Void
 
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -84,6 +85,12 @@ struct AthleteCardView: View {
                 Text(lapProgress)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            if let pace = paceDisplay {
+                Text(pace)
+                    .font(.caption.weight(.medium).monospacedDigit())
+                    .foregroundStyle(Theme.runsmithPink)
             }
 
             if splitTimes.isEmpty {

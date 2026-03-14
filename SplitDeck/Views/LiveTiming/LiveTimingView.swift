@@ -95,6 +95,7 @@ struct LiveTimingView: View {
         .navigationDestination(isPresented: $vm.navigateToResults) {
             if let resultsVM = vm.resultsViewModel {
                 ResultsView(vm: resultsVM, onDone: { vm.shouldDismiss = true })
+                    .hidesTabBar()
             }
         }
     }
@@ -175,6 +176,7 @@ struct LiveTimingView: View {
                         CompactAthleteCardView(
                             athlete: athlete,
                             lastLapDelta: vm.lastLapDelta(for: athlete),
+                            paceDisplay: vm.paceDisplay(for: athlete),
                             lapProgress: vm.lapProgress(for: athlete),
                             isComplete: RaceDomain.isComplete(
                                 athlete: athlete, splits: vm.splits, race: vm.race),
@@ -196,6 +198,7 @@ struct LiveTimingView: View {
                             athlete: athlete,
                             splitTimes: vm.splitTimesForDisplay(for: athlete),
                             lapProgress: vm.lapProgress(for: athlete),
+                            paceDisplay: vm.paceDisplay(for: athlete),
                             isComplete: RaceDomain.isComplete(
                                 athlete: athlete, splits: vm.splits, race: vm.race),
                             finishTime: vm.finishTimeForDisplay(for: athlete)
@@ -213,6 +216,7 @@ struct LiveTimingView: View {
                             athlete: athlete,
                             splitTimes: vm.splitTimesForDisplay(for: athlete),
                             lapProgress: vm.lapProgress(for: athlete),
+                            paceDisplay: vm.paceDisplay(for: athlete),
                             isComplete: RaceDomain.isComplete(
                                 athlete: athlete, splits: vm.splits, race: vm.race),
                             finishTime: vm.finishTimeForDisplay(for: athlete)

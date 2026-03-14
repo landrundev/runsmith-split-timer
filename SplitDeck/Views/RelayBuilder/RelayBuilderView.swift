@@ -42,6 +42,7 @@ struct RelayBuilderView: View {
         .navigationDestination(isPresented: $navigateToLiveTiming) {
             if let liveVM = liveTimingVM {
                 LiveTimingView(vm: liveVM, cache: cache)
+                    .hidesTabBar()
             }
         }
     }

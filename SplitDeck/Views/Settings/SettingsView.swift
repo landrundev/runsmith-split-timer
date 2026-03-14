@@ -4,6 +4,7 @@ struct SettingsView: View {
     @EnvironmentObject var store: SplitDeckStore
     @EnvironmentObject var cache: RaceStateCache
     @Binding var appearance: AppearanceSetting
+    @AppStorage("paceUnit") private var paceUnit: String = PaceUnit.perMile.rawValue
 
     var body: some View {
         List {
@@ -23,8 +24,17 @@ struct SettingsView: View {
 
             // MARK: – Tools
             Section {
+                Picker(selection: $paceUnit) {
+                    ForEach(PaceUnit.allCases, id: \.rawValue) { unit in
+                        Text(unit.label).tag(unit.rawValue)
+                    }
+                } label: {
+                    Label("Pace Unit", systemImage: "speedometer")
+                }
+
                 NavigationLink {
                     ImportRaceView(store: store)
+                        .hidesTabBar()
                 } label: {
                     Label("Import Race / Meet", systemImage: "square.and.arrow.down")
                 }
@@ -33,12 +43,14 @@ struct SettingsView: View {
                     RelayBuilderView(
                         vm: RelayBuilderViewModel(store: store)
                     )
+                    .hidesTabBar()
                 } label: {
                     Label("Relay Builder", systemImage: "arrow.triangle.branch")
                 }
 
                 NavigationLink {
                     ArchiveView(vm: ArchiveViewModel(store: store))
+                        .hidesTabBar()
                 } label: {
                     Label("Archive", systemImage: "archivebox")
                 }
@@ -50,6 +62,7 @@ struct SettingsView: View {
             Section {
                 NavigationLink {
                     AboutView()
+                        .hidesTabBar()
                 } label: {
                     HStack(spacing: 12) {
                         Image("RunsmithLogo")

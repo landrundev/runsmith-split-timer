@@ -3,6 +3,7 @@ import SwiftUI
 struct CompactAthleteCardView: View {
     let athlete: Athlete
     let lastLapDelta: String?
+    let paceDisplay: String?  // e.g. "5:12/mi"
     let lapProgress: String
     let isComplete: Bool
     let finishTime: String?  // e.g. "4:32.18"
@@ -78,6 +79,14 @@ struct CompactAthleteCardView: View {
                 } else {
                     Text("\u{2014}")
                         .font(.caption.monospacedDigit())
+                }
+                if let pace = paceDisplay {
+                    Text("\u{00B7}")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(pace)
+                        .font(.caption2.weight(.medium).monospacedDigit())
+                        .foregroundStyle(Theme.runsmithPink)
                 }
                 Spacer(minLength: 0)
                 Text(lapProgress)

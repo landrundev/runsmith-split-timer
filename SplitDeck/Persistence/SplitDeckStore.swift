@@ -18,6 +18,10 @@ final class SplitDeckStore: ObservableObject {
 
     private var ctx: NSManagedObjectContext { container.viewContext }
 
+    /// In-memory cache: athlete ID → races containing that athlete.
+    /// Populated lazily by fetchRaces(forAthlete:); invalidated by save(_:Race) and delete(raceId:).
+    private var athleteRaceCache: [UUID: [Race]] = [:]
+
     // MARK: – Athletes
 
     func fetchAthletes() throws -> [Athlete] {
@@ -111,6 +115,8 @@ final class SplitDeckStore: ObservableObject {
         }
         map(race, into: entity)
         try ctx.save()
+        // Invalidate cached athlete→race mappings for all athletes in this race
+        for id in race.athleteIds { athleteRaceCache.removeValue(forKey: id) }
     }
 
     func delete(raceId: UUID) throws {
@@ -119,8 +125,11 @@ final class SplitDeckStore: ObservableObject {
         let splits = try ctx.fetch(req)
         splits.forEach { ctx.delete($0) }
         guard let entity = try fetchRaceEntity(id: raceId) else { return }
+        // Capture athlete IDs before deleting so we can invalidate the cache
+        let race = map(entity)
         ctx.delete(entity)
         try ctx.save()
+        for id in race.athleteIds { athleteRaceCache.removeValue(forKey: id) }
     }
 
     // MARK: – Import Support
@@ -319,14 +328,26 @@ final class SplitDeckStore: ObservableObject {
         return try ctx.fetch(req).map(map)
     }
 
+    // MARK: – Single race lookup
+
+    func fetchRace(id: UUID) throws -> Race? {
+        guard let entity = try fetchRaceEntity(id: id) else { return nil }
+        return map(entity)
+    }
+
     // MARK: – Athlete-centric queries (for profiles)
 
     func fetchRaces(forAthlete athleteId: UUID) throws -> [Race] {
+        if let cached = athleteRaceCache[athleteId] { return cached }
+
         let req = RaceEntity.fetchRequest()
         req.predicate = NSPredicate(format: "isArchived == NO OR isArchived == nil")
         req.sortDescriptors = [NSSortDescriptor(key: "startedAt", ascending: false)]
+        req.fetchLimit = 500
         let allRaces = try ctx.fetch(req).map(map)
-        return allRaces.filter { $0.athleteIds.contains(athleteId) }
+        let result = allRaces.filter { $0.athleteIds.contains(athleteId) }
+        athleteRaceCache[athleteId] = result
+        return result
     }
 
     func fetchSplits(forAthlete athleteId: UUID) throws -> [Split] {
@@ -631,7 +652,7 @@ final class SplitDeckStore: ObservableObject {
         return SavedRelayTeam(
             id: entity.id!,
             name: entity.name!,
-            eventType: EventType(rawValue: entity.eventType) ?? .relay4x400,
+            eventType: EventType(rawValue: entity.eventType) ?? .relay4x100,
             gender: Gender(rawValue: entity.gender!) ?? .male,
             athleteIds: athleteIds,
             createdAt: entity.createdAt!

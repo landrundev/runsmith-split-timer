@@ -4,7 +4,7 @@ enum Theme {
 
     // MARK: – Brand Colors (constant in both modes)
 
-    static let runsmithPink = Color(hex: "#E8185D")
+    static let runsmithPink = Color(hex: "#EF4F8D")
     static let badgeYellow  = Color(hex: "#FFC700")
 
     // MARK: – Semantic Surface Colors

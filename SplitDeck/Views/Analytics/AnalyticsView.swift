@@ -48,7 +48,7 @@ struct AnalyticsView: View {
         }
         .navigationTitle("Analytics")
         .navigationBarTitleDisplayMode(.large)
-        .onAppear { vm.load() }
+        .task { await vm.load() }
         .navigationDestination(isPresented: Binding(
             get: { profileAthlete != nil },
             set: { if !$0 { profileAthlete = nil } }
@@ -58,6 +58,7 @@ struct AnalyticsView: View {
                     vm: AthleteProfileViewModel(athlete: athlete, store: store),
                     store: store
                 )
+                .hidesTabBar()
             }
         }
     }

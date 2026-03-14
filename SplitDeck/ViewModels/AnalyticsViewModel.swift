@@ -91,7 +91,7 @@ final class AnalyticsViewModel: ObservableObject {
 
     // MARK: – Load All Data
 
-    func load() {
+    func load() async {
         guard !isLoaded else { return }
 
         let athletes = (try? store.fetchAthletes()) ?? []
@@ -109,29 +109,51 @@ final class AnalyticsViewModel: ObservableObject {
         cachedAthletes = athletes
         cachedSplitsByRace = splitsByRace
 
-        computeSeasonStats(races: allRaces, athletes: athletes, meets: meets, splitsByRace: splitsByRace)
-        computePRBoard(races: allRaces, athletes: athletes, splitsByRace: splitsByRace)
-        computeEventLeaderboard(races: allRaces, athletes: athletes, splitsByRace: splitsByRace)
-        computeAthleteInsights(races: allRaces, athletes: athletes, splitsByRace: splitsByRace)
-        computeRaceHighlights(races: allRaces, athletes: athletes, splitsByRace: splitsByRace)
+        let selEvent = selectedEvent
+        let selGender = selectedGender
+
+        // Move heavy computation off the main thread
+        let (stats, prs, leaderboard, insights, highlights) = await Task.detached {
+            let stats = Self.computeSeasonStats(races: allRaces, athletes: athletes, meets: meets, splitsByRace: splitsByRace)
+            let prs = Self.computePRBoard(races: allRaces, athletes: athletes, splitsByRace: splitsByRace)
+            let leaderboard = Self.computeEventLeaderboard(races: allRaces, athletes: athletes, splitsByRace: splitsByRace, selectedEvent: selEvent, selectedGender: selGender)
+            let insights = Self.computeAthleteInsights(races: allRaces, athletes: athletes, splitsByRace: splitsByRace)
+            let highlights = Self.computeRaceHighlights(races: allRaces, athletes: athletes, splitsByRace: splitsByRace)
+            return (stats, prs, leaderboard, insights, highlights)
+        }.value
+
+        seasonStats = stats
+        prBoard = prs
+        eventLeaderboard = leaderboard
+        athleteInsights = insights
+        raceHighlights = highlights
 
         isLoaded = true
     }
 
     /// Call when selectedEvent or selectedGender changes. Uses cached data — no re-fetch.
     func refreshLeaderboard() {
-        computeEventLeaderboard(
-            races: cachedRaces,
-            athletes: cachedAthletes,
-            splitsByRace: cachedSplitsByRace
-        )
+        let races = cachedRaces
+        let athletes = cachedAthletes
+        let splits = cachedSplitsByRace
+        let selEvent = selectedEvent
+        let selGender = selectedGender
+        Task.detached {
+            let leaderboard = Self.computeEventLeaderboard(
+                races: races, athletes: athletes, splitsByRace: splits,
+                selectedEvent: selEvent, selectedGender: selGender
+            )
+            await MainActor.run { [weak self] in
+                self?.eventLeaderboard = leaderboard
+            }
+        }
     }
 
     // MARK: – Season Stats
 
-    private func computeSeasonStats(
+    nonisolated private static func computeSeasonStats(
         races: [Race], athletes: [Athlete], meets: [Meet], splitsByRace: [UUID: [Split]]
-    ) {
+    ) -> SeasonStats {
         var stats = SeasonStats()
         stats.totalRaces = races.count
         stats.totalAthletes = athletes.count
@@ -142,14 +164,14 @@ final class AnalyticsViewModel: ObservableObject {
         stats.firstRaceDate = dates.first
         stats.lastRaceDate = dates.last
 
-        seasonStats = stats
+        return stats
     }
 
     // MARK: – PR Board
 
-    private func computePRBoard(
+    nonisolated private static func computePRBoard(
         races: [Race], athletes: [Athlete], splitsByRace: [UUID: [Split]]
-    ) {
+    ) -> [PREntry] {
         var entries: [PREntry] = []
 
         for athlete in athletes {
@@ -267,9 +289,9 @@ final class AnalyticsViewModel: ObservableObject {
             }
         }
 
-        prBoard = entries.sorted {
-            let order0 = Self.eventSortOrder($0.eventType)
-            let order1 = Self.eventSortOrder($1.eventType)
+        return entries.sorted {
+            let order0 = eventSortOrder($0.eventType)
+            let order1 = eventSortOrder($1.eventType)
             if order0 != order1 { return order0 < order1 }
             return $0.prMs < $1.prMs
         }
@@ -277,9 +299,10 @@ final class AnalyticsViewModel: ObservableObject {
 
     // MARK: – Event Leaderboard
 
-    private func computeEventLeaderboard(
-        races: [Race], athletes: [Athlete], splitsByRace: [UUID: [Split]]
-    ) {
+    nonisolated private static func computeEventLeaderboard(
+        races: [Race], athletes: [Athlete], splitsByRace: [UUID: [Split]],
+        selectedEvent: EventType, selectedGender: Gender?
+    ) -> [LeaderboardEntry] {
         let filteredAthletes: [Athlete]
         if let gender = selectedGender {
             filteredAthletes = athletes.filter { $0.gender == gender }
@@ -369,7 +392,7 @@ final class AnalyticsViewModel: ObservableObject {
 
         bests.sort { $0.ms < $1.ms }
 
-        eventLeaderboard = bests.enumerated().map { i, entry in
+        return bests.enumerated().map { i, entry in
             LeaderboardEntry(
                 rank: i + 1,
                 athlete: entry.athlete,
@@ -382,9 +405,9 @@ final class AnalyticsViewModel: ObservableObject {
 
     // MARK: – Athlete Insights
 
-    private func computeAthleteInsights(
+    nonisolated private static func computeAthleteInsights(
         races: [Race], athletes: [Athlete], splitsByRace: [UUID: [Split]]
-    ) {
+    ) -> [AthleteInsight] {
         var insights: [AthleteInsight] = []
 
         for athlete in athletes {
@@ -471,14 +494,14 @@ final class AnalyticsViewModel: ObservableObject {
             ))
         }
 
-        athleteInsights = insights.sorted { $0.totalRaces > $1.totalRaces }
+        return insights.sorted { $0.totalRaces > $1.totalRaces }
     }
 
     // MARK: – Race Highlights
 
-    private func computeRaceHighlights(
+    nonisolated private static func computeRaceHighlights(
         races: [Race], athletes: [Athlete], splitsByRace: [UUID: [Split]]
-    ) {
+    ) -> [RaceHighlight] {
         var highlights: [RaceHighlight] = []
 
         // Closest finish — smallest gap between 1st and 2nd place final time
@@ -582,22 +605,22 @@ final class AnalyticsViewModel: ObservableObject {
             ))
         }
 
-        raceHighlights = highlights
+        return highlights
     }
 
     // MARK: – Helpers
 
     /// Distance-based sort index: 400 → 800 → 1500 → Mile → 1600 → 3200 → 5K → 10K → Custom last.
-    private static let distanceSortOrder: [EventType] = [
+    nonisolated private static let distanceSortOrder: [EventType] = [
         .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
     ]
 
-    static func eventSortOrder(_ event: EventType) -> Int {
+    nonisolated static func eventSortOrder(_ event: EventType) -> Int {
         distanceSortOrder.firstIndex(of: event) ?? distanceSortOrder.count
     }
 
     /// Returns lap-by-lap split times (not cumulative) for one athlete in one race.
-    private func computeLapTimes(athleteId: UUID, splits: [Split]) -> [Int] {
+    nonisolated private static func computeLapTimes(athleteId: UUID, splits: [Split]) -> [Int] {
         let sorted = splits.filter { $0.athleteId == athleteId }
             .sorted { $0.elapsedMs < $1.elapsedMs }
         guard !sorted.isEmpty else { return [] }
@@ -611,7 +634,7 @@ final class AnalyticsViewModel: ObservableObject {
         return lapTimes
     }
 
-    private func standardDeviation(_ values: [Double]) -> Double {
+    nonisolated private static func standardDeviation(_ values: [Double]) -> Double {
         guard values.count >= 2 else { return 0 }
         let mean = values.reduce(0, +) / Double(values.count)
         let variance = values.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(values.count)

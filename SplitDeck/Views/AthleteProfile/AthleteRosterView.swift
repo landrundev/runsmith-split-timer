@@ -131,6 +131,7 @@ struct AthleteRosterView: View {
                             store: store,
                             onDelete: { refreshAthletes() }
                         )
+                        .hidesTabBar()
                     } label: {
                         HStack(spacing: 0) {
                             Rectangle()

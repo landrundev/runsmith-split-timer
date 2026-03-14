@@ -29,7 +29,7 @@ final class RaceSetupViewModel: ObservableObject {
                 unlimitedSplits = true
                 selectedAthleteIds = []
             case .relay:
-                eventType = .relay4x400
+                eventType = .relay4x100
                 unlimitedSplits = false
                 splitsPerLap = 1
                 // restore relay selection from preserved order
@@ -59,18 +59,13 @@ final class RaceSetupViewModel: ObservableObject {
     let existingRaceId: UUID?
     let store: SplitDeckStore
 
-    // Predefined athlete colors assigned in rotation
-    static let colorPalette = [
-        "#FF3B30", "#FF9500", "#FFCC00", "#34C759",
-        "#00C7BE", "#007AFF", "#5856D6", "#FF2D55",
-        "#AF52DE", "#A2845E"
-    ]
+    static let colorPalette = RosterImporter.colorPalette
 
     static let maxIndividualAthletes = 50
     static let individualEventTypes: [EventType] = [
         .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
     ]
-    static let relayEventTypes: [EventType] = [.relay4x400, .relay4x800, .relay4x1600, .relay4x3200]
+    static let relayEventTypes: [EventType] = [.relay4x100, .relay4x200, .relay4x400, .relay4x800]
 
     init(meetId: UUID?, store: SplitDeckStore, existingRaceId: UUID? = nil) {
         self.meetId = meetId
@@ -163,10 +158,10 @@ final class RaceSetupViewModel: ObservableObject {
     }
 
     /// True when the selected relay type supports intermediate splits.
-    /// Only 4×400m (relay4x1600) and 4×800m (relay4x3200) — their legs are
+    /// Only 4×400m (relay4x400) and 4×800m (relay4x800) — their legs are
     /// long enough to warrant a midpoint split. 4×100m and 4×200m are too short.
     var supportsIntermediateSplits: Bool {
-        eventType == .relay4x1600 || eventType == .relay4x3200
+        eventType == .relay4x400 || eventType == .relay4x800
     }
 
     /// The intermediate split distance label, e.g. "200m" for 4×400m.
@@ -430,6 +425,35 @@ final class RaceSetupViewModel: ObservableObject {
         )
 
         do {
+            try store.save(race)
+            return race
+        } catch {
+            errorMessage = error.localizedDescription
+            return nil
+        }
+    }
+
+    // MARK: – Begin Race (from staging screen)
+
+    /// Start timing for an already-saved race. Sets startedAt and status = .inProgress.
+    func beginRace(existingRaceId: UUID) -> Race? {
+        do {
+            guard let saved = try store.fetchRace(id: existingRaceId) else {
+                errorMessage = "Race not found"
+                return nil
+            }
+            let race = Race(
+                id: saved.id, meetId: saved.meetId, configId: saved.configId,
+                name: saved.name, eventType: saved.eventType,
+                distanceMeters: saved.distanceMeters,
+                trackLengthMeters: saved.trackLengthMeters,
+                splitsPerLap: saved.splitsPerLap,
+                isUnlimitedSplits: saved.isUnlimitedSplits,
+                athleteIds: saved.athleteIds,
+                startedAt: Date(), status: .inProgress,
+                isArchived: saved.isArchived, isMerged: saved.isMerged,
+                sortOrder: saved.sortOrder
+            )
             try store.save(race)
             return race
         } catch {

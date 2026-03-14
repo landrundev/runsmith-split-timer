@@ -60,6 +60,7 @@ struct HomeView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     NavigationLink {
                         SettingsView(appearance: $appearance)
+                            .hidesTabBar()
                     } label: {
                         Image(systemName: "gearshape")
                     }
@@ -291,6 +292,7 @@ struct HomeView: View {
                 if vm.hasMoreHistory {
                     NavigationLink {
                         RaceHistoryView(vm: vm, cache: cache)
+                            .hidesTabBar()
                     } label: {
                         HStack {
                             Text("See All Races")
@@ -356,28 +358,32 @@ struct HomeView: View {
             store: store,
             cache: cache
         )
+        .hidesTabBar()
     }
 
     @ViewBuilder
     private func quickRaceDestination(_ race: Race) -> some View {
-        switch race.status {
-        case .completed:
-            let athletes = (try? store.fetchAthletes()) ?? []
-            let splits   = (try? store.fetchSplits(for: race.id)) ?? []
-            ResultsView(
-                vm: ResultsViewModel(race: race, athletes: athletes, splits: splits, meet: nil)
-            )
+        Group {
+            switch race.status {
+            case .completed:
+                let athletes = (try? store.fetchAthletes()) ?? []
+                let splits   = (try? store.fetchSplits(for: race.id)) ?? []
+                ResultsView(
+                    vm: ResultsViewModel(race: race, athletes: athletes, splits: splits, meet: nil)
+                )
 
-        case .inProgress:
-            let athletes = (try? store.fetchAthletes()) ?? []
-            let liveVM = LiveTimingViewModel(
-                race: race, athletes: athletes, store: store, cache: cache
-            )
-            LiveTimingView(vm: liveVM, cache: cache)
+            case .inProgress:
+                let athletes = (try? store.fetchAthletes()) ?? []
+                let liveVM = LiveTimingViewModel(
+                    race: race, athletes: athletes, store: store, cache: cache
+                )
+                LiveTimingView(vm: liveVM, cache: cache)
 
-        case .notStarted:
-            let setupVM = RaceSetupViewModel(meetId: nil, store: store, existingRaceId: race.id)
-            RaceSetupView(vm: setupVM, store: store, cache: cache)
+            case .notStarted:
+                let setupVM = RaceSetupViewModel(meetId: nil, store: store, existingRaceId: race.id)
+                RaceSetupView(vm: setupVM, store: store, cache: cache)
+            }
         }
+        .hidesTabBar()
     }
 }

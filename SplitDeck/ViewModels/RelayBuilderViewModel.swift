@@ -11,10 +11,10 @@ final class RelayBuilderViewModel: ObservableObject {
 
     // MARK: – Inputs
 
-    @Published var selectedRelayType: EventType = .relay4x400 {
+    @Published var selectedRelayType: EventType = .relay4x100 {
         didSet {
             // Reset intermediate splits if new type doesn't support it
-            if selectedRelayType != .relay4x1600 && selectedRelayType != .relay4x3200 {
+            if selectedRelayType != .relay4x400 && selectedRelayType != .relay4x800 {
                 splitsPerLap = 1
             }
             refreshCandidates()
@@ -220,7 +220,7 @@ final class RelayBuilderViewModel: ObservableObject {
     }
 
     var supportsIntermediateSplits: Bool {
-        selectedRelayType == .relay4x1600 || selectedRelayType == .relay4x3200
+        selectedRelayType == .relay4x400 || selectedRelayType == .relay4x800
     }
 
     var intermediateSplitLabel: String? {
