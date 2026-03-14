@@ -89,4 +89,51 @@ enum AppSettings {
     static func updateChild(_ child: SpectatorChild) {
         myChildren = myChildren.map { $0.id == child.id ? child : $0 }
     }
+
+    // MARK: Quick Race Templates
+
+    struct QuickRaceTemplate: Codable, Identifiable, Equatable {
+        var id: UUID = UUID()
+        var label: String           // "Ava · 1600m"
+        var athleteId: UUID
+        var eventTypeRaw: Int16     // EventType.rawValue
+        var isRelay: Bool
+        var relayAthleteIds: [UUID]
+        var createdAt: Date
+    }
+
+    private static let templatesKey = "runsmith_quickRaceTemplates"
+    private static let maxTemplates = 5
+
+    static var quickRaceTemplates: [QuickRaceTemplate] {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: templatesKey),
+                  let decoded = try? JSONDecoder().decode([QuickRaceTemplate].self, from: data)
+            else { return [] }
+            return decoded
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                UserDefaults.standard.set(data, forKey: templatesKey)
+            }
+        }
+    }
+
+    /// Records a race setup as a quick-start template. De-dupes by athlete+event.
+    static func saveQuickRaceTemplate(label: String, athleteId: UUID, eventTypeRaw: Int16, isRelay: Bool = false, relayAthleteIds: [UUID] = []) {
+        var templates = quickRaceTemplates
+        // Remove existing duplicate (same athlete + event)
+        templates.removeAll { $0.athleteId == athleteId && $0.eventTypeRaw == eventTypeRaw }
+        let template = QuickRaceTemplate(
+            label: label, athleteId: athleteId, eventTypeRaw: eventTypeRaw,
+            isRelay: isRelay, relayAthleteIds: relayAthleteIds, createdAt: Date()
+        )
+        templates.insert(template, at: 0)
+        if templates.count > maxTemplates { templates = Array(templates.prefix(maxTemplates)) }
+        quickRaceTemplates = templates
+    }
+
+    static func removeQuickRaceTemplate(id: UUID) {
+        quickRaceTemplates = quickRaceTemplates.filter { $0.id != id }
+    }
 }

@@ -39,8 +39,8 @@ struct SpectatorRelaySetupView: View {
             // GENDER
             Section {
                 Picker("Gender", selection: $gender) {
-                    Text("Boys").tag(Gender.male)
-                    Text("Girls").tag(Gender.female)
+                    Text("Male").tag(Gender.male)
+                    Text("Female").tag(Gender.female)
                 }
                 .pickerStyle(.segmented)
                 .onChange(of: gender) { _ in loadTeams() }
@@ -171,7 +171,7 @@ struct SpectatorRelaySetupView: View {
     }
 
     private func autoTeamName() -> String {
-        let genderName = gender == .male ? "Boys" : "Girls"
+        let genderName = gender == .male ? "Male" : "Female"
         return "\(genderName) \(eventType.displayName)"
     }
 
@@ -201,6 +201,16 @@ struct SpectatorRelaySetupView: View {
             status: .notStarted
         )
         try? store.save(race)
+
+        // Save as quick-start template
+        AppSettings.saveQuickRaceTemplate(
+            label: name,
+            athleteId: athleteIds[0],
+            eventTypeRaw: eventType.rawValue,
+            isRelay: true,
+            relayAthleteIds: athleteIds
+        )
+
         onReadyToTime(race)
     }
 }

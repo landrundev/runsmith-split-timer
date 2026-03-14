@@ -101,8 +101,8 @@ struct SpectatorSetupView: View {
 
             Section {
                 Picker("Gender", selection: $gender) {
-                    Text("Boys").tag(Gender.male)
-                    Text("Girls").tag(Gender.female)
+                    Text("Male").tag(Gender.male)
+                    Text("Female").tag(Gender.female)
                 }
                 .pickerStyle(.segmented)
             }
@@ -282,6 +282,18 @@ struct SpectatorSetupView: View {
         )
         try? store.save(race)
         savedRace = race
+
+        // Save as quick-start template
+        let displayName: String
+        if usingSomeoneElse {
+            displayName = someoneElseName.trimmingCharacters(in: .whitespaces)
+        } else if !myChildren.isEmpty {
+            displayName = myChildren[min(selectedChildIndex, myChildren.count - 1)].displayName
+        } else {
+            displayName = ""
+        }
+        let templateLabel = displayName.isEmpty ? eventType.displayName : "\(displayName) \u{00B7} \(eventType.displayName)"
+        AppSettings.saveQuickRaceTemplate(label: templateLabel, athleteId: athleteId, eventTypeRaw: eventType.rawValue)
     }
 
     private func finalizeRace() {

@@ -9,10 +9,13 @@ struct SpectatorHomeView: View {
     @State private var showAddAthlete = false
     @State private var showTimeRace = false
     @State private var showSettings = false
-
-    private var myChildren: [AppSettings.SpectatorChild] {
-        AppSettings.myChildren
-    }
+    @State private var myChildren: [AppSettings.SpectatorChild] = AppSettings.myChildren
+    @State private var pendingRaces: [Race] = []
+    @State private var selectedPendingRace: Race? = nil
+    @State private var navigateToStaging = false
+    @State private var navigateToLiveTiming = false
+    @State private var liveTimingVM: LiveTimingViewModel? = nil
+    @State private var quickTemplates: [AppSettings.QuickRaceTemplate] = []
 
     var body: some View {
         ScrollView {
@@ -43,6 +46,28 @@ struct SpectatorHomeView: View {
                     }
                 }
 
+                // PENDING RACES
+                if !pendingRaces.isEmpty {
+                    Spacer(minLength: 24)
+                    sectionHeader("SAVED RACES")
+
+                    VStack(spacing: 8) {
+                        ForEach(pendingRaces) { race in
+                            Button {
+                                if race.status == .inProgress {
+                                    resumeRace(race)
+                                } else {
+                                    selectedPendingRace = race
+                                    navigateToStaging = true
+                                }
+                            } label: {
+                                pendingRaceRow(race)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
                 Spacer(minLength: 24)
 
                 // TIME A RACE
@@ -64,6 +89,31 @@ struct SpectatorHomeView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .center)
+                }
+
+                // QUICK START
+                if !quickTemplates.isEmpty && !myChildren.isEmpty {
+                    Spacer(minLength: 12)
+                    sectionHeader("QUICK START")
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(quickTemplates) { template in
+                                Button {
+                                    quickStartFromTemplate(template)
+                                } label: {
+                                    Text(template.label)
+                                        .font(.subheadline.weight(.medium))
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 10)
+                                        .background(Theme.cardBackground)
+                                        .clipShape(Capsule())
+                                        .foregroundStyle(.primary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -92,18 +142,78 @@ struct SpectatorHomeView: View {
                 SpectatorAthleteDetailView(child: child, store: store)
             }
         }
-        .sheet(isPresented: $showSettings) {
+        .navigationDestination(isPresented: $navigateToStaging) {
+            if let race = selectedPendingRace {
+                SpectatorStagingView(race: race, store: store, cache: cache) {
+                    refreshAll()
+                }
+            }
+        }
+        .navigationDestination(isPresented: $navigateToLiveTiming) {
+            if let vm = liveTimingVM {
+                LiveTimingView(vm: vm, cache: cache, onRaceComplete: {
+                    refreshAll()
+                })
+                .hidesTabBar()
+            }
+        }
+        .sheet(isPresented: $showSettings, onDismiss: refreshAll) {
             SpectatorSettingsView()
         }
-        .sheet(isPresented: $showAddAthlete) {
+        .sheet(isPresented: $showAddAthlete, onDismiss: refreshAll) {
             SpectatorSetupView(mode: .addAthlete)
         }
-        .sheet(isPresented: $showTimeRace) {
+        .sheet(isPresented: $showTimeRace, onDismiss: refreshAll) {
             SpectatorSetupView(mode: .startRace)
         }
+        .onAppear { refreshAll() }
     }
 
     // MARK: - Helpers
+
+    private func refreshAll() {
+        myChildren = AppSettings.myChildren
+        loadPendingRaces()
+        quickTemplates = AppSettings.quickRaceTemplates
+    }
+
+    private func loadPendingRaces() {
+        let childIds = Set(myChildren.map(\.id))
+        guard !childIds.isEmpty else { pendingRaces = []; return }
+        var seen = Set<UUID>()
+        var result: [Race] = []
+        for childId in childIds {
+            guard let races = try? store.fetchRaces(forAthlete: childId) else { continue }
+            for race in races where (race.status == .notStarted || race.status == .inProgress) && !seen.contains(race.id) {
+                seen.insert(race.id)
+                result.append(race)
+            }
+        }
+        pendingRaces = result.sorted { ($0.startedAt ?? $0.endedAt ?? .distantPast) > ($1.startedAt ?? $1.endedAt ?? .distantPast) }
+    }
+
+    private func resumeRace(_ race: Race) {
+        let allAthletes = (try? store.fetchAthletes()) ?? []
+        liveTimingVM = LiveTimingViewModel(race: race, athletes: allAthletes, store: store, cache: cache)
+        navigateToLiveTiming = true
+    }
+
+    private func quickStartFromTemplate(_ template: AppSettings.QuickRaceTemplate) {
+        guard let eventType = EventType(rawValue: template.eventTypeRaw) else { return }
+        let athleteIds = template.isRelay ? template.relayAthleteIds : [template.athleteId]
+        let race = Race(
+            name: template.label,
+            eventType: eventType,
+            distanceMeters: eventType.defaultDistance ?? 0,
+            trackLengthMeters: eventType.isRelay ? (eventType.legDistanceMeters ?? 400) : 400,
+            splitsPerLap: 1,
+            athleteIds: athleteIds,
+            status: .notStarted
+        )
+        try? store.save(race)
+        selectedPendingRace = race
+        navigateToStaging = true
+    }
 
     private var emptyAthleteCard: some View {
         VStack(spacing: 12) {
@@ -120,6 +230,34 @@ struct SpectatorHomeView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(16)
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+    }
+
+    private func pendingRaceRow(_ race: Race) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(race.name)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Text(race.eventType.displayName)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            if race.status == .inProgress {
+                Text("In Progress")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.green)
+            } else {
+                Text("Not Started")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Image(systemName: "chevron.right")
+                .foregroundStyle(.tertiary)
+        }
+        .padding(14)
         .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
     }

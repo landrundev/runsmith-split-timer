@@ -171,35 +171,26 @@ struct SpectatorAthleteDetailView: View {
             .map { (eventType: $0.key, bestMs: $0.value.ms, date: $0.value.date) }
             .sorted { ($0.eventType.defaultDistance ?? 0) < ($1.eventType.defaultDistance ?? 0) }
 
-        // Compute recent races with PR flags
-        var bestSoFar: [EventType: Int] = [:]
-        // Process in chronological order for PR tracking
-        let chronological = completedRaces.reversed()
+        // Compute recent races — mark only current PB as PR
         var raceEntries: [(race: Race, finalMs: Int?, isPR: Bool)] = []
 
-        for race in chronological {
+        for race in completedRaces {
             guard let splits = try? store.fetchSplits(for: race.id) else {
                 raceEntries.append((race: race, finalMs: nil, isPR: false))
                 continue
             }
             let ms = RaceDomain.finalTime(athlete: athlete, splits: splits, race: race)
-            var isPR = false
-            if let ms = ms {
-                if let prev = bestSoFar[race.eventType] {
-                    if ms < prev {
-                        isPR = true
-                        bestSoFar[race.eventType] = ms
-                    }
-                } else {
-                    isPR = true
-                    bestSoFar[race.eventType] = ms
-                }
+            let isPR: Bool
+            if let ms = ms, let best = bestByEvent[race.eventType] {
+                isPR = ms <= best.ms
+            } else {
+                isPR = false
             }
             raceEntries.append((race: race, finalMs: ms, isPR: isPR))
         }
 
-        // Show most recent first
-        recentRaces = raceEntries.reversed()
+        // Already sorted most-recent first
+        recentRaces = raceEntries
 
         // Also include incomplete races
         let incompleteRaces = races

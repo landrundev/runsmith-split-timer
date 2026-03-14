@@ -85,10 +85,13 @@ struct LiveTimingView: View {
         .onDisappear { vm.onDisappear() }
         .onChange(of: vm.shouldDismiss) { should in
             if should {
-                if let onRaceComplete {
-                    onRaceComplete()   // Quick Race: dismiss the whole sheet
-                } else {
-                    dismiss()          // Meet race: pop back to MeetDetail
+                vm.navigateToResults = false   // Pop ResultsView first
+                DispatchQueue.main.async {
+                    if let onRaceComplete {
+                        onRaceComplete()   // Quick Race: dismiss the whole sheet
+                    } else {
+                        dismiss()          // Meet race: pop back to MeetDetail
+                    }
                 }
             }
         }
