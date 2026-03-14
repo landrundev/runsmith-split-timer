@@ -147,6 +147,7 @@ struct ResultsView: View {
     private var doneButton: some View {
         Button {
             onDone?()
+            dismiss()
         } label: {
             Text("Done")
         }

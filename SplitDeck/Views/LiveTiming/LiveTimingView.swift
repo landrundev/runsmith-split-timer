@@ -85,20 +85,19 @@ struct LiveTimingView: View {
         .onDisappear { vm.onDisappear() }
         .onChange(of: vm.shouldDismiss) { should in
             if should {
-                vm.navigateToResults = false   // Pop ResultsView first
-                DispatchQueue.main.async {
-                    if let onRaceComplete {
-                        onRaceComplete()   // Quick Race: dismiss the whole sheet
-                    } else {
-                        dismiss()          // Meet race: pop back to MeetDetail
-                    }
+                vm.navigateToResults = false
+                if let onRaceComplete {
+                    onRaceComplete()
+                } else {
+                    dismiss()
                 }
             }
         }
-        .navigationDestination(isPresented: $vm.navigateToResults) {
-            if let resultsVM = vm.resultsViewModel {
-                ResultsView(vm: resultsVM, onDone: { vm.shouldDismiss = true })
-                    .hidesTabBar()
+        .fullScreenCover(isPresented: $vm.navigateToResults) {
+            NavigationStack {
+                if let resultsVM = vm.resultsViewModel {
+                    ResultsView(vm: resultsVM, onDone: { vm.shouldDismiss = true })
+                }
             }
         }
     }

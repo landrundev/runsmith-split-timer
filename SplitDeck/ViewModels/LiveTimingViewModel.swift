@@ -52,6 +52,9 @@ final class LiveTimingViewModel: ObservableObject {
     func onAppear() {
         splits = (try? store.fetchSplits(for: race.id)) ?? []
 
+        // Don't restart engine if race is already finished
+        guard race.status != .completed else { return }
+
         // Check for a persisted blob from a previous session
         if let blob = cache.load(), blob.raceId == race.id {
             pendingResumeBlob = blob
