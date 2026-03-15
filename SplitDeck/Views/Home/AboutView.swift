@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct AboutView: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var showSwitchToFan = false
     private let runsmithURL = URL(string: "https://runsmith.app.link/")!
 
     var body: some View {
@@ -27,7 +25,7 @@ struct AboutView: View {
                 // About the app
                 VStack(alignment: .leading, spacing: 12) {
                     sectionHeader("About", icon: "stopwatch")
-                    Text("Runsmith Split Timer is a precision timing tool built for track & field coaches. Time individual and relay events from 100m to 10,000m, manage rosters, coordinate multi-coach timing, and analyze your season \u{2014} all from your pocket.")
+                    Text("Runsmith Split Timer is a precision timing tool built for track & field coaches and parents. Time individual and relay events from 100m to 10,000m, manage rosters, coordinate multi-coach timing, and analyze your season \u{2014} all from your pocket.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -51,6 +49,14 @@ struct AboutView: View {
                                detail: "Cumulative and lap time views. Share results as image cards or export to CSV. Relay results show per-leg and intermediate breakdowns.")
                     featureRow(icon: "tray.full.fill", title: "Meet Organization",
                                detail: "Group races by meet with date and location. Gender-filtered rosters, heat labels, and full archive system.")
+                    featureRow(icon: "heart.fill", title: "Fan Mode \u{2014} Made for Parents!",
+                               detail: "A simplified experience for parents and fans. Time your athlete, see their PR history, and track performance trends \u{2014} no coaching setup required.")
+                    featureRow(icon: "waveform.path.ecg", title: "Pre-Race Analytics",
+                               detail: "Before you start timing, see your athlete\u{2019}s personal best, race count, last result, best lap, and performance trend for the event.")
+                    featureRow(icon: "medal.fill", title: "Post-Race Insights",
+                               detail: "Instant PR detection, personal best comparisons, and best lap analysis after every race. Relay races show team records and fastest legs.")
+                    featureRow(icon: "bolt.fill", title: "Quick Start Templates",
+                               detail: "Save race setups as templates for one-tap timing. Jump straight into your athlete\u{2019}s favorite event without re-entering details.")
                     featureRow(icon: "arrow.counterclockwise", title: "Crash Recovery",
                                detail: "Mid-race state is saved continuously. Resume right where you left off if the app closes.")
                 }
@@ -92,33 +98,9 @@ struct AboutView: View {
 
                 Divider().padding(.horizontal)
 
-                // Switch mode
-                VStack(alignment: .leading, spacing: 12) {
-                    Button {
-                        showSwitchToFan = true
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Switch to Fan Mode")
-                                    .font(.subheadline.weight(.semibold))
-                                Text("Time your own athlete and track their PRs")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(.tertiary)
-                        }
-                    }
-                    .foregroundStyle(.primary)
-                }
-                .padding(.horizontal)
-
-                Divider().padding(.horizontal)
-
                 // Footer
                 VStack(spacing: 6) {
-                    Text("Made for coaches, by coaches.")
+                    Text("Made for coaches, parents & fans.")
                         .font(.footnote.weight(.semibold))
                     Text("runsmith.com")
                         .font(.footnote)
@@ -130,16 +112,6 @@ struct AboutView: View {
         .background(Theme.screenBackground.ignoresSafeArea())
         .navigationTitle("About")
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog("Switch to Fan Mode?",
-                            isPresented: $showSwitchToFan,
-                            titleVisibility: .visible) {
-            Button("Switch to Fan Mode") {
-                AppSettings.appMode = .spectator
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Your meets, rosters, and race history are kept. Switch back anytime.")
-        }
     }
 
     // MARK: – Helpers

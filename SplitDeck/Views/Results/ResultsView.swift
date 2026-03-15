@@ -1,5 +1,28 @@
 import SwiftUI
 
+// MARK: - Post-Race Insight Models
+
+private struct AthleteInsight: Identifiable {
+    var id: UUID { athlete.id }
+    let athlete: Athlete
+    let finishMs: Int?
+    let isPR: Bool
+    let previousPrMs: Int?   // their PR before this race (nil if first race)
+    let prGapMs: Int?        // finishMs - PR (positive = slower, nil if isPR or first)
+    let racesInEvent: Int
+    let bestLapMs: Int?      // best lap in THIS race
+    let bestLapLabel: String?
+}
+
+private struct RelayInsight {
+    let isTeamBest: Bool
+    let previousBestMs: Int?
+    let bestGapMs: Int?
+    let timesRaced: Int
+    let fastestLegAthlete: Athlete?
+    let fastestLegMs: Int?
+}
+
 struct ResultsView: View {
     @ObservedObject var vm: ResultsViewModel
     @EnvironmentObject var store: SplitDeckStore
@@ -7,6 +30,8 @@ struct ResultsView: View {
     @State private var shareItem: SharePreviewItem? = nil
     @State private var showExport = false
     @State private var showMerge = false
+    @State private var athleteInsights: [AthleteInsight] = []
+    @State private var relayInsight: RelayInsight?
     @Environment(\.horizontalSizeClass) private var sizeClass
     private var isWideLayout: Bool { sizeClass == .regular }
 
@@ -177,7 +202,12 @@ struct ResultsView: View {
                 }
                 .padding(.horizontal, 16)
             }
+
+            if !athleteInsights.isEmpty {
+                insightsSection
+            }
         }
+        .onAppear { loadInsights() }
     }
 
     private func athleteBlock(entry: (athlete: Athlete, place: Int?)) -> some View {
@@ -391,7 +421,333 @@ struct ResultsView: View {
             }
             }
             .frame(maxWidth: isWideLayout ? 800 : .infinity)
+
+            if relayInsight != nil {
+                relayInsightsSection
+            }
         }
+        .onAppear { loadInsights() }
+    }
+
+    // MARK: – Post-Race Insights (Individual)
+
+    private var insightsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("POST-RACE INSIGHTS")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.secondary)
+                .padding(.top, 8)
+
+            ForEach(athleteInsights) { insight in
+                insightCard(insight: insight)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
+    }
+
+    private func insightCard(insight: AthleteInsight) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Athlete header
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color(hex: insight.athlete.colorHex))
+                    .frame(width: 10, height: 10)
+                Text(insight.athlete.name)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1)
+                Spacer()
+            }
+
+            // PR status
+            if insight.isPR, insight.finishMs != nil {
+                HStack(spacing: 6) {
+                    Image(systemName: "trophy.fill")
+                        .font(.caption)
+                        .foregroundStyle(Theme.runsmithPink)
+                    Text("NEW PR!")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Theme.runsmithPink)
+                    if let prev = insight.previousPrMs {
+                        Text("(prev: \(prev.formattedSplitTime))")
+                            .font(.caption)
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                }
+            } else if let gap = insight.prGapMs, let pr = insight.previousPrMs {
+                HStack(spacing: 4) {
+                    Text("+\(gap.formattedSplitTime) off PR")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.orange)
+                    Text("(\(pr.formattedSplitTime))")
+                        .font(.caption)
+                        .foregroundStyle(Theme.textTertiary)
+                }
+            } else if insight.racesInEvent <= 1, insight.finishMs != nil {
+                HStack(spacing: 6) {
+                    Image(systemName: "star.fill")
+                        .font(.caption)
+                        .foregroundStyle(Theme.badgeYellow)
+                    Text("First \(vm.race.eventType.displayName) recorded!")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            }
+
+            // Stats row
+            HStack(spacing: 16) {
+                if insight.racesInEvent > 1 {
+                    VStack(spacing: 0) {
+                        Text("\(insight.racesInEvent)")
+                            .font(.caption.weight(.bold).monospacedDigit())
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("races")
+                            .font(.system(size: 9))
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                }
+                if let bestLap = insight.bestLapMs, let label = insight.bestLapLabel {
+                    VStack(spacing: 0) {
+                        Text(bestLap.formattedSplitTime)
+                            .font(.caption.weight(.bold).monospacedDigit())
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("best lap (\(label))")
+                            .font(.system(size: 9))
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+    }
+
+    // MARK: – Post-Race Insights (Relay)
+
+    private var relayInsightsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("POST-RACE INSIGHTS")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.secondary)
+                .padding(.top, 8)
+
+            if let ri = relayInsight {
+                relayInsightCard(ri: ri)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
+    }
+
+    private func relayInsightCard(ri: RelayInsight) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Team best status
+            if ri.isTeamBest {
+                HStack(spacing: 6) {
+                    Image(systemName: "trophy.fill")
+                        .font(.caption)
+                        .foregroundStyle(Theme.runsmithPink)
+                    Text("NEW TEAM BEST!")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Theme.runsmithPink)
+                    if let prev = ri.previousBestMs {
+                        Text("(prev: \(prev.formattedSplitTime))")
+                            .font(.caption)
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                }
+            } else if let gap = ri.bestGapMs, let best = ri.previousBestMs {
+                HStack(spacing: 4) {
+                    Text("+\(gap.formattedSplitTime) off best")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.orange)
+                    Text("(\(best.formattedSplitTime))")
+                        .font(.caption)
+                        .foregroundStyle(Theme.textTertiary)
+                }
+            } else if ri.timesRaced <= 1 {
+                HStack(spacing: 6) {
+                    Image(systemName: "star.fill")
+                        .font(.caption)
+                        .foregroundStyle(Theme.badgeYellow)
+                    Text("First \(vm.race.eventType.displayName) recorded!")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            }
+
+            // Stats
+            HStack(spacing: 16) {
+                if ri.timesRaced > 1 {
+                    VStack(spacing: 0) {
+                        Text("\(ri.timesRaced)")
+                            .font(.caption.weight(.bold).monospacedDigit())
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("times raced")
+                            .font(.system(size: 9))
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                }
+                if let athlete = ri.fastestLegAthlete, let ms = ri.fastestLegMs {
+                    VStack(spacing: 0) {
+                        Text(ms.formattedSplitTime)
+                            .font(.caption.weight(.bold).monospacedDigit())
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("fastest leg (\(athlete.firstName))")
+                            .font(.system(size: 9))
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+    }
+
+    // MARK: – Insight Computation
+
+    private func loadInsights() {
+        if vm.race.eventType.isRelay {
+            loadRelayInsight()
+        } else {
+            loadAthleteInsights()
+        }
+    }
+
+    private func loadAthleteInsights() {
+        let athletes = vm.orderedAthletes
+        athleteInsights = athletes.compactMap { athlete in
+            let finishMs = RaceDomain.finalTime(athlete: athlete, splits: vm.splits, race: vm.race)
+
+            // Historical races for this event
+            let allRaces = (try? store.fetchRaces(forAthlete: athlete.id)) ?? []
+            let eventRaces = allRaces.filter {
+                $0.status == .completed && $0.eventType == vm.race.eventType && $0.id != vm.race.id
+            }
+
+            // Prior PR (excluding this race)
+            var priorPrMs: Int?
+            for past in eventRaces {
+                guard let splits = try? store.fetchSplits(for: past.id),
+                      let ms = RaceDomain.finalTime(athlete: athlete, splits: splits, race: past)
+                else { continue }
+                if priorPrMs == nil || ms < priorPrMs! { priorPrMs = ms }
+            }
+
+            let racesInEvent = eventRaces.count + (finishMs != nil ? 1 : 0)
+            let isPR: Bool
+            let prGap: Int?
+            if let finish = finishMs {
+                if let prior = priorPrMs {
+                    isPR = finish <= prior
+                    prGap = isPR ? nil : (finish - prior)
+                } else {
+                    isPR = true  // first race = automatic PR
+                    prGap = nil
+                }
+            } else {
+                isPR = false
+                prGap = nil
+            }
+
+            // Best lap in THIS race
+            let totalSplits = vm.race.isUnlimitedSplits ? vm.splits.filter({ $0.athleteId == athlete.id }).count : vm.race.expectedSplitsPerAthlete
+            var bestLapMs: Int?
+            var bestLapLabel: String?
+            let splitDist = vm.race.isUnlimitedSplits ? nil : vm.race.trackLengthMeters / max(vm.race.splitsPerLap, 1)
+            for idx in 1...max(totalSplits, 1) {
+                if let lapMs = RaceDomain.lapTime(athlete: athlete, lapIndex: idx, splits: vm.splits) {
+                    if bestLapMs == nil || lapMs < bestLapMs! {
+                        bestLapMs = lapMs
+                        if let dist = splitDist {
+                            bestLapLabel = "\(dist * idx)m"
+                        } else {
+                            bestLapLabel = "Split \(idx)"
+                        }
+                    }
+                }
+            }
+
+            // Only show insight if there's something meaningful
+            guard finishMs != nil || racesInEvent > 0 else { return nil }
+
+            return AthleteInsight(
+                athlete: athlete,
+                finishMs: finishMs,
+                isPR: isPR,
+                previousPrMs: priorPrMs,
+                prGapMs: prGap,
+                racesInEvent: racesInEvent,
+                bestLapMs: bestLapMs,
+                bestLapLabel: bestLapLabel
+            )
+        }
+    }
+
+    private func loadRelayInsight() {
+        guard vm.race.eventType.isRelay else { return }
+        let totalMs = vm.totalRelayMs
+
+        // Find prior relay races of same event type
+        guard let firstId = vm.race.athleteIds.first else { return }
+        let allRaces = (try? store.fetchRaces(forAthlete: firstId)) ?? []
+        let priorRelays = allRaces.filter {
+            $0.status == .completed && $0.eventType == vm.race.eventType && $0.id != vm.race.id
+        }
+
+        let allAthletes = (try? store.fetchAthletes()) ?? []
+        var priorTimes: [Int] = []
+        for past in priorRelays {
+            guard let splits = try? store.fetchSplits(for: past.id),
+                  let lastId = past.athleteIds.last,
+                  let lastAthlete = allAthletes.first(where: { $0.id == lastId }),
+                  let ms = RaceDomain.finalTime(athlete: lastAthlete, splits: splits, race: past)
+            else { continue }
+            priorTimes.append(ms)
+        }
+
+        let priorBest = priorTimes.min()
+        let timesRaced = priorTimes.count + (totalMs != nil ? 1 : 0)
+
+        let isTeamBest: Bool
+        let bestGap: Int?
+        if let total = totalMs {
+            if let prior = priorBest {
+                isTeamBest = total <= prior
+                bestGap = isTeamBest ? nil : (total - prior)
+            } else {
+                isTeamBest = true
+                bestGap = nil
+            }
+        } else {
+            isTeamBest = false
+            bestGap = nil
+        }
+
+        // Fastest leg
+        let legData = vm.relayLegData
+        var fastestAthlete: Athlete?
+        var fastestMs: Int?
+        for entry in legData {
+            if let ms = entry.legMs, (fastestMs == nil || ms < fastestMs!) {
+                fastestMs = ms
+                fastestAthlete = entry.athlete
+            }
+        }
+
+        relayInsight = RelayInsight(
+            isTeamBest: isTeamBest,
+            previousBestMs: priorBest,
+            bestGapMs: bestGap,
+            timesRaced: timesRaced,
+            fastestLegAthlete: fastestAthlete,
+            fastestLegMs: fastestMs
+        )
     }
 }
 

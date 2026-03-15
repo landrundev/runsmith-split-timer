@@ -19,11 +19,8 @@ struct LiveTimingView: View {
         }
         .onChange(of: vm.shouldDismiss) { should in
             if should {
-                if let onRaceComplete {
-                    onRaceComplete()
-                } else {
-                    dismiss()
-                }
+                onRaceComplete?()
+                dismiss()
             }
         }
     }

@@ -5,6 +5,7 @@ struct SettingsView: View {
     @EnvironmentObject var cache: RaceStateCache
     @Binding var appearance: AppearanceSetting
     @AppStorage("paceUnit") private var paceUnit: String = PaceUnit.perMile.rawValue
+    @State private var showSwitchToFan = false
 
     var body: some View {
         List {
@@ -58,6 +59,27 @@ struct SettingsView: View {
                 Text("Tools")
             }
 
+            // MARK: – Switch Mode
+            Section {
+                Button {
+                    showSwitchToFan = true
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Switch to Fan Mode")
+                                .font(.subheadline.weight(.semibold))
+                            Text("Time your own athlete and track their PRs")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .foregroundStyle(.primary)
+            }
+
             // MARK: – About
             Section {
                 NavigationLink {
@@ -82,5 +104,15 @@ struct SettingsView: View {
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.large)
+        .confirmationDialog("Switch to Fan Mode?",
+                            isPresented: $showSwitchToFan,
+                            titleVisibility: .visible) {
+            Button("Switch to Fan Mode") {
+                AppSettings.appMode = .spectator
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Your meets, rosters, and race history are kept. Switch back anytime.")
+        }
     }
 }
