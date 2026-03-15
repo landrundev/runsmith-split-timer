@@ -79,6 +79,8 @@ struct SpectatorHomeView: View {
     @State private var navigateToLiveTiming = false
     @State private var liveTimingVM: LiveTimingViewModel? = nil
     @State private var quickTemplates: [AppSettings.QuickRaceTemplate] = []
+    @State private var childToDelete: AppSettings.SpectatorChild? = nil
+    @State private var showDeleteConfirm = false
 
     var body: some View {
         ScrollView {
@@ -91,13 +93,18 @@ struct SpectatorHomeView: View {
                 } else {
                     VStack(spacing: 8) {
                         ForEach(myChildren) { child in
-                            Button {
-                                selectedChild = child
-                                navigateToDetail = true
-                            } label: {
+                            SwipeDeleteRow(
+                                onTap: {
+                                    selectedChild = child
+                                    navigateToDetail = true
+                                },
+                                onDelete: {
+                                    childToDelete = child
+                                    showDeleteConfirm = true
+                                }
+                            ) {
                                 SpectatorChildRowView(child: child, store: store)
                             }
-                            .buttonStyle(.plain)
                         }
 
                         Button("+ Add another athlete") {
@@ -232,6 +239,14 @@ struct SpectatorHomeView: View {
             SpectatorSetupView(mode: .startRace)
         }
         .onAppear { refreshAll() }
+        .alert("Delete Athlete?", isPresented: $showDeleteConfirm, presenting: childToDelete) { child in
+            Button("Delete", role: .destructive) {
+                deleteChild(child)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { child in
+            Text("This will remove \(child.displayName) and all their race history. This cannot be undone.")
+        }
     }
 
     // MARK: - Helpers
@@ -255,6 +270,17 @@ struct SpectatorHomeView: View {
             }
         }
         pendingRaces = result.sorted { ($0.startedAt ?? $0.endedAt ?? .distantPast) > ($1.startedAt ?? $1.endedAt ?? .distantPast) }
+    }
+
+    private func deleteChild(_ child: AppSettings.SpectatorChild) {
+        // Delete all races where this athlete is the sole participant
+        if let races = try? store.fetchRaces(forAthlete: child.id) {
+            for race in races where race.athleteIds == [child.id] {
+                try? store.delete(raceId: race.id)
+            }
+        }
+        AppSettings.removeChild(id: child.id)
+        refreshAll()
     }
 
     private func deletePendingRace(_ race: Race) {
