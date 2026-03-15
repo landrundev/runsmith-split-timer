@@ -612,7 +612,7 @@ final class AnalyticsViewModel: ObservableObject {
 
     /// Distance-based sort index: 400 → 800 → 1500 → Mile → 1600 → 3200 → 5K → 10K → Custom last.
     nonisolated private static let distanceSortOrder: [EventType] = [
-        .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
+        .m100, .m110H, .m200, .m300H, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
     ]
 
     nonisolated static func eventSortOrder(_ event: EventType) -> Int {

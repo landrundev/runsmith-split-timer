@@ -53,19 +53,27 @@ private struct RelayTeamStats {
 // MARK: - View
 
 struct SpectatorStagingView: View {
-    let race: Race
     let store: SplitDeckStore
     let cache: RaceStateCache
     let onDone: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var race: Race
     @State private var navigateToLiveTiming = false
     @State private var liveTimingVM: LiveTimingViewModel?
     @State private var raceCompleted = false
+    @State private var showRaceInfoEdit = false
 
     @State private var athleteStats: [AthleteEventStats] = []
     @State private var relayStats: RelayTeamStats?
     @State private var athletes: [Athlete] = []
+
+    init(race: Race, store: SplitDeckStore, cache: RaceStateCache, onDone: @escaping () -> Void) {
+        self.store = store
+        self.cache = cache
+        self.onDone = onDone
+        self._race = State(initialValue: race)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -97,6 +105,27 @@ struct SpectatorStagingView: View {
             }
             .buttonStyle(GlassPrimaryButtonStyle(color: .green))
             .glassActionBar()
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    // Save race to store so RaceInfoEditView can edit it
+                    try? store.save(race)
+                    showRaceInfoEdit = true
+                } label: {
+                    Image(systemName: "pencil.circle")
+                }
+            }
+        }
+        .sheet(isPresented: $showRaceInfoEdit) {
+            RaceInfoEditView(race: race, store: store) {
+                // Reload race from store after edit
+                if let races = try? store.fetchRaces(forAthlete: race.athleteIds.first ?? UUID()),
+                   let updated = races.first(where: { $0.id == race.id }) {
+                    race = updated
+                }
+                loadStats()
+            }
         }
         .navigationDestination(isPresented: $navigateToLiveTiming) {
             if let vm = liveTimingVM {
@@ -180,9 +209,9 @@ struct SpectatorStagingView: View {
 
             HStack(spacing: 4) {
                 Text(race.eventType.displayName)
-                if !race.isUnlimitedSplits {
+                if let lapText = race.lapDisplayString {
                     Text("\u{00B7}")
-                    Text("\(race.laps) lap\(race.laps == 1 ? "" : "s")")
+                    Text(lapText)
                     Text("\u{00B7}")
                     Text(verbatim: "\(race.trackLengthMeters)m track")
                 }
@@ -332,16 +361,18 @@ struct SpectatorStagingView: View {
                 .foregroundStyle(Theme.textPrimary)
             HStack(spacing: 4) {
                 Text(race.eventType.displayName)
-                if !race.isUnlimitedSplits {
+                if let lapText = race.lapDisplayString {
                     Text("\u{00B7}")
-                    Text("\(race.laps) lap\(race.laps == 1 ? "" : "s")")
+                    Text(lapText)
                 }
             }
             .font(.subheadline)
             .foregroundStyle(Theme.textSecondary)
-            Text(verbatim: "\(race.trackLengthMeters)m track")
-                .font(.caption)
-                .foregroundStyle(Theme.textTertiary)
+            if !race.eventType.isHurdles {
+                Text(verbatim: "\(race.trackLengthMeters)m track")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textTertiary)
+            }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -608,7 +639,11 @@ struct SpectatorStagingView: View {
             athleteIds: race.athleteIds,
             startedAt: Date(), status: .inProgress,
             isArchived: race.isArchived, isMerged: race.isMerged,
-            sortOrder: race.sortOrder
+            sortOrder: race.sortOrder,
+            spectatorMeetName: race.spectatorMeetName,
+            heat: race.heat,
+            overallPlace: race.overallPlace,
+            heatPlace: race.heatPlace
         )
         try? store.save(updated)
         let allAthletes = (try? store.fetchAthletes()) ?? []

@@ -79,14 +79,14 @@ struct RaceStagingView: View {
 
             HStack(spacing: 4) {
                 Text(race.eventType.displayName)
-                if !race.isUnlimitedSplits {
+                if let lapText = race.lapDisplayString {
                     Text("\u{00B7}")
-                    Text("\(race.laps) lap\(race.laps == 1 ? "" : "s")")
+                    Text(lapText)
                     if race.splitsPerLap > 1 {
                         Text("\u{00B7}")
                         Text("\(race.splitsPerLap) splits/lap")
                     }
-                } else {
+                } else if race.isUnlimitedSplits {
                     Text("\u{00B7}")
                     Text("Unlimited splits")
                 }

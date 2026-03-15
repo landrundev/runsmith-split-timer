@@ -47,7 +47,7 @@ struct SpectatorSetupView: View {
     }
 
     private static let individualEvents: [EventType] = [
-        .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000
+        .m100, .m110H, .m200, .m300H, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000
     ]
 
     /// Computed heat string from roundType + heatNumber

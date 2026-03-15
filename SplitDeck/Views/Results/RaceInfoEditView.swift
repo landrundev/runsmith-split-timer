@@ -17,7 +17,7 @@ struct RaceInfoEditView: View {
     @State private var errorMessage: String? = nil
 
     private static let allEvents: [EventType] = [
-        .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000,
+        .m100, .m110H, .m200, .m300H, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000,
         .relay4x100, .relay4x200, .relay4x400, .relay4x800, .custom
     ]
 

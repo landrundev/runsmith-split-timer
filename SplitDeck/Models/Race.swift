@@ -16,6 +16,8 @@ enum EventType: Int16, Codable, CaseIterable {
     case mile   = 12
     case m100   = 13
     case m200   = 14
+    case m110H  = 15
+    case m300H  = 16
 
     var displayName: String {
         switch self {
@@ -29,6 +31,8 @@ enum EventType: Int16, Codable, CaseIterable {
         case .m3200:     return "3200m"
         case .m5000:     return "5000m"
         case .m10000:    return "10000m"
+        case .m110H:     return "110m Hurdles"
+        case .m300H:     return "300m Hurdles"
         case .custom:    return "Custom"
         case .relay4x100:  return "4\u{00D7}100m"
         case .relay4x200:  return "4\u{00D7}200m"
@@ -40,6 +44,13 @@ enum EventType: Int16, Codable, CaseIterable {
     var isRelay: Bool {
         switch self {
         case .relay4x100, .relay4x200, .relay4x400, .relay4x800: return true
+        default: return false
+        }
+    }
+
+    var isHurdles: Bool {
+        switch self {
+        case .m110H, .m300H: return true
         default: return false
         }
     }
@@ -78,6 +89,8 @@ enum EventType: Int16, Codable, CaseIterable {
         case .m3200:  return 3200
         case .m5000:  return 5000
         case .m10000: return 10000
+        case .m110H:  return 110
+        case .m300H:  return 300
         case .custom: return nil
         default:      return legDistanceMeters
         }
@@ -136,6 +149,20 @@ struct Race: Identifiable, Codable, Hashable {
     var laps: Int {
         guard !isUnlimitedSplits else { return Int.max }
         return Int(ceil(Double(distanceMeters) / Double(trackLengthMeters)))
+    }
+
+    /// Human-readable lap count for display.
+    /// Returns nil for hurdle events (no lap reference shown).
+    /// Returns fractional text for sub-track distances (e.g. "1/4 Lap").
+    var lapDisplayString: String? {
+        guard !eventType.isHurdles else { return nil }
+        guard !isUnlimitedSplits else { return nil }
+        if distanceMeters < trackLengthMeters {
+            func gcd(_ a: Int, _ b: Int) -> Int { b == 0 ? a : gcd(b, a % b) }
+            let g = gcd(distanceMeters, trackLengthMeters)
+            return "\(distanceMeters / g)/\(trackLengthMeters / g) Lap"
+        }
+        return "\(laps) Lap\(laps == 1 ? "" : "s")"
     }
 
     var expectedSplitsPerAthlete: Int {

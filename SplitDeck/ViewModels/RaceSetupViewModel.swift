@@ -63,7 +63,7 @@ final class RaceSetupViewModel: ObservableObject {
 
     static let maxIndividualAthletes = 50
     static let individualEventTypes: [EventType] = [
-        .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
+        .m100, .m110H, .m200, .m300H, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
     ]
     static let relayEventTypes: [EventType] = [.relay4x100, .relay4x200, .relay4x400, .relay4x800]
 

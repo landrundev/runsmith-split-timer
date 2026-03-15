@@ -16,7 +16,7 @@ struct AnalyticsView: View {
 
     /// Distance-based sort order: shortest \u{2192} longest, Custom last.
     private static let eventSortOrder: [EventType] = [
-        .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
+        .m100, .m110H, .m200, .m300H, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000, .custom
     ]
 
     private func eventSortIndex(_ event: EventType) -> Int {
