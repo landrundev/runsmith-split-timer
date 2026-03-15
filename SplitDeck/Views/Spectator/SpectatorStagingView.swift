@@ -184,7 +184,7 @@ struct SpectatorStagingView: View {
                     Text("\u{00B7}")
                     Text("\(race.laps) lap\(race.laps == 1 ? "" : "s")")
                     Text("\u{00B7}")
-                    Text("\(race.trackLengthMeters)m track")
+                    Text(verbatim: "\(race.trackLengthMeters)m track")
                 }
             }
             .font(.subheadline)
@@ -334,14 +334,12 @@ struct SpectatorStagingView: View {
                 Text(race.eventType.displayName)
                 if !race.isUnlimitedSplits {
                     Text("\u{00B7}")
-                    Text("\(race.distanceMeters)m")
-                    Text("\u{00B7}")
                     Text("\(race.laps) lap\(race.laps == 1 ? "" : "s")")
                 }
             }
             .font(.subheadline)
             .foregroundStyle(Theme.textSecondary)
-            Text("\(race.trackLengthMeters)m track")
+            Text(verbatim: "\(race.trackLengthMeters)m track")
                 .font(.caption)
                 .foregroundStyle(Theme.textTertiary)
         }
@@ -407,7 +405,7 @@ struct SpectatorStagingView: View {
                 HStack(spacing: 4) {
                     Text("\(race.athleteIds.count) legs")
                     Text("\u{00B7}")
-                    Text("\(race.trackLengthMeters)m each")
+                    Text(verbatim: "\(race.trackLengthMeters)m each")
                 }
                 .font(.subheadline)
                 .foregroundStyle(Theme.textSecondary)

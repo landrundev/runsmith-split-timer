@@ -1,5 +1,12 @@
 import SwiftUI
 
+private struct AthleteQuickStats {
+    let athlete: Athlete
+    let prMs: Int?
+    let lastRaceMs: Int?
+    let racesInEvent: Int
+}
+
 struct RaceStagingView: View {
     let race: Race
     let athletes: [Athlete]
@@ -12,6 +19,7 @@ struct RaceStagingView: View {
     @State private var showShareConfig = false
     @State private var navigateToLiveTiming = false
     @State private var liveTimingVM: LiveTimingViewModel?
+    @State private var athleteQuickStats: [AthleteQuickStats] = []
 
     var body: some View {
         ScrollView {
@@ -58,6 +66,7 @@ struct RaceStagingView: View {
             }
         }
         .hidesTabBar()
+        .onAppear { loadAthleteStats() }
     }
 
     // MARK: – Race Summary Card
@@ -66,20 +75,26 @@ struct RaceStagingView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(race.name)
                 .font(.headline)
+                .foregroundStyle(Theme.textPrimary)
 
             HStack(spacing: 4) {
                 Text(race.eventType.displayName)
-                Text("\u{00B7}")
-                if race.isUnlimitedSplits {
-                    Text("Unlimited")
+                if !race.isUnlimitedSplits {
+                    Text("\u{00B7}")
+                    Text("\(race.laps) lap\(race.laps == 1 ? "" : "s")")
+                    if race.splitsPerLap > 1 {
+                        Text("\u{00B7}")
+                        Text("\(race.splitsPerLap) splits/lap")
+                    }
                 } else {
-                    Text("\(race.distanceMeters)m \u{00B7} \(race.laps) lap\(race.laps == 1 ? "" : "s")")
+                    Text("\u{00B7}")
+                    Text("Unlimited splits")
                 }
             }
             .font(.subheadline)
             .foregroundStyle(Theme.textSecondary)
 
-            Text("\(race.trackLengthMeters)m track")
+            Text(verbatim: "\(race.trackLengthMeters)m track")
                 .font(.caption)
                 .foregroundStyle(Theme.textTertiary)
         }
@@ -101,26 +116,49 @@ struct RaceStagingView: View {
             if race.eventType.isRelay {
                 relayLegList
             } else {
-                athleteChips
+                athleteRows
             }
         }
     }
 
-    private var athleteChips: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 8)], spacing: 8) {
-            ForEach(athletes) { athlete in
-                HStack(spacing: 6) {
+    private var athleteRows: some View {
+        VStack(spacing: 8) {
+            ForEach(athleteQuickStats, id: \.athlete.id) { stats in
+                HStack(spacing: 12) {
                     Circle()
-                        .fill(Color(hex: athlete.colorHex))
-                        .frame(width: 10, height: 10)
-                    Text(athlete.name)
-                        .font(.subheadline)
-                        .lineLimit(1)
+                        .fill(Color(hex: stats.athlete.colorHex))
+                        .frame(width: 12, height: 12)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(stats.athlete.name)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                            .lineLimit(1)
+
+                        if stats.racesInEvent > 0 {
+                            HStack(spacing: 4) {
+                                if let pr = stats.prMs {
+                                    Text("PR: \(pr.formattedSplitTime)")
+                                }
+                                if let last = stats.lastRaceMs, last != stats.prMs {
+                                    Text("\u{00B7}")
+                                    Text("Last: \(last.formattedSplitTime)")
+                                }
+                            }
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(Theme.textSecondary)
+                        } else {
+                            Text("First \(race.eventType.displayName)!")
+                                .font(.caption)
+                                .foregroundStyle(Theme.badgeYellow)
+                        }
+                    }
+
+                    Spacer()
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(14)
                 .background(Theme.cardBackground)
-                .clipShape(Capsule())
+                .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
             }
         }
     }
@@ -175,6 +213,36 @@ struct RaceStagingView: View {
             }
             .buttonStyle(.bordered)
             .tint(Theme.runsmithPink)
+        }
+    }
+
+    // MARK: – Stats Loading
+
+    private func loadAthleteStats() {
+        guard !race.eventType.isRelay else { return }
+        athleteQuickStats = athletes.map { athlete in
+            let allRaces = (try? store.fetchRaces(forAthlete: athlete.id)) ?? []
+            let eventRaces = allRaces
+                .filter { $0.status == .completed && $0.eventType == race.eventType }
+                .sorted { ($0.startedAt ?? .distantPast) > ($1.startedAt ?? .distantPast) }
+
+            var prMs: Int?
+            var lastMs: Int?
+
+            for (i, pastRace) in eventRaces.enumerated() {
+                guard let splits = try? store.fetchSplits(for: pastRace.id),
+                      let finalMs = RaceDomain.finalTime(athlete: athlete, splits: splits, race: pastRace)
+                else { continue }
+                if i == 0 { lastMs = finalMs }
+                if prMs == nil || finalMs < prMs! { prMs = finalMs }
+            }
+
+            return AthleteQuickStats(
+                athlete: athlete,
+                prMs: prMs,
+                lastRaceMs: lastMs,
+                racesInEvent: eventRaces.count
+            )
         }
     }
 
