@@ -126,6 +126,12 @@ struct Race: Identifiable, Codable, Hashable {
     /// as officially timed. Displayed as an "Official" badge in results.
     var isOfficiallyTimed: Bool
 
+    // Spectator-only metadata (nil for coach races)
+    var spectatorMeetName: String?  // e.g. "City Championships"
+    var heat: String?               // e.g. "Heat 3", "Semis", "Final"
+    var overallPlace: Int?          // 1-based overall placement
+    var heatPlace: Int?             // 1-based heat placement
+
     // Computed — never stored
     var laps: Int {
         guard !isUnlimitedSplits else { return Int.max }
@@ -163,7 +169,11 @@ struct Race: Identifiable, Codable, Hashable {
         isMerged: Bool = false,
         sortOrder: Int = 0,
         officialFinalMs: Int? = nil,
-        isOfficiallyTimed: Bool = false
+        isOfficiallyTimed: Bool = false,
+        spectatorMeetName: String? = nil,
+        heat: String? = nil,
+        overallPlace: Int? = nil,
+        heatPlace: Int? = nil
     ) {
         self.id = id
         self.meetId = meetId
@@ -183,5 +193,9 @@ struct Race: Identifiable, Codable, Hashable {
         self.sortOrder = sortOrder
         self.officialFinalMs = officialFinalMs
         self.isOfficiallyTimed = isOfficiallyTimed
+        self.spectatorMeetName = spectatorMeetName
+        self.heat = heat
+        self.overallPlace = overallPlace
+        self.heatPlace = heatPlace
     }
 }

@@ -165,9 +165,16 @@ struct ResultsView: View {
 
     private var raceInfoHeader: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(vm.race.name)
-                .font(.headline)
-                .foregroundStyle(Theme.textPrimary)
+            HStack(spacing: 8) {
+                // Medal icon for top 3 overall placement
+                if let place = vm.race.overallPlace, place >= 1, place <= 3 {
+                    resultsMedalIcon(place: place)
+                }
+
+                Text(vm.race.name)
+                    .font(.headline)
+                    .foregroundStyle(Theme.textPrimary)
+            }
 
             HStack(spacing: 6) {
                 Text(vm.race.eventType.displayName)
@@ -179,6 +186,11 @@ struct ResultsView: View {
                     Text(meet.name)
                         .font(.subheadline)
                         .foregroundStyle(Theme.textSecondary)
+                } else if let meetName = vm.race.spectatorMeetName {
+                    Text("\u{00B7}").foregroundStyle(Theme.textTertiary)
+                    Text(meetName)
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.runsmithPink)
                 }
 
                 if let date = vm.race.startedAt {
@@ -186,6 +198,27 @@ struct ResultsView: View {
                     Text(Self.dateFormatter.string(from: date))
                         .font(.subheadline)
                         .foregroundStyle(Theme.textSecondary)
+                }
+            }
+
+            // Heat + Place info (spectator)
+            if vm.race.heat != nil || vm.race.overallPlace != nil || vm.race.heatPlace != nil {
+                HStack(spacing: 6) {
+                    if let heat = vm.race.heat {
+                        Text(heat)
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                    if let op = vm.race.overallPlace {
+                        Text(resultsOrdinal(op) + " overall")
+                            .font(.caption)
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                    if let hp = vm.race.heatPlace {
+                        Text(resultsOrdinal(hp) + " in heat")
+                            .font(.caption)
+                            .foregroundStyle(Theme.textSecondary)
+                    }
                 }
             }
 
@@ -229,6 +262,38 @@ struct ResultsView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .background(Theme.cardBackground)
+    }
+
+    @ViewBuilder
+    private func resultsMedalIcon(place: Int) -> some View {
+        let color: Color = {
+            switch place {
+            case 1: return .yellow
+            case 2: return .gray
+            case 3: return .orange
+            default: return .clear
+            }
+        }()
+        Image(systemName: "medal.fill")
+            .font(.title3)
+            .foregroundStyle(color)
+    }
+
+    private func resultsOrdinal(_ n: Int) -> String {
+        let ones = n % 10
+        let tens = (n / 10) % 10
+        let suffix: String
+        if tens == 1 {
+            suffix = "th"
+        } else {
+            switch ones {
+            case 1: suffix = "st"
+            case 2: suffix = "nd"
+            case 3: suffix = "rd"
+            default: suffix = "th"
+            }
+        }
+        return "\(n)\(suffix)"
     }
 
     // MARK: – Done Button (bottom)

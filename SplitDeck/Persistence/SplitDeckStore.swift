@@ -644,7 +644,11 @@ final class SplitDeckStore: ObservableObject {
             sortOrder: Int(entity.sortOrder),
             officialFinalMs: entity.isOfficiallyTimed
                 ? Int(entity.officialFinalMs) : nil,
-            isOfficiallyTimed: entity.isOfficiallyTimed
+            isOfficiallyTimed: entity.isOfficiallyTimed,
+            spectatorMeetName: entity.spectatorMeetName,
+            heat: entity.heat,
+            overallPlace: entity.overallPlace > 0 ? Int(entity.overallPlace) : nil,
+            heatPlace: entity.heatPlace > 0 ? Int(entity.heatPlace) : nil
         )
     }
 
@@ -697,6 +701,10 @@ final class SplitDeckStore: ObservableObject {
         entity.sortOrder = Int16(race.sortOrder)
         entity.officialFinalMs = Int64(race.officialFinalMs ?? 0)
         entity.isOfficiallyTimed = race.isOfficiallyTimed
+        entity.spectatorMeetName = race.spectatorMeetName
+        entity.heat = race.heat
+        entity.overallPlace = Int16(race.overallPlace ?? 0)
+        entity.heatPlace = Int16(race.heatPlace ?? 0)
     }
 
     private func map(_ split: Split, into entity: SplitEntity) {

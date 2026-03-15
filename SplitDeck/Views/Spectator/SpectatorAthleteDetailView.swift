@@ -135,17 +135,57 @@ struct SpectatorAthleteDetailView: View {
 
     private func raceRow(_ entry: (race: Race, finalMs: Int?, isPR: Bool)) -> some View {
         HStack {
+            // Medal icon for top 3 overall
+            if let place = entry.race.overallPlace, place >= 1, place <= 3 {
+                medalIcon(place: place)
+            }
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.race.name)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
-                if let date = entry.race.startedAt {
-                    Text(date, style: .date)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+
+                HStack(spacing: 4) {
+                    if let date = entry.race.startedAt {
+                        Text(date, style: .date)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    if let meetName = entry.race.spectatorMeetName {
+                        Text("\u{00B7}")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                        Text(meetName)
+                            .font(.caption)
+                            .foregroundStyle(Theme.runsmithPink)
+                            .lineLimit(1)
+                    }
+                }
+
+                // Heat + Place info
+                if entry.race.heat != nil || entry.race.overallPlace != nil {
+                    HStack(spacing: 6) {
+                        if let heat = entry.race.heat {
+                            Text(heat)
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        if let op = entry.race.overallPlace {
+                            Text(ordinal(op) + " overall")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        if let hp = entry.race.heatPlace {
+                            Text(ordinal(hp) + " in heat")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
             }
+
             Spacer()
+
             if let ms = entry.finalMs {
                 let displayMs = entry.race.officialFinalMs ?? ms
                 VStack(alignment: .trailing, spacing: 2) {
@@ -179,6 +219,38 @@ struct SpectatorAthleteDetailView: View {
         .padding(14)
         .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+    }
+
+    @ViewBuilder
+    private func medalIcon(place: Int) -> some View {
+        let config: (icon: String, color: Color) = {
+            switch place {
+            case 1: return ("medal.fill", Color.yellow)
+            case 2: return ("medal.fill", Color.gray)
+            case 3: return ("medal.fill", Color.orange)
+            default: return ("medal.fill", Color.clear)
+            }
+        }()
+        Image(systemName: config.icon)
+            .font(.title3)
+            .foregroundStyle(config.color)
+    }
+
+    private func ordinal(_ n: Int) -> String {
+        let suffix: String
+        let ones = n % 10
+        let tens = (n / 10) % 10
+        if tens == 1 {
+            suffix = "th"
+        } else {
+            switch ones {
+            case 1: suffix = "st"
+            case 2: suffix = "nd"
+            case 3: suffix = "rd"
+            default: suffix = "th"
+            }
+        }
+        return "\(n)\(suffix)"
     }
 
     @ViewBuilder
