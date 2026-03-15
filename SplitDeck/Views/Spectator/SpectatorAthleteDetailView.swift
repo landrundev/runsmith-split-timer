@@ -56,7 +56,7 @@ struct SpectatorAthleteDetailView: View {
                         .padding(.vertical, 8)
                 } else {
                     VStack(spacing: 8) {
-                        ForEach(Array(recentRaces.enumerated()), id: \.offset) { _, entry in
+                        ForEach(recentRaces, id: \.race.id) { entry in
                             SwipeDeleteRow(
                                 onTap: {
                                     selectedRace = entry.race

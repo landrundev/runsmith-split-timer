@@ -33,6 +33,7 @@ struct ResultsView: View {
     @State private var athleteInsights: [AthleteInsight] = []
     @State private var relayInsight: RelayInsight?
     @State private var showOfficialEntry = false
+    @State private var showRaceInfoEdit = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     private var isWideLayout: Bool { sizeClass == .regular }
 
@@ -106,6 +107,14 @@ struct ResultsView: View {
                     } label: {
                         Label("Merge Coach Data", systemImage: "person.2.badge.gearshape")
                     }
+
+                    Divider()
+
+                    Button {
+                        showRaceInfoEdit = true
+                    } label: {
+                        Label("Edit Race Info", systemImage: "pencil")
+                    }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -130,13 +139,23 @@ struct ResultsView: View {
         .adaptiveSheet(item: $shareItem) { item in
             SharePreviewSheet(image: item.image, csvURL: vm.csvFileURL())
         }
+        .sheet(isPresented: $showRaceInfoEdit) {
+            RaceInfoEditView(
+                race: vm.race,
+                store: store,
+                onSaved: { vm.reload(store: store) }
+            )
+        }
         .sheet(isPresented: $showOfficialEntry) {
             if let ms = manualFinalMsForOfficialEntry {
                 OfficialTimeEntryView(
                     race: vm.race,
                     manualFinalMs: ms,
                     store: store,
-                    onSaved: { showOfficialEntry = false }
+                    onSaved: {
+                        vm.reload(store: store)
+                        showOfficialEntry = false
+                    }
                 )
             }
         }

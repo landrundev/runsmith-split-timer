@@ -10,10 +10,10 @@ enum DisplayMode: String, CaseIterable {
 @MainActor
 final class ResultsViewModel: ObservableObject {
     @Published var displayMode: DisplayMode = .cumulative
+    @Published private(set) var race: Race
+    @Published private(set) var splits: [Split]
 
-    let race: Race
     let athletes: [Athlete]
-    let splits: [Split]
     let meet: Meet?
 
     init(race: Race, athletes: [Athlete], splits: [Split], meet: Meet?) {
@@ -21,6 +21,17 @@ final class ResultsViewModel: ObservableObject {
         self.athletes = athletes
         self.splits = splits
         self.meet = meet
+    }
+
+    /// Reloads race and split data from the store. Call after official time entry
+    /// or race info edits so the results screen reflects the latest state.
+    func reload(store: SplitDeckStore) {
+        if let updatedRace = try? store.fetchRace(id: race.id) {
+            self.race = updatedRace
+        }
+        if let updatedSplits = try? store.fetchSplits(for: race.id) {
+            self.splits = updatedSplits
+        }
     }
 
     var orderedAthletes: [Athlete] {
