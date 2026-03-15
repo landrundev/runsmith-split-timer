@@ -34,7 +34,12 @@ enum CardRenderer {
     static func render(data: CardData) -> UIImage {
         // Calculate total height
         let hasExtraLines = data.meetName != nil || !data.isRelay
-        let headerHeight: CGFloat = (hasExtraLines ? 140 : 116) + (data.isMerged ? 20 : 0)
+        let hasPlacementLine = data.heat != nil || data.overallPlace != nil || data.heatPlace != nil
+        let hasOfficialLine = data.isOfficiallyTimed && data.officialFinalTime != nil
+        var headerHeight: CGFloat = hasExtraLines ? 140 : 116
+        if hasPlacementLine { headerHeight += 20 }
+        if hasOfficialLine { headerHeight += 20 }
+        if data.isMerged { headerHeight += 20 }
         let nameRowHeight: CGFloat = 40
         let splitsRowHeight: CGFloat = 32
         let footerHeight: CGFloat = 28
@@ -168,6 +173,50 @@ enum CardRenderer {
                 withAttributes: infoAttrs
             )
             cursorY += infoSize.height + 4
+        }
+
+        // Heat + Placement line
+        let hasPlacementLine = data.heat != nil || data.overallPlace != nil || data.heatPlace != nil
+        if hasPlacementLine {
+            let placementAttrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 12, weight: .semibold),
+                .foregroundColor: UIColor.white.withAlphaComponent(0.9)
+            ]
+            var parts: [String] = []
+            if let heat = data.heat { parts.append(heat) }
+            if let op = data.overallPlace {
+                let medal: String
+                switch op {
+                case 1: medal = "\u{1F947} "  // 🥇
+                case 2: medal = "\u{1F948} "  // 🥈
+                case 3: medal = "\u{1F949} "  // 🥉
+                default: medal = ""
+                }
+                parts.append("\(medal)\(ordinalString(op)) overall")
+            }
+            if let hp = data.heatPlace { parts.append("\(ordinalString(hp)) in heat") }
+            let placementText = parts.joined(separator: "  \u{00B7}  ")
+            let placementSize = (placementText as NSString).size(withAttributes: placementAttrs)
+            (placementText as NSString).draw(
+                at: CGPoint(x: (cardWidth - placementSize.width) / 2, y: cursorY),
+                withAttributes: placementAttrs
+            )
+            cursorY += placementSize.height + 4
+        }
+
+        // Official time badge
+        if data.isOfficiallyTimed, let officialTime = data.officialFinalTime {
+            let officialText = "\u{2713} Official  \u{00B7}  \(officialTime)"
+            let officialAttrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 12, weight: .semibold),
+                .foregroundColor: UIColor.white.withAlphaComponent(0.9)
+            ]
+            let officialSize = (officialText as NSString).size(withAttributes: officialAttrs)
+            (officialText as NSString).draw(
+                at: CGPoint(x: (cardWidth - officialSize.width) / 2, y: cursorY),
+                withAttributes: officialAttrs
+            )
+            cursorY += officialSize.height + 4
         }
 
         // Display mode label (e.g. "Cumulative" / "Lap Times")
@@ -491,6 +540,24 @@ enum CardRenderer {
         }
 
         return currentY + 6
+    }
+
+    // MARK: – Helpers
+
+    private static func ordinalString(_ n: Int) -> String {
+        let ones = n % 10
+        let tens = (n / 10) % 10
+        let suffix: String
+        if tens == 1 { suffix = "th" }
+        else {
+            switch ones {
+            case 1: suffix = "st"
+            case 2: suffix = "nd"
+            case 3: suffix = "rd"
+            default: suffix = "th"
+            }
+        }
+        return "\(n)\(suffix)"
     }
 
     // MARK: – Footer

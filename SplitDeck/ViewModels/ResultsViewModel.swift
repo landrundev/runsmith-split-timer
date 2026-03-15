@@ -133,14 +133,19 @@ final class ResultsViewModel: ObservableObject {
             raceName: race.name,
             eventDisplayName: race.eventType.displayName,
             startedAt: race.startedAt,
-            meetName: meet?.name,
+            meetName: meet?.name ?? race.spectatorMeetName,
             displayModeName: displayMode.rawValue,
             isRelay: race.eventType.isRelay,
             athletes: athleteRows,
             columnLabels: labels,
             relayLegs: relayRows,
             totalRelayTime: totalRelayMs.map { $0.formattedSplitTime },
-            isMerged: race.isMerged
+            isMerged: race.isMerged,
+            heat: race.heat,
+            overallPlace: race.overallPlace,
+            heatPlace: race.heatPlace,
+            isOfficiallyTimed: race.isOfficiallyTimed,
+            officialFinalTime: race.officialFinalMs.map { $0.formattedSplitTime }
         )
     }
 

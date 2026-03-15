@@ -15,6 +15,13 @@ struct CardData {
     let totalRelayTime: String?
     let isMerged: Bool
 
+    // Spectator race details
+    let heat: String?
+    let overallPlace: Int?
+    let heatPlace: Int?
+    let isOfficiallyTimed: Bool
+    let officialFinalTime: String?   // pre-formatted, e.g. "4:48.93"
+
     struct CardAthlete {
         let name: String
         let colorHex: String
@@ -75,16 +82,51 @@ struct ResultsCardView: View {
             HStack(spacing: 6) {
                 Text(data.eventDisplayName)
                 if let meetName = data.meetName {
-                    Text("·").opacity(0.6)
+                    Text("\u{00B7}").opacity(0.6)
                     Text(meetName)
                 }
                 if let date = data.startedAt {
-                    Text("·").opacity(0.6)
+                    Text("\u{00B7}").opacity(0.6)
                     Text(Self.dateFormatter.string(from: date))
                 }
             }
             .font(.subheadline)
             .foregroundColor(.white.opacity(0.8))
+
+            // Heat + Placement line
+            if data.heat != nil || data.overallPlace != nil || data.heatPlace != nil {
+                HStack(spacing: 6) {
+                    if let heat = data.heat {
+                        Text(heat)
+                    }
+                    if let op = data.overallPlace {
+                        if data.heat != nil { Text("\u{00B7}").opacity(0.6) }
+                        HStack(spacing: 3) {
+                            if op >= 1, op <= 3 {
+                                Image(systemName: "medal.fill")
+                                    .foregroundColor(cardMedalColor(op))
+                            }
+                            Text(cardOrdinal(op) + " overall")
+                        }
+                    }
+                    if let hp = data.heatPlace {
+                        Text("\u{00B7}").opacity(0.6)
+                        Text(cardOrdinal(hp) + " in heat")
+                    }
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundColor(.white.opacity(0.9))
+            }
+
+            // Official time badge
+            if data.isOfficiallyTimed, let time = data.officialFinalTime {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.seal.fill")
+                    Text("Official \u{00B7} \(time)")
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundColor(.white.opacity(0.9))
+            }
 
             if !data.isRelay {
                 Text(data.displayModeName)
@@ -112,6 +154,31 @@ struct ResultsCardView: View {
                 endPoint: .bottomTrailing
             )
         )
+    }
+
+    private func cardMedalColor(_ place: Int) -> Color {
+        switch place {
+        case 1: return Color(hex: "#D4AF37")
+        case 2: return Color(hex: "#C0C0C0")
+        case 3: return Color(hex: "#CD7F32")
+        default: return .white
+        }
+    }
+
+    private func cardOrdinal(_ n: Int) -> String {
+        let ones = n % 10
+        let tens = (n / 10) % 10
+        let suffix: String
+        if tens == 1 { suffix = "th" }
+        else {
+            switch ones {
+            case 1: suffix = "st"
+            case 2: suffix = "nd"
+            case 3: suffix = "rd"
+            default: suffix = "th"
+            }
+        }
+        return "\(n)\(suffix)"
     }
 
     // MARK: – Individual Results
