@@ -1,5 +1,68 @@
 import SwiftUI
 
+// MARK: - Swipe-to-Delete Row Wrapper
+
+private struct SwipeDeleteRow<Content: View>: View {
+    let onTap: () -> Void
+    let onDelete: () -> Void
+    @ViewBuilder let content: () -> Content
+
+    @State private var offset: CGFloat = 0
+    private let deleteWidth: CGFloat = 72
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                    onDelete()
+                }
+            } label: {
+                Image(systemName: "trash.fill")
+                    .font(.body)
+                    .foregroundStyle(.white)
+                    .frame(width: deleteWidth)
+                    .frame(maxHeight: .infinity)
+            }
+            .background(Color.red)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+
+            content()
+                .offset(x: offset)
+                .gesture(
+                    DragGesture(minimumDistance: 15, coordinateSpace: .local)
+                        .onChanged { value in
+                            let w = value.translation.width
+                            if w < 0 {
+                                offset = max(w, -deleteWidth * 1.3)
+                            } else if offset < 0 {
+                                offset = min(0, offset + w)
+                            }
+                        }
+                        .onEnded { _ in
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                                if offset < -deleteWidth / 2 {
+                                    offset = -deleteWidth
+                                } else {
+                                    offset = 0
+                                }
+                            }
+                        }
+                )
+                .onTapGesture {
+                    if offset < 0 {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                            offset = 0
+                        }
+                    } else {
+                        onTap()
+                    }
+                }
+        }
+    }
+}
+
+// MARK: - SpectatorHomeView
+
 struct SpectatorHomeView: View {
     @EnvironmentObject var store: SplitDeckStore
     @EnvironmentObject var cache: RaceStateCache
@@ -53,23 +116,18 @@ struct SpectatorHomeView: View {
 
                     VStack(spacing: 8) {
                         ForEach(pendingRaces) { race in
-                            Button {
-                                if race.status == .inProgress {
-                                    resumeRace(race)
-                                } else {
-                                    selectedPendingRace = race
-                                    navigateToStaging = true
-                                }
-                            } label: {
+                            SwipeDeleteRow(
+                                onTap: {
+                                    if race.status == .inProgress {
+                                        resumeRace(race)
+                                    } else {
+                                        selectedPendingRace = race
+                                        navigateToStaging = true
+                                    }
+                                },
+                                onDelete: { deletePendingRace(race) }
+                            ) {
                                 pendingRaceRow(race)
-                            }
-                            .buttonStyle(.plain)
-                            .contextMenu {
-                                Button(role: .destructive) {
-                                    deletePendingRace(race)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
                             }
                         }
                     }
