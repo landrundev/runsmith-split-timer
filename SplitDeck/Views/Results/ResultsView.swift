@@ -241,20 +241,35 @@ struct ResultsView: View {
                 .foregroundStyle(.green)
             }
 
-            // Add official time prompt (spectator single-athlete non-meet races)
-            if !vm.race.isOfficiallyTimed && !vm.race.isMerged
-               && vm.race.meetId == nil && vm.athletes.count == 1 {
-                if manualFinalMsForOfficialEntry != nil {
-                    Button {
-                        showOfficialEntry = true
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "plus.circle")
-                            Text("Add Official Time")
+            // Action links row
+            HStack(spacing: 16) {
+                // Add official time prompt (spectator single-athlete non-meet races)
+                if !vm.race.isOfficiallyTimed && !vm.race.isMerged
+                   && vm.race.meetId == nil && vm.athletes.count == 1 {
+                    if manualFinalMsForOfficialEntry != nil {
+                        Button {
+                            showOfficialEntry = true
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "plus.circle")
+                                Text("Add Official Time")
+                            }
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Theme.runsmithPink)
                         }
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Theme.runsmithPink)
                     }
+                }
+
+                // Edit Race Info link
+                Button {
+                    showRaceInfoEdit = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "pencil.circle")
+                        Text("Edit Race Info")
+                    }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.runsmithPink)
                 }
             }
         }

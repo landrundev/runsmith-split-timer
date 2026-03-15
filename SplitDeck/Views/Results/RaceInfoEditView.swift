@@ -11,16 +11,10 @@ struct RaceInfoEditView: View {
     @State private var eventType: EventType = .m1600
     @State private var meetName: String = ""
     @State private var heatNumber: String = ""
-    @State private var roundType: RoundType = .none
+    @State private var roundType: SpectatorRoundType = .none
     @State private var overallPlace: String = ""
     @State private var heatPlace: String = ""
     @State private var errorMessage: String? = nil
-
-    private enum RoundType: String, CaseIterable {
-        case none = "Heat"
-        case semis = "Semis"
-        case final_ = "Final"
-    }
 
     private static let allEvents: [EventType] = [
         .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000,
@@ -60,7 +54,7 @@ struct RaceInfoEditView: View {
                 // Round
                 Section {
                     Picker("Round", selection: $roundType) {
-                        ForEach(RoundType.allCases, id: \.self) { type in
+                        ForEach(SpectatorRoundType.allCases, id: \.self) { type in
                             Text(type.rawValue).tag(type)
                         }
                     }

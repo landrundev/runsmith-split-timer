@@ -1,5 +1,11 @@
 import SwiftUI
 
+enum SpectatorRoundType: String, CaseIterable {
+    case none = "Heat"
+    case semis = "Semis"
+    case final_ = "Final"
+}
+
 struct SpectatorSetupView: View {
     enum SetupMode { case addAthlete, startRace }
 
@@ -21,6 +27,9 @@ struct SpectatorSetupView: View {
     @State private var usingSomeoneElse = false
     @State private var eventType: EventType = .m1600
     @State private var raceName = ""
+    @State private var meetName = ""
+    @State private var heatNumber = ""
+    @State private var roundType: SpectatorRoundType = .none
 
     // Navigation
     @State private var savedRace: Race? = nil
@@ -40,6 +49,17 @@ struct SpectatorSetupView: View {
     private static let individualEvents: [EventType] = [
         .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000
     ]
+
+    /// Computed heat string from roundType + heatNumber
+    private var computedHeat: String? {
+        switch roundType {
+        case .semis: return "Semis"
+        case .final_: return "Final"
+        case .none:
+            if let num = Int(heatNumber), num > 0 { return "Heat \(num)" }
+            return nil
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -179,15 +199,40 @@ struct SpectatorSetupView: View {
                 Text("Who are you timing?")
             }
 
-            // EVENT
+            // MEET & EVENT
             Section {
+                TextField("e.g. City Championships", text: $meetName)
                 Picker("Event", selection: $eventType) {
                     ForEach(Self.individualEvents, id: \.self) { event in
                         Text(event.displayName).tag(event)
                     }
                 }
             } header: {
-                Text("Event")
+                Text("Meet & Event")
+            }
+
+            // ROUND
+            Section {
+                Picker("Round", selection: $roundType) {
+                    ForEach(SpectatorRoundType.allCases, id: \.self) { type in
+                        Text(type.rawValue).tag(type)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                if roundType == .none {
+                    HStack {
+                        Text("Heat Number")
+                            .foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        TextField("—", text: $heatNumber)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 60)
+                    }
+                }
+            } header: {
+                Text("Round")
             }
 
             // RACE NAME
@@ -271,6 +316,7 @@ struct SpectatorSetupView: View {
         let name = raceName.trimmingCharacters(in: .whitespaces).isEmpty
             ? "\(eventType.displayName)"
             : raceName.trimmingCharacters(in: .whitespaces)
+        let meetTrimmed = meetName.trimmingCharacters(in: .whitespaces)
         let race = Race(
             name: name,
             eventType: eventType,
@@ -278,7 +324,9 @@ struct SpectatorSetupView: View {
             trackLengthMeters: 400,
             splitsPerLap: 1,
             athleteIds: [athleteId],
-            status: .notStarted
+            status: .notStarted,
+            spectatorMeetName: meetTrimmed.isEmpty ? nil : meetTrimmed,
+            heat: computedHeat
         )
 
         // Only persist to Core Data when explicitly saving, not when staging

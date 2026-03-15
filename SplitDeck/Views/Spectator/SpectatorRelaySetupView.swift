@@ -13,6 +13,9 @@ struct SpectatorRelaySetupView: View {
     @State private var teamName = ""
     @State private var savedTeams: [SavedRelayTeam] = []
     @State private var loadedTeamId: UUID? = nil
+    @State private var meetName = ""
+    @State private var heatNumber = ""
+    @State private var roundType: SpectatorRoundType = .none
 
     private static let relayEvents: [EventType] = [
         .relay4x100, .relay4x200, .relay4x400, .relay4x800
@@ -44,6 +47,37 @@ struct SpectatorRelaySetupView: View {
                 }
                 .pickerStyle(.segmented)
                 .onChange(of: gender) { _ in loadTeams() }
+            }
+
+            // MEET
+            Section {
+                TextField("e.g. City Championships", text: $meetName)
+            } header: {
+                Text("Meet")
+            }
+
+            // ROUND
+            Section {
+                Picker("Round", selection: $roundType) {
+                    ForEach(SpectatorRoundType.allCases, id: \.self) { type in
+                        Text(type.rawValue).tag(type)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                if roundType == .none {
+                    HStack {
+                        Text("Heat Number")
+                            .foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        TextField("—", text: $heatNumber)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 60)
+                    }
+                }
+            } header: {
+                Text("Round")
             }
 
             // SAVED TEAMS
@@ -134,6 +168,16 @@ struct SpectatorRelaySetupView: View {
 
     // MARK: - Helpers
 
+    private var computedHeat: String? {
+        switch roundType {
+        case .semis: return "Semis"
+        case .final_: return "Final"
+        case .none:
+            if let num = Int(heatNumber), num > 0 { return "Heat \(num)" }
+            return nil
+        }
+    }
+
     private var matchingTeams: [SavedRelayTeam] {
         savedTeams.filter { $0.eventType == eventType && $0.gender == gender }
     }
@@ -191,6 +235,7 @@ struct SpectatorRelaySetupView: View {
         let team = SavedRelayTeam(name: name, eventType: eventType, gender: gender, athleteIds: athleteIds)
         try? store.save(team)
 
+        let meetTrimmed = meetName.trimmingCharacters(in: .whitespaces)
         let race = Race(
             name: name,
             eventType: eventType,
@@ -198,7 +243,9 @@ struct SpectatorRelaySetupView: View {
             trackLengthMeters: eventType.legDistanceMeters ?? 400,
             splitsPerLap: 1,
             athleteIds: athleteIds,
-            status: .notStarted
+            status: .notStarted,
+            spectatorMeetName: meetTrimmed.isEmpty ? nil : meetTrimmed,
+            heat: computedHeat
         )
         // Race is NOT saved to Core Data here — it will be persisted
         // when the user actually starts timing in SpectatorStagingView.
