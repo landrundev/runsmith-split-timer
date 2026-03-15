@@ -10,68 +10,82 @@ struct RaceInfoEditView: View {
     @State private var raceDate: Date = Date()
     @State private var eventType: EventType = .m1600
     @State private var meetName: String = ""
-    @State private var selectedHeat: String = "None"
+    @State private var heatNumber: String = ""
+    @State private var roundType: RoundType = .none
     @State private var overallPlace: String = ""
     @State private var heatPlace: String = ""
     @State private var errorMessage: String? = nil
+
+    private enum RoundType: String, CaseIterable {
+        case none = "Heat"
+        case semis = "Semis"
+        case final_ = "Final"
+    }
 
     private static let allEvents: [EventType] = [
         .m100, .m200, .m400, .m800, .m1500, .mile, .m1600, .m3200, .m5000, .m10000,
         .relay4x100, .relay4x200, .relay4x400, .relay4x800, .custom
     ]
 
-    private static let heatOptions: [String] = {
-        var opts = ["None"]
-        opts += (1...20).map { "Heat \($0)" }
-        opts += ["Semis", "Final"]
-        return opts
-    }()
-
     var body: some View {
         NavigationStack {
             Form {
+                // Race Name
                 Section {
-                    TextField("Race name", text: $raceName)
+                    TextField("e.g. Boys 1600m", text: $raceName)
+                        .font(.body)
                 } header: {
                     Text("Race Name")
                 }
 
+                // Meet & Event
                 Section {
-                    DatePicker("Date", selection: $raceDate, displayedComponents: .date)
-                        .datePickerStyle(.graphical)
-                } header: {
-                    Text("Date")
-                }
-
-                Section {
+                    TextField("e.g. City Championships", text: $meetName)
                     Picker("Event", selection: $eventType) {
                         ForEach(Self.allEvents, id: \.self) { event in
                             Text(event.displayName).tag(event)
                         }
                     }
                 } header: {
-                    Text("Event")
+                    Text("Meet & Event")
                 }
 
+                // Date
                 Section {
-                    TextField("e.g. City Championships", text: $meetName)
+                    DatePicker("Date", selection: $raceDate, displayedComponents: .date)
                 } header: {
-                    Text("Meet")
+                    Text("Date")
                 }
 
+                // Round
                 Section {
-                    Picker("Heat", selection: $selectedHeat) {
-                        ForEach(Self.heatOptions, id: \.self) { option in
-                            Text(option).tag(option)
+                    Picker("Round", selection: $roundType) {
+                        ForEach(RoundType.allCases, id: \.self) { type in
+                            Text(type.rawValue).tag(type)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    if roundType == .none {
+                        HStack {
+                            Text("Heat Number")
+                                .foregroundStyle(Theme.textSecondary)
+                            Spacer()
+                            TextField("—", text: $heatNumber)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 60)
                         }
                     }
                 } header: {
-                    Text("Heat")
+                    Text("Round")
                 }
 
+                // Placement
                 Section {
                     HStack {
-                        Text("Overall")
+                        Text("Overall Place")
+                            .foregroundStyle(Theme.textSecondary)
                         Spacer()
                         TextField("—", text: $overallPlace)
                             .keyboardType(.numberPad)
@@ -79,7 +93,8 @@ struct RaceInfoEditView: View {
                             .frame(width: 60)
                     }
                     HStack {
-                        Text("Heat")
+                        Text("Heat Place")
+                            .foregroundStyle(Theme.textSecondary)
                         Spacer()
                         TextField("—", text: $heatPlace)
                             .keyboardType(.numberPad)
@@ -87,7 +102,7 @@ struct RaceInfoEditView: View {
                             .frame(width: 60)
                     }
                 } header: {
-                    Text("Place")
+                    Text("Placement")
                 }
 
                 if let error = errorMessage {
@@ -115,9 +130,26 @@ struct RaceInfoEditView: View {
         raceDate = race.startedAt ?? race.endedAt ?? Date()
         eventType = race.eventType
         meetName = race.spectatorMeetName ?? ""
-        selectedHeat = race.heat ?? "None"
         overallPlace = race.overallPlace.map { "\($0)" } ?? ""
         heatPlace = race.heatPlace.map { "\($0)" } ?? ""
+
+        // Parse existing heat string into roundType + heatNumber
+        if let heat = race.heat {
+            if heat == "Semis" {
+                roundType = .semis
+            } else if heat == "Final" {
+                roundType = .final_
+            } else if heat.hasPrefix("Heat "), let num = Int(heat.dropFirst(5)) {
+                roundType = .none
+                heatNumber = "\(num)"
+            } else {
+                roundType = .none
+                heatNumber = ""
+            }
+        } else {
+            roundType = .none
+            heatNumber = ""
+        }
     }
 
     private func save() {
@@ -137,7 +169,21 @@ struct RaceInfoEditView: View {
 
         let meetTrimmed = meetName.trimmingCharacters(in: .whitespaces)
         updated.spectatorMeetName = meetTrimmed.isEmpty ? nil : meetTrimmed
-        updated.heat = selectedHeat == "None" ? nil : selectedHeat
+
+        // Build heat string from roundType + heatNumber
+        switch roundType {
+        case .semis:
+            updated.heat = "Semis"
+        case .final_:
+            updated.heat = "Final"
+        case .none:
+            if let num = Int(heatNumber), num > 0 {
+                updated.heat = "Heat \(num)"
+            } else {
+                updated.heat = nil
+            }
+        }
+
         updated.overallPlace = Int(overallPlace)
         updated.heatPlace = Int(heatPlace)
 
