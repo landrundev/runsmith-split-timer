@@ -8,6 +8,8 @@ struct SpectatorAthleteDetailView: View {
     @State private var recentRaces: [(race: Race, finalMs: Int?, isPR: Bool)] = []
     @State private var editName: String = ""
     @State private var showEditName = false
+    @State private var selectedRace: Race? = nil
+    @State private var navigateToResults = false
 
     var body: some View {
         ScrollView {
@@ -26,7 +28,8 @@ struct SpectatorAthleteDetailView: View {
                             HStack {
                                 Text(pb.eventType.displayName)
                                     .font(.subheadline)
-                                    .frame(width: 60, alignment: .leading)
+                                    .lineLimit(1)
+                                    .frame(width: 80, alignment: .leading)
                                 Text(pb.bestMs.formattedSplitTime)
                                     .font(.subheadline.weight(.semibold).monospacedDigit())
                                 Spacer()
@@ -53,12 +56,15 @@ struct SpectatorAthleteDetailView: View {
                 } else {
                     VStack(spacing: 8) {
                         ForEach(Array(recentRaces.enumerated()), id: \.offset) { _, entry in
-                            NavigationLink {
-                                resultsView(for: entry.race)
-                            } label: {
+                            SwipeDeleteRow(
+                                onTap: {
+                                    selectedRace = entry.race
+                                    navigateToResults = true
+                                },
+                                onDelete: { deleteRace(entry.race) }
+                            ) {
                                 raceRow(entry)
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -87,10 +93,20 @@ struct SpectatorAthleteDetailView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+        .navigationDestination(isPresented: $navigateToResults) {
+            if let race = selectedRace {
+                resultsView(for: race)
+            }
+        }
         .onAppear { loadData() }
     }
 
     // MARK: - Helpers
+
+    private func deleteRace(_ race: Race) {
+        try? store.delete(raceId: race.id)
+        loadData()
+    }
 
     private func sectionHeader(_ title: String) -> some View {
         Text(title)

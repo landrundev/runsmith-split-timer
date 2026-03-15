@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Swipe-to-Delete Row Wrapper
 
-private struct SwipeDeleteRow<Content: View>: View {
+struct SwipeDeleteRow<Content: View>: View {
     let onTap: () -> Void
     let onDelete: () -> Void
     @ViewBuilder let content: () -> Content
