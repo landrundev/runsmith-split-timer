@@ -104,15 +104,17 @@ struct SettingsView: View {
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.large)
-        .confirmationDialog("Switch to Fan Mode?",
-                            isPresented: $showSwitchToFan,
-                            titleVisibility: .visible) {
-            Button("Switch to Fan Mode") {
-                AppSettings.appMode = .spectator
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Your meets, rosters, and race history are kept. Switch back anytime.")
+        .actionSheet(isPresented: $showSwitchToFan) {
+            ActionSheet(
+                title: Text("Switch to Fan Mode?"),
+                message: Text("Your meets, rosters, and race history are kept. Switch back anytime."),
+                buttons: [
+                    .default(Text("Switch to Fan Mode")) {
+                        AppSettings.appMode = .spectator
+                    },
+                    .cancel()
+                ]
+            )
         }
     }
 }
