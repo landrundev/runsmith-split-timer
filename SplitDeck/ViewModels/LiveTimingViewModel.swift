@@ -216,6 +216,27 @@ final class LiveTimingViewModel: ObservableObject {
         return ms.formattedSplitTime
     }
 
+    /// Current lap elapsed time (ms since last recorded split) for single-athlete races.
+    /// Returns nil on the first lap (total elapsed IS lap elapsed), when complete, or for multi-athlete/relay.
+    var singleAthleteLapElapsedMs: Int? {
+        guard !isRelay, athletes.count == 1, let athlete = athletes.first else { return nil }
+        guard !RaceDomain.isComplete(athlete: athlete, splits: splits, race: race) else { return nil }
+        let athleteSplits = splits(for: athlete)
+        guard let lastMs = athleteSplits.last?.elapsedMs else { return nil }
+        return max(0, engine.elapsedMs - lastMs)
+    }
+
+    /// Label for the current lap timer, e.g. "Lap 2" or "Split 3".
+    var singleAthleteLapLabel: String? {
+        guard !isRelay, athletes.count == 1, let athlete = athletes.first else { return nil }
+        let completed = splits(for: athlete).count
+        guard completed > 0 else { return nil }
+        if race.isUnlimitedSplits {
+            return "Split \(completed + 1)"
+        }
+        return "Lap \(min(completed + 1, race.laps))"
+    }
+
     func lapProgress(for athlete: Athlete) -> String {
         let completed = splits(for: athlete).count
         if race.isUnlimitedSplits {

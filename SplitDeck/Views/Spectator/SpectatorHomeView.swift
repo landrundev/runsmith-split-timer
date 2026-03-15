@@ -239,8 +239,11 @@ struct SpectatorHomeView: View {
             SpectatorSetupView(mode: .startRace)
         }
         .onAppear { refreshAll() }
-        .alert("Delete Athlete?", isPresented: $showDeleteConfirm, presenting: childToDelete) { child in
-            Button("Delete", role: .destructive) {
+        .confirmationDialog("Delete Athlete?",
+                            isPresented: $showDeleteConfirm,
+                            titleVisibility: .visible,
+                            presenting: childToDelete) { child in
+            Button("Delete \(child.displayName)", role: .destructive) {
                 deleteChild(child)
             }
             Button("Cancel", role: .cancel) {}

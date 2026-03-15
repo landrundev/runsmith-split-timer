@@ -111,6 +111,18 @@ struct LiveTimingView: View {
                 .font(.system(size: 52, weight: .semibold, design: .monospaced))
                 .foregroundStyle(Theme.textPrimary)
 
+            // Live per-lap timer for single-athlete races (resets each split)
+            if let lapMs = vm.singleAthleteLapElapsedMs, let lapLabel = vm.singleAthleteLapLabel {
+                HStack(spacing: 6) {
+                    Text(lapLabel)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Theme.textTertiary)
+                    Text(lapMs.formattedSplitTime)
+                        .font(.system(size: 24, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(Theme.runsmithPink)
+                }
+            }
+
             Text(vm.lapSubtitle)
                 .font(.subheadline)
                 .foregroundStyle(Theme.textSecondary)
