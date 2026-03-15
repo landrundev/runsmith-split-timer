@@ -170,6 +170,13 @@ struct Race: Identifiable, Codable, Hashable {
         return laps * splitsPerLap
     }
 
+    /// Distance each split represents for label generation.
+    /// For sub-lap races (100m, 200m on 400m track), uses the race distance.
+    /// For multi-lap races, uses the track length divided by splitsPerLap.
+    var splitDistanceMeters: Int {
+        return min(distanceMeters, trackLengthMeters) / max(splitsPerLap, 1)
+    }
+
     /// For relays with splitsPerLap > 1, returns the intermediate split distance.
     /// e.g. 4×400m relay with splitsPerLap=2 → 200m intermediate.
     /// Returns nil for non-relay or splitsPerLap==1.

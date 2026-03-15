@@ -161,7 +161,7 @@ final class LiveTimingViewModel: ObservableObject {
 
         let splitDistance: Int? = {
             guard !race.isUnlimitedSplits else { return nil }
-            return race.trackLengthMeters / race.splitsPerLap
+            return race.splitDistanceMeters
         }()
 
         return sorted.enumerated().map { i, split in
@@ -197,7 +197,7 @@ final class LiveTimingViewModel: ObservableObject {
     /// Formatted pace string for the athlete's most recent lap, e.g. "5:12/mi".
     func paceDisplay(for athlete: Athlete) -> String? {
         guard let deltaMs = lastLapDeltaMs(for: athlete) else { return nil }
-        let lapMeters = race.trackLengthMeters / max(race.splitsPerLap, 1)
+        let lapMeters = race.splitDistanceMeters
         let raw = UserDefaults.standard.string(forKey: "paceUnit") ?? PaceUnit.perMile.rawValue
         let unit = PaceUnit(rawValue: raw) ?? .perMile
         return PaceCalculator.format(lapMs: deltaMs, lapMeters: lapMeters, unit: unit)

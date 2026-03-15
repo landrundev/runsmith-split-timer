@@ -807,7 +807,7 @@ struct ResultsView: View {
             let totalSplits = vm.race.isUnlimitedSplits ? vm.splits.filter({ $0.athleteId == athlete.id }).count : vm.race.expectedSplitsPerAthlete
             var bestLapMs: Int?
             var bestLapLabel: String?
-            let splitDist = vm.race.isUnlimitedSplits ? nil : vm.race.trackLengthMeters / max(vm.race.splitsPerLap, 1)
+            let splitDist = vm.race.isUnlimitedSplits ? nil : vm.race.splitDistanceMeters
             for idx in 1...max(totalSplits, 1) {
                 if let lapMs = RaceDomain.lapTime(athlete: athlete, lapIndex: idx, splits: vm.splits) {
                     if bestLapMs == nil || lapMs < bestLapMs! {

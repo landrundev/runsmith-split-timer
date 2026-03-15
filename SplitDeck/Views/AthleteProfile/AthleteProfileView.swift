@@ -298,7 +298,7 @@ struct AthleteProfileView: View {
 
     /// "Lap" when each split = 1 full track lap (400m), "Split" otherwise.
     private func deltaLabel(for result: AthleteRaceResult) -> String {
-        let splitDist = result.trackLengthMeters / max(result.splitsPerLap, 1)
+        let splitDist = min(result.trackLengthMeters, result.distanceMeters) / max(result.splitsPerLap, 1)
         return splitDist >= 400 ? "Lap" : "Split"
     }
 

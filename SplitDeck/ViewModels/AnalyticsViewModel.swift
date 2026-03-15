@@ -212,7 +212,7 @@ final class AnalyticsViewModel: ObservableObject {
             for race in races where race.athleteIds.contains(athlete.id) {
                 guard race.expectedSplitsPerAthlete > 1 else { continue }
 
-                let splitDist = race.trackLengthMeters / max(race.splitsPerLap, 1)
+                let splitDist = race.splitDistanceMeters
                 guard let splitEvent = EventType.eventType(forSplitDistance: splitDist) else { continue }
 
                 let splits = splitsByRace[race.id] ?? []
@@ -336,7 +336,7 @@ final class AnalyticsViewModel: ObservableObject {
             var splitCount = 0
 
             for race in races where race.athleteIds.contains(athlete.id) && race.expectedSplitsPerAthlete > 1 {
-                let splitDist = race.trackLengthMeters / max(race.splitsPerLap, 1)
+                let splitDist = race.splitDistanceMeters
                 guard EventType.eventType(forSplitDistance: splitDist) == selectedEvent else { continue }
 
                 let splits = splitsByRace[race.id] ?? []

@@ -111,17 +111,13 @@ struct SpectatorSettingsView: View {
             }) {
                 SpectatorSetupView(mode: .addAthlete)
             }
-            .actionSheet(isPresented: $showSwitchConfirm) {
-                ActionSheet(
-                    title: Text("Switch to Coach Mode?"),
-                    message: Text("Your athletes and race history are kept. Switch back anytime in Settings."),
-                    buttons: [
-                        .default(Text("Switch to Coach Mode")) {
-                            AppSettings.appMode = .coach
-                        },
-                        .cancel()
-                    ]
-                )
+            .alert("Switch to Coach Mode?", isPresented: $showSwitchConfirm) {
+                Button("Switch to Coach Mode") {
+                    AppSettings.appMode = .coach
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Your athletes and race history are kept. Switch back anytime in Settings.")
             }
             .onAppear {
                 children = AppSettings.myChildren

@@ -24,6 +24,7 @@ struct AthleteRaceResult: Identifiable {
     let meetName: String?        // non-nil when race belongs to a meet
     let splitsPerLap: Int        // 1 = one split per lap, 2+ = intermediate splits
     let trackLengthMeters: Int   // physical track or leg distance
+    let distanceMeters: Int      // race distance (e.g. 100 for 100m)
     let splitLabels: [String]    // e.g. ["400m", "800m"] or ["Split 1", "Split 2"]
     let cumulativeTimesMs: [Int] // elapsed times per split, sorted by lap index
     let lapTimesMs: [Int]        // per-split deltas
@@ -147,6 +148,7 @@ final class AthleteProfileViewModel: ObservableObject {
                     meetName: race.meetId.flatMap { meetLookup[$0] },
                     splitsPerLap: race.splitsPerLap,
                     trackLengthMeters: race.trackLengthMeters,
+                    distanceMeters: race.distanceMeters,
                     splitLabels: labels,
                     cumulativeTimesMs: cumulativeTimes,
                     lapTimesMs: lapTimes,

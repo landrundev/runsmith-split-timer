@@ -108,7 +108,7 @@ enum RaceDomain {
             return (1...maxCount).map { "Split \($0)" }
         }
         let totalColumns = race.laps * race.splitsPerLap
-        let splitDistance = race.trackLengthMeters / race.splitsPerLap
+        let splitDistance = race.splitDistanceMeters
         return (1...totalColumns).map { "\(splitDistance * $0)m" }
     }
 
