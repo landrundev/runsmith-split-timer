@@ -200,7 +200,8 @@ struct SpectatorRelaySetupView: View {
             athleteIds: athleteIds,
             status: .notStarted
         )
-        try? store.save(race)
+        // Race is NOT saved to Core Data here — it will be persisted
+        // when the user actually starts timing in SpectatorStagingView.
 
         // Save as quick-start template
         AppSettings.saveQuickRaceTemplate(

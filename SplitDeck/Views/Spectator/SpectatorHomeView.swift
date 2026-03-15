@@ -49,7 +49,7 @@ struct SpectatorHomeView: View {
                 // PENDING RACES
                 if !pendingRaces.isEmpty {
                     Spacer(minLength: 24)
-                    sectionHeader("SAVED RACES")
+                    sectionHeader("PENDING RACES")
 
                     VStack(spacing: 8) {
                         ForEach(pendingRaces) { race in
@@ -64,6 +64,13 @@ struct SpectatorHomeView: View {
                                 pendingRaceRow(race)
                             }
                             .buttonStyle(.plain)
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    deletePendingRace(race)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
                         }
                     }
                 }
@@ -192,6 +199,11 @@ struct SpectatorHomeView: View {
         pendingRaces = result.sorted { ($0.startedAt ?? $0.endedAt ?? .distantPast) > ($1.startedAt ?? $1.endedAt ?? .distantPast) }
     }
 
+    private func deletePendingRace(_ race: Race) {
+        try? store.delete(raceId: race.id)
+        loadPendingRaces()
+    }
+
     private func resumeRace(_ race: Race) {
         let allAthletes = (try? store.fetchAthletes()) ?? []
         liveTimingVM = LiveTimingViewModel(race: race, athletes: allAthletes, store: store, cache: cache)
@@ -210,7 +222,6 @@ struct SpectatorHomeView: View {
             athleteIds: athleteIds,
             status: .notStarted
         )
-        try? store.save(race)
         selectedPendingRace = race
         navigateToStaging = true
     }

@@ -280,7 +280,11 @@ struct SpectatorSetupView: View {
             athleteIds: [athleteId],
             status: .notStarted
         )
-        try? store.save(race)
+
+        // Only persist to Core Data when explicitly saving, not when staging
+        if !andStage {
+            try? store.save(race)
+        }
         savedRace = race
 
         // Save as quick-start template
