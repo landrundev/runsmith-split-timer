@@ -33,6 +33,8 @@
         <attribute name="startedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="status" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="trackLengthMeters" attributeType="Integer 32" defaultValueString="400" usesScalarValueType="YES"/>
+        <attribute name="officialFinalMs" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="isOfficiallyTimed" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
     </entity>
     <entity name="SavedRelayTeamEntity" representedClassName="SavedRelayTeamEntity" syncable="YES" codeGenerationType="class">
         <attribute name="athleteIdsData" attributeType="Binary"/>

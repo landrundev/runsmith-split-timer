@@ -310,6 +310,48 @@ final class SplitDeckStore: ObservableObject {
         try ctx.save()
     }
 
+    /// Records an official finish time for a race and optionally adjusts
+    /// all splits proportionally.
+    func recordOfficialTime(raceId: UUID, officialMs: Int, adjustSplits: Bool) throws {
+        guard let raceEntity = try fetchRaceEntity(id: raceId) else { return }
+        raceEntity.officialFinalMs = Int64(officialMs)
+        raceEntity.isOfficiallyTimed = true
+
+        if adjustSplits {
+            let splitReq = SplitEntity.fetchRequest()
+            splitReq.predicate = NSPredicate(format: "raceId == %@", raceId as CVarArg)
+            let allSplits = try ctx.fetch(splitReq)
+
+            let athleteIds: [UUID]
+            if let data = raceEntity.athleteIdsData,
+               let decoded = try? JSONDecoder().decode([UUID].self, from: data) {
+                athleteIds = decoded
+            } else {
+                athleteIds = []
+            }
+
+            for athleteId in athleteIds {
+                let athleteSplits = allSplits
+                    .filter { $0.athleteId == athleteId }
+                    .sorted { $0.lapIndex < $1.lapIndex }
+                guard let manualFinal = athleteSplits.last?.elapsedMs,
+                      manualFinal > 0 else { continue }
+
+                let scale = Double(officialMs) / Double(manualFinal)
+                for split in athleteSplits {
+                    split.elapsedMs = Int64(round(Double(split.elapsedMs) * scale))
+                }
+            }
+        }
+
+        try ctx.save()
+        // Invalidate athlete race cache since race data changed
+        if let data = raceEntity.athleteIdsData,
+           let ids = try? JSONDecoder().decode([UUID].self, from: data) {
+            for id in ids { athleteRaceCache.removeValue(forKey: id) }
+        }
+    }
+
     // MARK: – Saved Relay Teams
 
     func fetchSavedRelayTeams() throws -> [SavedRelayTeam] {
@@ -599,7 +641,10 @@ final class SplitDeckStore: ObservableObject {
             status: RaceStatus(rawValue: entity.status) ?? .notStarted,
             isArchived: entity.isArchived,
             isMerged: entity.isMerged,
-            sortOrder: Int(entity.sortOrder)
+            sortOrder: Int(entity.sortOrder),
+            officialFinalMs: entity.isOfficiallyTimed
+                ? Int(entity.officialFinalMs) : nil,
+            isOfficiallyTimed: entity.isOfficiallyTimed
         )
     }
 
@@ -650,6 +695,8 @@ final class SplitDeckStore: ObservableObject {
         entity.isArchived = race.isArchived
         entity.isMerged = race.isMerged
         entity.sortOrder = Int16(race.sortOrder)
+        entity.officialFinalMs = Int64(race.officialFinalMs ?? 0)
+        entity.isOfficiallyTimed = race.isOfficiallyTimed
     }
 
     private func map(_ split: Split, into entity: SplitEntity) {

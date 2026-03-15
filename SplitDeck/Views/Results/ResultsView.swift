@@ -32,6 +32,7 @@ struct ResultsView: View {
     @State private var showMerge = false
     @State private var athleteInsights: [AthleteInsight] = []
     @State private var relayInsight: RelayInsight?
+    @State private var showOfficialEntry = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     private var isWideLayout: Bool { sizeClass == .regular }
 
@@ -41,6 +42,17 @@ struct ResultsView: View {
         f.timeStyle = .none
         return f
     }()
+
+    private var manualFinalMsForOfficialEntry: Int? {
+        guard let entry = vm.rankedAthletes.first,
+              vm.race.meetId == nil,
+              vm.athletes.count == 1 else { return nil }
+        // Use the split's elapsedMs directly (not officialFinalMs) since we want
+        // the original manual time as the starting point for the official entry.
+        let splits = vm.splits.filter { $0.athleteId == entry.athlete.id }
+        guard let finalSplit = splits.first(where: { $0.lapIndex == vm.race.laps }) else { return nil }
+        return finalSplit.elapsedMs
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -118,6 +130,16 @@ struct ResultsView: View {
         .adaptiveSheet(item: $shareItem) { item in
             SharePreviewSheet(image: item.image, csvURL: vm.csvFileURL())
         }
+        .sheet(isPresented: $showOfficialEntry) {
+            if let ms = manualFinalMsForOfficialEntry {
+                OfficialTimeEntryView(
+                    race: vm.race,
+                    manualFinalMs: ms,
+                    store: store,
+                    onSaved: { showOfficialEntry = false }
+                )
+            }
+        }
     }
 
     // MARK: – Race Info Header
@@ -155,6 +177,33 @@ struct ResultsView: View {
                 }
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.green)
+            }
+
+            // Official time badge (spectator mode)
+            if vm.race.isOfficiallyTimed, let offMs = vm.race.officialFinalMs {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.seal.fill")
+                    Text("Official \u{00B7} \(offMs.formattedSplitTime)")
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.green)
+            }
+
+            // Add official time prompt (spectator single-athlete non-meet races)
+            if !vm.race.isOfficiallyTimed && !vm.race.isMerged
+               && vm.race.meetId == nil && vm.athletes.count == 1 {
+                if manualFinalMsForOfficialEntry != nil {
+                    Button {
+                        showOfficialEntry = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus.circle")
+                            Text("Add Official Time")
+                        }
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Theme.runsmithPink)
+                    }
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

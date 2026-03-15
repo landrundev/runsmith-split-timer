@@ -33,6 +33,16 @@ enum RaceDomain {
     // MARK: A valid final time exists ONLY if lapIndex == race.laps exists for athlete
     static func finalTime(athlete: Athlete, splits: [Split], race: Race) -> Int? {
         guard !race.isUnlimitedSplits else { return nil }
+        // Require the final split to exist — confirms the athlete actually finished.
+        let hasFinalSplit = splits.contains {
+            $0.athleteId == athlete.id && $0.lapIndex == race.laps
+        }
+        guard hasFinalSplit else { return nil }
+
+        // If an official time has been recorded, it is the canonical result.
+        if let official = race.officialFinalMs {
+            return official
+        }
         return splits.first {
             $0.athleteId == athlete.id && $0.lapIndex == race.laps
         }?.elapsedMs

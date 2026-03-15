@@ -116,6 +116,16 @@ struct Race: Identifiable, Codable, Hashable {
     var isMerged: Bool
     var sortOrder: Int
 
+    /// The official recorded time for this race in milliseconds.
+    /// Set when a spectator enters the officially posted result after the race.
+    /// nil = not yet entered. When set, this is the canonical final time for
+    /// PR comparisons — not the adjusted split's elapsedMs.
+    var officialFinalMs: Int?
+
+    /// True when an official time has been entered and the race is marked
+    /// as officially timed. Displayed as an "Official" badge in results.
+    var isOfficiallyTimed: Bool
+
     // Computed — never stored
     var laps: Int {
         guard !isUnlimitedSplits else { return Int.max }
@@ -151,7 +161,9 @@ struct Race: Identifiable, Codable, Hashable {
         status: RaceStatus = .notStarted,
         isArchived: Bool = false,
         isMerged: Bool = false,
-        sortOrder: Int = 0
+        sortOrder: Int = 0,
+        officialFinalMs: Int? = nil,
+        isOfficiallyTimed: Bool = false
     ) {
         self.id = id
         self.meetId = meetId
@@ -169,5 +181,7 @@ struct Race: Identifiable, Codable, Hashable {
         self.isArchived = isArchived
         self.isMerged = isMerged
         self.sortOrder = sortOrder
+        self.officialFinalMs = officialFinalMs
+        self.isOfficiallyTimed = isOfficiallyTimed
     }
 }

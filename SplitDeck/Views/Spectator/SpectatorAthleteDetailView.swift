@@ -10,6 +10,7 @@ struct SpectatorAthleteDetailView: View {
     @State private var showEditName = false
     @State private var selectedRace: Race? = nil
     @State private var navigateToResults = false
+    @State private var officialTimeSheet: OfficialTimeSheetItem? = nil
 
     var body: some View {
         ScrollView {
@@ -64,6 +65,16 @@ struct SpectatorAthleteDetailView: View {
                                 onDelete: { deleteRace(entry.race) }
                             ) {
                                 raceRow(entry)
+                                    .contextMenu {
+                                        if entry.race.status == .completed && !entry.race.isOfficiallyTimed,
+                                           let ms = entry.finalMs {
+                                            Button {
+                                                officialTimeSheet = OfficialTimeSheetItem(race: entry.race, manualMs: ms)
+                                            } label: {
+                                                Label("Add Official Time", systemImage: "checkmark.seal")
+                                            }
+                                        }
+                                    }
                             }
                         }
                     }
@@ -98,6 +109,14 @@ struct SpectatorAthleteDetailView: View {
                 resultsView(for: race)
             }
         }
+        .sheet(item: $officialTimeSheet) { item in
+            OfficialTimeEntryView(
+                race: item.race,
+                manualFinalMs: item.manualMs,
+                store: store,
+                onSaved: { loadData() }
+            )
+        }
         .onAppear { loadData() }
     }
 
@@ -128,13 +147,26 @@ struct SpectatorAthleteDetailView: View {
             }
             Spacer()
             if let ms = entry.finalMs {
+                let displayMs = entry.race.officialFinalMs ?? ms
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(ms.formattedSplitTime)
-                        .font(.subheadline.weight(.semibold).monospacedDigit())
-                        .foregroundStyle(.primary)
+                    HStack(spacing: 4) {
+                        if entry.race.isOfficiallyTimed {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.green)
+                        }
+                        Text(displayMs.formattedSplitTime)
+                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                            .foregroundStyle(.primary)
+                    }
                     if entry.isPR {
                         Text("PR")
                             .font(.caption.weight(.bold))
+                            .foregroundStyle(.green)
+                    }
+                    if entry.race.isOfficiallyTimed {
+                        Text("Official")
+                            .font(.caption2)
                             .foregroundStyle(.green)
                     }
                 }
@@ -215,5 +247,18 @@ struct SpectatorAthleteDetailView: View {
             .map { (race: $0, finalMs: nil as Int?, isPR: false) }
 
         recentRaces = recentRaces + incompleteRaces
+    }
+}
+
+// MARK: - OfficialTimeSheetItem
+
+private struct OfficialTimeSheetItem: Identifiable {
+    let id: UUID
+    let race: Race
+    let manualMs: Int
+    init(race: Race, manualMs: Int) {
+        self.id = race.id
+        self.race = race
+        self.manualMs = manualMs
     }
 }
